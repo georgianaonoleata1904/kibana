@@ -17,13 +17,7 @@ import type {
   ServiceNowSecretConfigurationType,
   ServiceNowPublicConfigurationType,
 } from '@kbn/connector-schemas/servicenow';
-import type {
-  ExternalServiceCredentials,
-  Incident,
-  PartialIncident,
-  ResponseError,
-  ServiceNowError,
-} from './types';
+import type { ExternalServiceCredentials, Incident, PartialIncident, ResponseError } from './types';
 import { FIELD_PREFIX } from './config';
 import * as i18n from './translations';
 
@@ -44,23 +38,57 @@ export const prepareIncident = (
 
   return { ...additionalFields, ...baseFields };
 };
+/**
+ * Extracts error information from ServiceNow API errors.
+ *
+ * Handles two formats:
+ * 1. Table API: error.response.data = { error: { message?: string, detail?: string }, status?: string }
+ * 2. OAuth: error.message is JSON like {"error": "invalid_grant", "error_description"?: "User not found"}
+ */
+const createErrorMessage = (error: ResponseError): { error: string; reason: string } => {
+  // 1. Standard ServiceNow Table API error (error.response.data exists)
+  const data = error.response?.data;
 
-const createErrorMessage = (errorResponse?: ServiceNowError): string => {
-  if (errorResponse == null) {
-    return 'unknown: errorResponse was null';
+  if (data) {
+    const snErrorMessage = data.error?.message;
+    const snErrorDetail = data.error?.detail;
+
+    const reason = snErrorMessage
+      ? snErrorDetail
+        ? `${snErrorMessage}: ${snErrorDetail}`
+        : snErrorMessage
+      : 'unknown: no error in error response';
+
+    return {
+      error: error.message,
+      reason,
+    };
   }
 
-  const { error } = errorResponse;
-  return error != null
-    ? `${error?.message}: ${error?.detail}`
-    : 'unknown: no error in error response';
+  // 2. OAuth error (error.message is JSON)
+  // Example: {"error":"invalid_grant","error_description":"User not found"}
+  if (error.message) {
+    try {
+      const parsed = JSON.parse(error.message);
+      const reason = parsed.error_description || '';
+      return { error: parsed.error, reason };
+    } catch {
+      // JSON parsing failed - not an OAuth error, use error.message as-is
+    }
+
+    return { error: error.message, reason: '' };
+  }
+
+  return { error: '', reason: '' };
 };
 
 export const addServiceMessageToError = (error: ResponseError, message: string): AxiosError => {
-  error.message = getErrorMessage(
-    i18n.SERVICENOW,
-    `${message}. Error: ${error.message} Reason: ${createErrorMessage(error.response?.data)}`
-  );
+  const errorResponse = createErrorMessage(error);
+
+  const { error: errorPart, reason } = errorResponse;
+  const reasonPart = reason.length ? `Reason: ${reason}` : '';
+
+  error.message = getErrorMessage(i18n.SERVICENOW, `${message}. Error: ${errorPart} ${reasonPart}`);
   return error;
 };
 
