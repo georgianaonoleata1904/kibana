@@ -106,9 +106,6 @@ describe('utils', () => {
   });
 
   describe('createServiceError', () => {
-    // service now table api
-    // oauth
-
     describe('Table API errors', () => {
       test('it creates an error with response correctly', async () => {
         const axiosError = {
