@@ -19,6 +19,7 @@ import {
   EuiCallOut,
 } from '@elastic/eui';
 import { FormattedMessage } from '@kbn/i18n-react';
+import { i18n } from '@kbn/i18n';
 import type { ParsedAggregationResults } from '@kbn/triggers-actions-ui-plugin/common';
 import { useTestQuery } from './use_test_query';
 import { TestQueryRowTable } from './test_query_row_table';
@@ -50,6 +51,7 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
   } = useTestQuery(fetch);
 
   const [copiedMessage, setCopiedMessage] = useState<ReactNode | null>(null);
+  const [copyQueryError, setCopyQueryError] = useState<string | null>(null);
 
   return (
     <>
@@ -88,13 +90,23 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
                   iconSide="left"
                   iconType="copyClipboard"
                   onClick={() => {
-                    const copied = copyToClipboard(copyQuery());
-                    if (copied) {
-                      setCopiedMessage(
-                        <FormattedMessage
-                          id="xpack.stackAlerts.esQuery.ui.queryCopiedToClipboard"
-                          defaultMessage="Copied"
-                        />
+                    setCopyQueryError(null);
+                    try {
+                      const copied = copyToClipboard(copyQuery());
+                      if (copied) {
+                        setCopiedMessage(
+                          <FormattedMessage
+                            id="xpack.stackAlerts.esQuery.ui.queryCopiedToClipboard"
+                            defaultMessage="Copied"
+                          />
+                        );
+                      }
+                    } catch (err) {
+                      setCopyQueryError(
+                        i18n.translate('xpack.stackAlerts.esQuery.ui.copyQueryError', {
+                          defaultMessage: 'Error copying query: {message}',
+                          values: { message: err.message },
+                        })
                       );
                     }
                   }}
@@ -135,6 +147,13 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
         <EuiFormRow>
           <EuiText data-test-subj="testQueryError" color="danger" size="s">
             <p>{testQueryError}</p>
+          </EuiText>
+        </EuiFormRow>
+      )}
+      {copyQueryError && (
+        <EuiFormRow>
+          <EuiText data-test-subj="copyQueryError" color="danger" size="s">
+            <p>{copyQueryError}</p>
           </EuiText>
         </EuiFormRow>
       )}
