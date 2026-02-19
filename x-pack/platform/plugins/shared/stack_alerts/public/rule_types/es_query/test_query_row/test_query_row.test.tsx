@@ -128,4 +128,45 @@ describe('TestQueryRow', () => {
     component.update();
     expect(findTestSubject(component, 'copyQueryError').exists()).toBe(false);
   });
+
+  it('should clear copyQuery error when clicking test query', async () => {
+    const errorMessage = 'Expected AND, OR, end of input but ":" found.';
+    const localOnCopyQuery = jest.fn(() => {
+      throw new Error(errorMessage);
+    });
+    const component = mountWithIntl(
+      <TestQueryRow fetch={onFetch} copyQuery={localOnCopyQuery} hasValidationErrors={false} />
+    );
+
+    await act(async () => {
+      findTestSubject(component, 'copyQuery').simulate('click');
+    });
+    component.update();
+    expect(findTestSubject(component, 'copyQueryError').exists()).toBe(true);
+
+    await act(async () => {
+      findTestSubject(component, 'testQuery').simulate('click');
+    });
+    component.update();
+    expect(findTestSubject(component, 'copyQueryError').exists()).toBe(false);
+  });
+
+  it('should clear testQuery error when clicking copy query', async () => {
+    const localOnFetch = jest.fn(() => Promise.reject(new Error('Test query failed')));
+    const component = mountWithIntl(
+      <TestQueryRow fetch={localOnFetch} copyQuery={onCopyQuery} hasValidationErrors={false} />
+    );
+
+    await act(async () => {
+      findTestSubject(component, 'testQuery').simulate('click');
+    });
+    component.update();
+    expect(findTestSubject(component, 'testQueryError').exists()).toBe(true);
+
+    await act(async () => {
+      findTestSubject(component, 'copyQuery').simulate('click');
+    });
+    component.update();
+    expect(findTestSubject(component, 'testQueryError').exists()).toBe(false);
+  });
 });

@@ -43,6 +43,7 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
 }) => {
   const {
     onTestQuery,
+    resetTestQueryResponse,
     testQueryResult,
     testQueryError,
     testQueryWarning,
@@ -64,6 +65,7 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
               iconSide="left"
               iconType="playFilled"
               onClick={() => {
+                setCopyQueryError(null);
                 onTestQuery();
               }}
               disabled={hasValidationErrors}
@@ -91,6 +93,7 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
                   iconType="copyClipboard"
                   onClick={() => {
                     setCopyQueryError(null);
+                    resetTestQueryResponse();
                     try {
                       const copied = copyToClipboard(copyQuery());
                       if (copied) {
