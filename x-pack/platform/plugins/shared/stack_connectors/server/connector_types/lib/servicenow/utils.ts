@@ -17,7 +17,13 @@ import type {
   ServiceNowSecretConfigurationType,
   ServiceNowPublicConfigurationType,
 } from '@kbn/connector-schemas/servicenow';
-import type { ExternalServiceCredentials, Incident, PartialIncident, ResponseError } from './types';
+import type {
+  ExternalServiceCredentials,
+  Incident,
+  PartialIncident,
+  ResponseError,
+  ErrorMessageFormat,
+} from './types';
 import { FIELD_PREFIX } from './config';
 import * as i18n from './translations';
 
@@ -41,11 +47,12 @@ export const prepareIncident = (
 /**
  * Extracts error information from ServiceNow API errors.
  *
- * Handles two formats:
+ * Handles 3 formats:
  * 1. Table API: error.response.data = { error: { message?: string, detail?: string }, status?: string }
  * 2. OAuth: error.message is JSON like {"error": "invalid_grant", "error_description"?: "User not found"}
+ * 3. Plain message like Incident id is empty
  */
-const createErrorMessage = (error: ResponseError): { error: string; reason: string } => {
+const createErrorMessage = (error: ResponseError): ErrorMessageFormat => {
   // 1. Standard ServiceNow Table API error (error.response.data exists)
   const data = error.response?.data;
 
@@ -76,6 +83,7 @@ const createErrorMessage = (error: ResponseError): { error: string; reason: stri
       // JSON parsing failed - not an OAuth error, use error.message as-is
     }
 
+    // Plain error
     return { error: error.message, reason: '' };
   }
 
