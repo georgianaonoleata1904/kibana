@@ -5,7 +5,7 @@
  * 2.0.
  */
 import type { ReactNode } from 'react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   copyToClipboard,
   EuiButton,
@@ -53,6 +53,10 @@ export const TestQueryRow: React.FC<TestQueryRowProps> = ({
 
   const [copiedMessage, setCopiedMessage] = useState<ReactNode | null>(null);
   const [copyQueryError, setCopyQueryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCopyQueryError(null);
+  }, [fetch]);
 
   return (
     <>
