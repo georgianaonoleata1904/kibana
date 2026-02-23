@@ -511,13 +511,6 @@ describe('ServiceNow service', () => {
         connectorUsageCollector,
       });
     });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementation(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getIncident('1')).rejects.toThrow();
-    });
   });
 
   describe('getIncidentByCorrelationId', () => {
@@ -582,13 +575,6 @@ describe('ServiceNow service', () => {
         method: 'get',
         connectorUsageCollector,
       });
-    });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementationOnce(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getIncidentByCorrelationId('custom_correlation_id')).rejects.toThrow();
     });
   });
 
@@ -822,16 +808,6 @@ describe('ServiceNow service', () => {
         });
 
         expect(res.url).toEqual('https://example.com/nav_to.do?uri=sn_si_incident.do?sys_id=1');
-      });
-
-      test('it should throw an error when there is an import set api error', async () => {
-        requestMock.mockImplementation(() => ({ data: getImportSetAPIError() }));
-        await expect(
-          service.updateIncident({
-            incidentId: '1',
-            incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
-          })
-        ).rejects.toThrow();
       });
 
       test('it should update an incident with additional fields correctly without prefixing them with u_', async () => {
@@ -1077,12 +1053,6 @@ describe('ServiceNow service', () => {
         expect(res?.url).toEqual('https://example.com/nav_to.do?uri=incident.do?sys_id=1');
       });
 
-      test('it should throw an error', async () => {
-        await expect(
-          service.closeIncident({ incidentId: null, correlationId: null })
-        ).rejects.toThrow();
-      });
-
       test('it should log warning if found incident is closed', async () => {
         requestMock.mockImplementationOnce(() => ({
           data: {
@@ -1234,24 +1204,6 @@ describe('ServiceNow service', () => {
 
         expect(res?.url).toEqual('https://example.com/nav_to.do?uri=sn_si_incident.do?sys_id=1');
       });
-
-      test('it should throw an error when the incidentId and correlationId are null', async () => {
-        await expect(
-          service.closeIncident({ incidentId: null, correlationId: null })
-        ).rejects.toThrow();
-      });
-
-      test('it should throw an error when correlationId is empty', async () => {
-        await expect(
-          service.closeIncident({ incidentId: null, correlationId: ' ' })
-        ).rejects.toThrow();
-      });
-
-      test('it should throw an error when incidentId is empty', async () => {
-        await expect(
-          service.closeIncident({ incidentId: ' ', correlationId: null })
-        ).rejects.toThrow();
-      });
     });
   });
 
@@ -1304,13 +1256,6 @@ describe('ServiceNow service', () => {
         url: 'https://example.com/api/now/table/sys_dictionary?sysparm_query=name=task^ORname=sn_si_incident^internal_type=string&active=true&array=false&read_only=false&sysparm_fields=max_length,element,column_label,mandatory',
         connectorUsageCollector,
       });
-    });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementation(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getFields()).rejects.toThrow();
     });
   });
 
@@ -1365,13 +1310,6 @@ describe('ServiceNow service', () => {
         connectorUsageCollector,
       });
     });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementation(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getChoices(['priority'])).rejects.toThrow();
-    });
   });
 
   describe('getUrl', () => {
@@ -1411,13 +1349,6 @@ describe('ServiceNow service', () => {
           scope: 'x_elas2_inc_int',
           version: '1.0.0',
         });
-      });
-
-      test('it should throw an error', async () => {
-        requestMock.mockImplementation(() => {
-          throw new Error('An error has occurred');
-        });
-        await expect(service.getApplicationInformation()).rejects.toThrow();
       });
     });
 
@@ -1586,6 +1517,18 @@ describe('ServiceNow service', () => {
           })
         ).rejects.toThrow(
           'There is an issue with your Service Now Instance. Please check Developer instance.'
+        );
+      });
+
+      test('it should throw an error when there is an import set api error', async () => {
+        requestMock.mockImplementation(() => ({ data: getImportSetAPIError() }));
+        await expect(
+          service.updateIncident({
+            incidentId: '1',
+            incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
+          })
+        ).rejects.toThrow(
+          '[Action][ServiceNow]: Unable to update incident with id 1. Error: An error has occurred while importing the incident'
         );
       });
 

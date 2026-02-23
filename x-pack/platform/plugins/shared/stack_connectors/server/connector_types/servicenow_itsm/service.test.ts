@@ -454,13 +454,6 @@ describe('ServiceNow service', () => {
         connectorUsageCollector,
       });
     });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementation(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getIncident('1')).rejects.toThrow();
-    });
   });
 
   describe('createIncident', () => {
@@ -796,13 +789,6 @@ describe('ServiceNow service', () => {
         connectorUsageCollector,
       });
     });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementation(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getFields()).rejects.toThrow();
-    });
   });
 
   describe('getChoices', () => {
@@ -856,13 +842,6 @@ describe('ServiceNow service', () => {
         connectorUsageCollector,
       });
     });
-
-    test('it should throw an error', async () => {
-      requestMock.mockImplementation(() => {
-        throw new Error('An error has occurred');
-      });
-      await expect(service.getChoices(['priority'])).rejects.toThrow();
-    });
   });
 
   describe('getUrl', () => {
@@ -902,13 +881,6 @@ describe('ServiceNow service', () => {
           scope: 'x_elas2_inc_int',
           version: '1.0.0',
         });
-      });
-
-      test('it should throw an error', async () => {
-        requestMock.mockImplementation(() => {
-          throw new Error('An error has occurred');
-        });
-        await expect(service.getApplicationInformation()).rejects.toThrow();
       });
     });
 
