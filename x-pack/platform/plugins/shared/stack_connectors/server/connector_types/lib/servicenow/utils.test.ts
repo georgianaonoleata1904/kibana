@@ -142,7 +142,7 @@ describe('utils', () => {
         const error = new Error('{"error":"invalid_grant"}');
         // @ts-expect-error
         expect(addServiceMessageToError(error, 'Unable to do action').message).toBe(
-          '[Action][ServiceNow]: Unable to do action. Error: invalid_grant '
+          '[Action][ServiceNow]: Unable to do action. Error: invalid_grant'
         );
       });
     });

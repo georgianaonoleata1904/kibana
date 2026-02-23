@@ -77,8 +77,10 @@ const createErrorMessage = (error: ResponseError): ErrorMessageFormat => {
   if (error.message) {
     try {
       const parsed = JSON.parse(error.message);
-      const reason = parsed.error_description || '';
-      return { error: parsed.error, reason };
+      if (typeof parsed?.error === 'string') {
+        const reason = parsed.error_description || '';
+        return { error: parsed.error, reason };
+      }
     } catch {
       // JSON parsing failed - not an OAuth error, use error.message as-is
     }
@@ -91,12 +93,12 @@ const createErrorMessage = (error: ResponseError): ErrorMessageFormat => {
 };
 
 export const addServiceMessageToError = (error: ResponseError, message: string): AxiosError => {
-  const errorResponse = createErrorMessage(error);
+  const { error: errorPart, reason } = createErrorMessage(error);
 
-  const { error: errorPart, reason } = errorResponse;
-  const reasonPart = reason.length ? `Reason: ${reason}` : '';
+  const parts = [`${message}.`, 'Error:', errorPart];
+  if (reason) parts.push('Reason:', reason);
 
-  error.message = getErrorMessage(i18n.SERVICENOW, `${message}. Error: ${errorPart} ${reasonPart}`);
+  error.message = getErrorMessage(i18n.SERVICENOW, parts.join(' '));
   return error;
 };
 

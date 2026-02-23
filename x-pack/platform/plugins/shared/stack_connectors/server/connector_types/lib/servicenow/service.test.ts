@@ -1395,7 +1395,7 @@ describe('ServiceNow service', () => {
 
       test('it should throw an error when incident id is empty', async () => {
         await expect(service.getIncident('')).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get incident with id . Error: Incident id is empty. '
+          '[Action][ServiceNow]: Unable to get incident with id . Error: Incident id is empty.'
         );
       });
     });
@@ -1403,7 +1403,7 @@ describe('ServiceNow service', () => {
     describe('getIncidentByCorrelationId', () => {
       test('it should throw an error when correlation id is empty', async () => {
         await expect(service.getIncidentByCorrelationId('')).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get incident by correlation ID . Error: Correlation ID is empty. '
+          '[Action][ServiceNow]: Unable to get incident by correlation ID . Error: Correlation ID is empty.'
         );
       });
 
@@ -1430,7 +1430,7 @@ describe('ServiceNow service', () => {
             incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to create incident. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to create incident. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred'
         );
       });
 
@@ -1459,7 +1459,7 @@ describe('ServiceNow service', () => {
             } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to create incident. Error: An error has occurred while importing the incident '
+          '[Action][ServiceNow]: Unable to create incident. Error: An error has occurred while importing the incident'
         );
       });
 
@@ -1483,7 +1483,7 @@ describe('ServiceNow service', () => {
             } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to create incident. Error: ServiceNow additional fields are not supported for deprecated connectors. '
+          '[Action][ServiceNow]: Unable to create incident. Error: ServiceNow additional fields are not supported for deprecated connectors.'
         );
       });
     });
@@ -1500,7 +1500,7 @@ describe('ServiceNow service', () => {
             incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to update incident with id 1. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to update incident with id 1. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred'
         );
       });
 
@@ -1552,7 +1552,7 @@ describe('ServiceNow service', () => {
             } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to update incident with id 1. Error: ServiceNow additional fields are not supported for deprecated connectors. '
+          '[Action][ServiceNow]: Unable to update incident with id 1. Error: ServiceNow additional fields are not supported for deprecated connectors.'
         );
       });
     });
@@ -1562,7 +1562,7 @@ describe('ServiceNow service', () => {
         await expect(
           service.closeIncident({ incidentId: null, correlationId: null })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to close incident. Error: No correlationId or incidentId found. '
+          '[Action][ServiceNow]: Unable to close incident. Error: No correlationId or incidentId found.'
         );
       });
 
@@ -1570,7 +1570,7 @@ describe('ServiceNow service', () => {
         await expect(
           service.closeIncident({ incidentId: null, correlationId: ' ' })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to close incident. Error: [Action][ServiceNow]: Unable to get incident by correlation ID  . Error: Correlation ID is empty. '
+          '[Action][ServiceNow]: Unable to close incident. Error: [Action][ServiceNow]: Unable to get incident by correlation ID  . Error: Correlation ID is empty.'
         );
       });
 
@@ -1578,7 +1578,7 @@ describe('ServiceNow service', () => {
         await expect(
           service.closeIncident({ incidentId: ' ', correlationId: null })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to close incident. Error: [Action][ServiceNow]: Unable to get incident with id  . Error: Incident id is empty. '
+          '[Action][ServiceNow]: Unable to close incident. Error: [Action][ServiceNow]: Unable to get incident with id  . Error: Incident id is empty.'
         );
       });
 
@@ -1630,7 +1630,7 @@ describe('ServiceNow service', () => {
           throw new Error('An error has occurred');
         });
         await expect(service.getFields()).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get fields. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to get fields. Error: An error has occurred'
         );
       });
 
@@ -1665,7 +1665,7 @@ describe('ServiceNow service', () => {
           throw new Error('An error has occurred');
         });
         await expect(service.getApplicationInformation()).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get application version. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to get application version. Error: An error has occurred'
         );
       });
     });
@@ -1691,7 +1691,7 @@ describe('ServiceNow service', () => {
         });
 
         await expect(service.getIncident('1')).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get incident with id 1. Error: invalid_grant '
+          '[Action][ServiceNow]: Unable to get incident with id 1. Error: invalid_grant'
         );
       });
     });

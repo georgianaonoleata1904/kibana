@@ -919,7 +919,7 @@ describe('ServiceNow service', () => {
           throw new Error('An error has occurred');
         });
         await expect(service.getIncident('1')).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get incident with id 1. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to get incident with id 1. Error: An error has occurred'
         );
       });
 
@@ -946,7 +946,7 @@ describe('ServiceNow service', () => {
             incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to create incident. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to create incident. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred'
         );
       });
 
@@ -972,7 +972,7 @@ describe('ServiceNow service', () => {
             incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to create incident. Error: An error has occurred while importing the incident '
+          '[Action][ServiceNow]: Unable to create incident. Error: An error has occurred while importing the incident'
         );
       });
     });
@@ -989,7 +989,7 @@ describe('ServiceNow service', () => {
             incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to update incident with id 1. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to update incident with id 1. Error: [Action][ServiceNow]: Unable to get application version. Error: An error has occurred'
         );
       });
 
@@ -1017,7 +1017,7 @@ describe('ServiceNow service', () => {
             incident: { short_description: 'title', description: 'desc' } as ServiceNowITSMIncident,
           })
         ).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to update incident with id 1. Error: An error has occurred while importing the incident '
+          '[Action][ServiceNow]: Unable to update incident with id 1. Error: An error has occurred while importing the incident'
         );
       });
     });
@@ -1028,7 +1028,7 @@ describe('ServiceNow service', () => {
           throw new Error('An error has occurred');
         });
         await expect(service.getFields()).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get fields. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to get fields. Error: An error has occurred'
         );
       });
 
@@ -1050,7 +1050,7 @@ describe('ServiceNow service', () => {
           throw new Error('An error has occurred');
         });
         await expect(service.getChoices(['priority'])).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get choices. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to get choices. Error: An error has occurred'
         );
       });
 
@@ -1072,7 +1072,7 @@ describe('ServiceNow service', () => {
           throw new Error('An error has occurred');
         });
         await expect(service.getApplicationInformation()).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get application version. Error: An error has occurred '
+          '[Action][ServiceNow]: Unable to get application version. Error: An error has occurred'
         );
       });
     });
@@ -1098,7 +1098,7 @@ describe('ServiceNow service', () => {
         });
 
         await expect(service.getIncident('1')).rejects.toThrow(
-          '[Action][ServiceNow]: Unable to get incident with id 1. Error: invalid_grant '
+          '[Action][ServiceNow]: Unable to get incident with id 1. Error: invalid_grant'
         );
       });
     });
