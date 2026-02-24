@@ -5,8 +5,7 @@
  * 2.0.
  */
 
-import { renderHook } from '@testing-library/react';
-import { act } from 'react-test-renderer';
+import { renderHook, act } from '@testing-library/react';
 import { useTestQuery } from './use_test_query';
 
 describe('useTestQuery', () => {
@@ -172,7 +171,7 @@ describe('useTestQuery', () => {
     });
     expect(result.current.testQueryError).toContain(errorMsg);
 
-    act(() => {
+    await act(async () => {
       result.current.resetTestQueryResponse();
     });
 
