@@ -91,7 +91,8 @@ const createIdConfig = (
         message: i18n.translate(
           'xpack.triggersActionsUI.sections.actionConnectorForm.error.connectorIdTooLong',
           {
-            defaultMessage: 'Connector ID must be 36 characters or less.',
+            defaultMessage: 'Connector ID must be {maxLength} characters or less.',
+            values: { maxLength: CONNECTOR_ID_MAX_LENGTH },
           }
         ),
       }),
@@ -138,7 +139,8 @@ const ConnectorFormFieldsGlobalComponent: React.FC<ConnectorFormFieldsProps> = (
 
   useEffect(() => {
     if (!isEdit && !usingCustomIdentifier && name) {
-      setFieldValue('id', toSlugIdentifier(name));
+      const slug = toSlugIdentifier(name).slice(0, CONNECTOR_ID_MAX_LENGTH).replace(/-+$/, '');
+      setFieldValue('id', slug);
     }
   }, [name, isEdit, setFieldValue, usingCustomIdentifier]);
 

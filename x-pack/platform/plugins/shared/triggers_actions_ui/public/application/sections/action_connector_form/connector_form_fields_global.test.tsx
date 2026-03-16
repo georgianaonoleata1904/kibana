@@ -140,4 +140,23 @@ describe('ConnectorFormFieldsGlobal', () => {
       expect(screen.getByTestId('connectorIdInput')).toHaveValue('my-new-connector');
     });
   });
+
+  it('truncates auto-populated connector ID to 36 characters', async () => {
+    render(
+      <FormTestProvider onSubmit={onSubmit}>
+        <ConnectorFormFieldsGlobal canSave={true} isEdit={false} />
+      </FormTestProvider>
+    );
+
+    const nameInput = screen.getByTestId('nameInput');
+    // Type a name that would generate a slug longer than 36 characters
+    await userEvent.type(nameInput, 'This Is A Very Long Connector Name That Exceeds The Limit');
+
+    await waitFor(() => {
+      const idInput = screen.getByTestId('connectorIdInput');
+      const idValue = (idInput as HTMLInputElement).value;
+      expect(idValue.length).toBeLessThanOrEqual(36);
+      expect(idValue.endsWith('-')).toBe(false);
+    });
+  });
 });
