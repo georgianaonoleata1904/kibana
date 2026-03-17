@@ -80,7 +80,7 @@ export default ({ getPageObjects, getPageObject, getService }: FtrProviderContex
 
     it('should create a connector with a custom user-defined ID', async () => {
       const connectorName = generateUniqueKey();
-      const customConnectorId = `custom-${generateUniqueKey()}`;
+      const customConnectorId = `custom-${generateUniqueKey().slice(0, 28)}`;
 
       await pageObjects.triggersActionsUI.clickCreateConnectorButton();
 
