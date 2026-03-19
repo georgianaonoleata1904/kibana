@@ -2081,6 +2081,7 @@ describe('delete()', () => {
     actionsClient = new ActionsClient({
       logger,
       actionTypeRegistry,
+      authTypeRegistry,
       unsecuredSavedObjectsClient,
       scopedClusterClient,
       kibanaIndices,
@@ -3098,6 +3099,7 @@ describe('execute()', () => {
       ],
       logger,
       actionTypeRegistry,
+      authTypeRegistry,
       unsecuredSavedObjectsClient,
       scopedClusterClient,
       kibanaIndices,
