@@ -377,4 +377,60 @@ describe('MaintenanceWindowClient - create', () => {
       - [data.categoryIds.1]: expected value to equal [null]"
     `);
   });
+  it('should pass Query DSL wildcard filter through unchanged without requiring index pattern', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2023-02-26T00:00:00.000Z'));
+
+    const mockMaintenanceWindow = getMockMaintenanceWindow({
+      expirationDate: moment(new Date()).tz('UTC').add(1, 'year').toISOString(),
+    });
+
+    savedObjectsClient.create.mockResolvedValueOnce({
+      attributes: mockMaintenanceWindow,
+      version: '123',
+      id: 'test-id',
+    } as unknown as SavedObject);
+
+    const wildcardQuery = {
+      wildcard: {
+        'kibana.alert.rule.name': {
+          value: 'example*',
+        },
+      },
+    };
+
+    await createMaintenanceWindow(mockContext, {
+      data: {
+        title: mockMaintenanceWindow.title,
+        duration: mockMaintenanceWindow.duration,
+        rRule: mockMaintenanceWindow.rRule as CreateMaintenanceWindowParams['data']['rRule'],
+        schedule: mockMaintenanceWindow.schedule,
+        scope: {
+          alerting: {
+            kql: '',
+            filters: [
+              {
+                meta: {
+                  disabled: false,
+                  negate: false,
+                  alias: null,
+                },
+                $state: {
+                  store: FilterStateStore.APP_STATE,
+                },
+                query: wildcardQuery,
+              },
+            ],
+          },
+        },
+      },
+    });
+
+    const dsl = (savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow).scope!.alerting!
+      .dsl!;
+    const parsedDsl = JSON.parse(dsl);
+
+    // Query DSL filters are passed through translateToQuery() as filter.query,
+    // so the wildcard query should appear unchanged in the output — no index pattern needed.
+    expect(parsedDsl.bool.filter[0]).toEqual(wildcardQuery);
+  });
 });
