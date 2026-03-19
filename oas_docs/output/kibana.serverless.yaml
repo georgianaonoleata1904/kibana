@@ -410,6 +410,37 @@ paths:
       x-metaTags:
         - content: Kibana, Elastic Cloud Serverless
           name: product_name
+  /api/actions/connector/_conflicted_ids:
+    get:
+      operationId: get-actions-connector-conflicted-ids
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: false
+                type: object
+                properties:
+                  skippedPreconfiguredConnectorIds:
+                    items:
+                      type: string
+                    type: array
+                required:
+                  - skippedPreconfiguredConnectorIds
+          description: Returns preconfigured connector IDs that were skipped because they conflict with existing connectors.
+      summary: Get preconfigured connector IDs that were skipped due to conflicts
+      tags:
+        - connectors
+      x-metaTags:
+        - content: Kibana, Elastic Cloud Serverless
+          name: product_name
+      description: |-
+        **Spaces method and path for this operation:**
+
+        <div><span class="operation-verb get">get</span>&nbsp;<span class="operation-path">/s/{space_id}/api/actions/connector/_conflicted_ids</span></div>
+
+        Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
   /api/actions/connector/_oauth_callback:
     get:
       description: |-
