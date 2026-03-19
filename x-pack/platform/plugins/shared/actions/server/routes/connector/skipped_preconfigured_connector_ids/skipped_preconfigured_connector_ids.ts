@@ -14,7 +14,12 @@ import { verifyAccessAndContext } from '../../verify_access_and_context';
 import { DEFAULT_ACTION_ROUTE_SECURITY } from '../../constants';
 
 const responseSchema = schema.object({
-  skippedPreconfiguredConnectorIds: schema.arrayOf(schema.string()),
+  skippedPreconfiguredConnectorIds: schema.arrayOf(schema.string(), {
+    meta: {
+      description:
+        'Preconfigured connector IDs that were skipped because they conflict with existing saved connectors.',
+    },
+  }),
 });
 
 export const getSkippedPreconfiguredConnectorIdsRoute = (
@@ -28,6 +33,8 @@ export const getSkippedPreconfiguredConnectorIdsRoute = (
       options: {
         access: 'public',
         summary: 'Get preconfigured connector IDs that were skipped due to conflicts',
+        description:
+          'Returns preconfigured connector IDs that were skipped because they conflict with existing connectors.',
         tags: ['oas-tag:connectors'],
       },
       validate: {
