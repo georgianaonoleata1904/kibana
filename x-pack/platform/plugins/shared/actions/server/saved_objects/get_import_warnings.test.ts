@@ -7,7 +7,8 @@
 
 import type { SavedObject } from '@kbn/core/server';
 import type { RawAction } from '../types';
-import { getImportWarnings } from './get_import_warnings';
+import { createMockInMemoryConnector } from '../application/connector/mocks';
+import { getImportWarnings, getPreconfiguredConflictWarnings } from './get_import_warnings';
 
 describe('getImportWarnings', () => {
   it('return warning message with total imported connectors and the proper secrets need to update', () => {
@@ -92,5 +93,55 @@ describe('getImportWarnings', () => {
       savedObjectConnectors as unknown as Array<SavedObject<RawAction>>
     );
     expect(warnings.length).toBe(0);
+  });
+});
+
+describe('getPreconfiguredConflictWarnings', () => {
+  const createConnector = (id: string, destinationId?: string) =>
+    ({
+      type: 'action',
+      id,
+      ...(destinationId && { destinationId }),
+      attributes: {
+        actionTypeId: '.server-log',
+        config: {},
+        isMissingSecrets: false,
+        name: 'test',
+      },
+      references: [],
+      migrationVersion: { action: '7.14.0' },
+      coreMigrationVersion: '8.0.0',
+      updated_at: '2021-04-27T04:10:33.043Z',
+      version: 'WzcxLDFd',
+      namespaces: ['default'],
+    } as unknown as SavedObject<RawAction> & { destinationId?: string });
+
+  it('returns empty array when no connectors conflict with preconfigured', () => {
+    const connectors = [createConnector('custom-1'), createConnector('custom-2')];
+    const inMemoryConnectors = [
+      createMockInMemoryConnector({ id: 'preconfigured-slack', isPreconfigured: true }),
+    ];
+    expect(getPreconfiguredConflictWarnings(connectors, inMemoryConnectors)).toEqual([]);
+  });
+
+  it('returns warning when connector conflicts and was created with original id', () => {
+    const connectors = [createConnector('preconfigured-slack'), createConnector('custom-1')];
+    const inMemoryConnectors = [
+      createMockInMemoryConnector({ id: 'preconfigured-slack', isPreconfigured: true }),
+    ];
+    const warnings = getPreconfiguredConflictWarnings(connectors, inMemoryConnectors);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0].message).toMatch(/preconfigured/);
+  });
+
+  it('returns empty array when conflicting connector has destinationId (createNewCopies)', () => {
+    const connectors = [
+      createConnector('preconfigured-slack', 'new-uuid-12345'),
+      createConnector('custom-1'),
+    ];
+    const inMemoryConnectors = [
+      createMockInMemoryConnector({ id: 'preconfigured-slack', isPreconfigured: true }),
+    ];
+    expect(getPreconfiguredConflictWarnings(connectors, inMemoryConnectors)).toEqual([]);
   });
 });

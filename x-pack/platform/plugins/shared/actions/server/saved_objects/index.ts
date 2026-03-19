@@ -23,7 +23,7 @@ import {
 import { getActionsMigrations } from './actions_migrations';
 import { getActionTaskParamsMigrations } from './action_task_params_migrations';
 import type { InMemoryConnector, RawAction } from '../types';
-import { getImportWarnings } from './get_import_warnings';
+import { getImportWarnings, getPreconfiguredConflictWarnings } from './get_import_warnings';
 import { transformConnectorsForExport } from './transform_connectors_for_export';
 import type { ActionTypeRegistry } from '../action_type_registry';
 import {
@@ -70,8 +70,12 @@ export function setupSavedObjects(
         return transformConnectorsForExport(objects, actionTypeRegistry);
       },
       onImport(connectors) {
+        const typedConnectors = connectors as Array<SavedObject<RawAction>>;
         return {
-          warnings: getImportWarnings(connectors as Array<SavedObject<RawAction>>),
+          warnings: [
+            ...getImportWarnings(typedConnectors),
+            ...getPreconfiguredConflictWarnings(typedConnectors, inMemoryConnectors),
+          ],
         };
       },
     },

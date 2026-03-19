@@ -15,6 +15,7 @@ import { listTypesWithSystemRoute } from './connector/list_types_system';
 import type { ILicenseState } from '../lib';
 import type { ActionsRequestHandlerContext } from '../types';
 import { checkConnectorIdRoute } from './connector/check_id';
+import { getSkippedPreconfiguredConnectorIdsRoute } from './connector/skipped_preconfigured_connector_ids';
 import { createConnectorRoute } from './connector/create';
 import { deleteConnectorRoute } from './connector/delete';
 import { executeConnectorRoute } from './connector/execute';
@@ -54,7 +55,7 @@ export function defineRoutes(opts: RouteOptions) {
   getGlobalExecutionLogRoute(router, licenseState);
   getGlobalExecutionKPIRoute(router, licenseState);
   checkConnectorIdRoute(router, licenseState);
-
+  getSkippedPreconfiguredConnectorIdsRoute(router, licenseState);
   getOAuthAccessToken(router, licenseState, actionsConfigUtils);
   oauthAuthorizeRoute(router, licenseState, logger, core, oauthRateLimiter);
   oauthCallbackRoute(router, licenseState, actionsConfigUtils, logger, core, oauthRateLimiter);

@@ -517,15 +517,22 @@ export class ActionsClient {
       }
 
       if (foundInMemoryConnector?.isPreconfigured) {
-        throw new PreconfiguredActionDisabledModificationError(
-          i18n.translate('xpack.actions.serverSideErrors.predefinedActionDeleteDisabled', {
-            defaultMessage: 'Preconfigured action {id} is not allowed to delete.',
-            values: {
-              id,
-            },
-          }),
-          'delete'
-        );
+        const savedObjectExists = await this.context.unsecuredSavedObjectsClient
+          .get('action', id)
+          .then(() => true)
+          .catch(() => false);
+
+        if (!savedObjectExists) {
+          throw new PreconfiguredActionDisabledModificationError(
+            i18n.translate('xpack.actions.serverSideErrors.predefinedActionDeleteDisabled', {
+              defaultMessage: 'Preconfigured action {id} is not allowed to delete.',
+              values: {
+                id,
+              },
+            }),
+            'delete'
+          );
+        }
       }
     } catch (error) {
       this.context.auditLogger?.log(
