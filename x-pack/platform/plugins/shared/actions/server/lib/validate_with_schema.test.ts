@@ -234,6 +234,161 @@ test('should work with @kbn/zod v4', () => {
   `);
 });
 
+describe('Zod v4 config and secrets', () => {
+  test('validateConfig uses z4.prettifyError for v4 schema failures', () => {
+    const configSchema = z4.object({ apiUrl: z4.string() }).strict();
+    const actionType: ActionType = {
+      id: 'foo',
+      name: 'bar',
+      minimumLicenseRequired: 'basic',
+      supportedFeatureIds: ['alerting'],
+      executor,
+      validate: {
+        params: { schema: z4.object({}) },
+        config: { schema: configSchema },
+        secrets: { schema: z4.object({}) },
+        connector: () => null,
+      },
+    };
+
+    const result = validateConfig(
+      actionType,
+      { apiUrl: 'https://example.com' },
+      { configurationUtilities }
+    );
+    expect(result).toEqual({ apiUrl: 'https://example.com' });
+
+    expect(() => validateConfig(actionType, { apiUrl: 123 }, { configurationUtilities })).toThrow(
+      /error validating connector type config/
+    );
+    expect(() => validateConfig(actionType, { apiUrl: 123 }, { configurationUtilities })).toThrow(
+      /apiUrl|string|number/
+    );
+  });
+
+  test('validateSecrets uses z4.prettifyError for v4 schema failures', () => {
+    const secretsSchema = z4.object({ token: z4.string() }).strict();
+    const actionType: ActionType = {
+      id: 'foo',
+      name: 'bar',
+      minimumLicenseRequired: 'basic',
+      supportedFeatureIds: ['alerting'],
+      executor,
+      validate: {
+        params: { schema: z4.object({}) },
+        config: { schema: z4.object({}) },
+        secrets: { schema: secretsSchema },
+        connector: () => null,
+      },
+    };
+
+    const result = validateSecrets(
+      actionType,
+      { token: 'secret-token' },
+      { configurationUtilities }
+    );
+    expect(result).toEqual({ token: 'secret-token' });
+
+    expect(() => validateSecrets(actionType, { token: 456 }, { configurationUtilities })).toThrow(
+      /error validating connector type secrets/
+    );
+    expect(() => validateSecrets(actionType, { token: 456 }, { configurationUtilities })).toThrow(
+      /token|string|number/
+    );
+  });
+});
+
+describe('schema transforms and complex schemas', () => {
+  test('returns transformed value when schema has transform', () => {
+    const transformSchema = z4.object({ count: z4.number() }).transform((v) => ({
+      ...v,
+      doubled: v.count * 2,
+    }));
+    const actionType: ActionType = {
+      id: 'foo',
+      name: 'bar',
+      minimumLicenseRequired: 'basic',
+      supportedFeatureIds: ['alerting'],
+      executor,
+      validate: {
+        params: { schema: transformSchema },
+        config: { schema: z4.object({}) },
+        secrets: { schema: z4.object({}) },
+        connector: () => null,
+      },
+    };
+
+    const result = validateParams(actionType, { count: 5 }, { configurationUtilities });
+    expect(result).toEqual({ count: 5, doubled: 10 });
+  });
+
+  test('validates optional and nullable fields', () => {
+    const schema = z4.object({
+      required: z4.string(),
+      optional: z4.string().optional(),
+      nullable: z4.string().nullable(),
+    });
+    const actionType: ActionType = {
+      id: 'foo',
+      name: 'bar',
+      minimumLicenseRequired: 'basic',
+      supportedFeatureIds: ['alerting'],
+      executor,
+      validate: {
+        params: { schema },
+        config: { schema: z4.object({}) },
+        secrets: { schema: z4.object({}) },
+        connector: () => null,
+      },
+    };
+
+    const result = validateParams(
+      actionType,
+      { required: 'x', nullable: null },
+      { configurationUtilities }
+    );
+    expect(result).toEqual({ required: 'x', nullable: null });
+  });
+
+  test('validates union schema', () => {
+    const unionSchema = z4.union([
+      z4.object({ type: z4.literal('a'), value: z4.string() }),
+      z4.object({ type: z4.literal('b'), value: z4.number() }),
+    ]);
+    const actionType: ActionType = {
+      id: 'foo',
+      name: 'bar',
+      minimumLicenseRequired: 'basic',
+      supportedFeatureIds: ['alerting'],
+      executor,
+      validate: {
+        params: { schema: unionSchema },
+        config: { schema: z4.object({}) },
+        secrets: { schema: z4.object({}) },
+        connector: () => null,
+      },
+    };
+
+    const resultA = validateParams(
+      actionType,
+      { type: 'a', value: 'hello' },
+      { configurationUtilities }
+    );
+    expect(resultA).toEqual({ type: 'a', value: 'hello' });
+
+    const resultB = validateParams(
+      actionType,
+      { type: 'b', value: 42 },
+      { configurationUtilities }
+    );
+    expect(resultB).toEqual({ type: 'b', value: 42 });
+
+    expect(() =>
+      validateParams(actionType, { type: 'c', value: 1 }, { configurationUtilities })
+    ).toThrow();
+  });
+});
+
 test('should validate when custom validator is defined', () => {
   const schemaValidator = {
     parse: (value: ActionTypeParams | ActionTypeConfig | ActionTypeSecrets) => value,

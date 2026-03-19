@@ -261,6 +261,27 @@ describe('Executor', () => {
     `);
   });
 
+  it('includes Zod v4 error format in validation failure message', async () => {
+    const executor = createExecutor(TestExecutor);
+
+    try {
+      await executor({
+        actionId,
+        params: { subAction: 'echo', subActionParams: { wrongKey: 'value' } },
+        config,
+        secrets,
+        services,
+        configurationUtilities: mockedActionsConfig,
+        logger,
+        connectorUsageCollector,
+      });
+    } catch (e) {
+      expect(e.message).toMatch(/Request validation failed/);
+      expect(e.message).toMatch(/✖|Invalid input|expected string|received/);
+      expect(e.message).toMatch(/→ at|id/);
+    }
+  });
+
   it('Passes connectorUsageCollector to the subAction method as a second param', async () => {
     let echoSpy;
 

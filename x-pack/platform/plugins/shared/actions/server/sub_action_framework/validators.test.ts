@@ -151,4 +151,115 @@ describe('Validators', () => {
       expect.anything()
     );
   });
+
+  it('propagates error when config validator throws', () => {
+    const configValidator = jest.fn().mockImplementation(() => {
+      throw new Error('Config validation failed');
+    });
+    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
+      id: '.test',
+      name: 'Test',
+      minimumLicenseRequired: 'basic' as const,
+      supportedFeatureIds: ['alerting'],
+      schema: {
+        config: TestConfigSchema,
+        secrets: TestSecretsSchema,
+      },
+      validators: [
+        {
+          type: ValidatorType.CONFIG,
+          validator: configValidator,
+        },
+      ],
+      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
+        new TestSubActionConnector(serviceParams),
+    };
+
+    const { config } = buildValidators({
+      configurationUtilities: mockedActionsConfig,
+      connector,
+    });
+
+    expect(() =>
+      config.customValidator?.(
+        { url: 'http://www.example.com' },
+        { configurationUtilities: mockedActionsConfig }
+      )
+    ).toThrow('Config validation failed');
+  });
+
+  it('propagates error when secrets validator throws', () => {
+    const secretsValidator = jest.fn().mockImplementation(() => {
+      throw new Error('Secrets validation failed');
+    });
+    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
+      id: '.test',
+      name: 'Test',
+      minimumLicenseRequired: 'basic' as const,
+      supportedFeatureIds: ['alerting'],
+      schema: {
+        config: TestConfigSchema,
+        secrets: TestSecretsSchema,
+      },
+      validators: [
+        {
+          type: ValidatorType.SECRETS,
+          validator: secretsValidator,
+        },
+      ],
+      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
+        new TestSubActionConnector(serviceParams),
+    };
+
+    const { secrets } = buildValidators({
+      configurationUtilities: mockedActionsConfig,
+      connector,
+    });
+
+    expect(() =>
+      secrets.customValidator?.(
+        { username: 'u', password: 'p' },
+        { configurationUtilities: mockedActionsConfig }
+      )
+    ).toThrow('Secrets validation failed');
+  });
+
+  it('runs multiple config validators in sequence', () => {
+    const validator1 = jest.fn();
+    const validator2 = jest.fn();
+    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
+      id: '.test',
+      name: 'Test',
+      minimumLicenseRequired: 'basic' as const,
+      supportedFeatureIds: ['alerting'],
+      schema: {
+        config: TestConfigSchema,
+        secrets: TestSecretsSchema,
+      },
+      validators: [
+        { type: ValidatorType.CONFIG, validator: validator1 },
+        { type: ValidatorType.CONFIG, validator: validator2 },
+      ],
+      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
+        new TestSubActionConnector(serviceParams),
+    };
+
+    const { config } = buildValidators({
+      configurationUtilities: mockedActionsConfig,
+      connector,
+    });
+
+    const configValue = { url: 'http://example.com' };
+    config.customValidator?.(configValue, { configurationUtilities: mockedActionsConfig });
+
+    expect(validator1).toHaveBeenCalledWith(configValue, expect.anything());
+    expect(validator2).toHaveBeenCalledWith(configValue, expect.anything());
+  });
+
+  it('params schema parse failure throws', () => {
+    const validator = createValidator(TestSubActionConnector);
+    const { params } = validator;
+
+    expect(() => params.schema.parse({ subAction: 'test', subActionParams: 'invalid' })).toThrow();
+  });
 });

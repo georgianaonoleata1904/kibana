@@ -15,6 +15,8 @@ import { TestSubActionConnector } from './mocks';
 import type { ActionsConfigurationUtilities } from '../actions_config';
 import * as utils from '../lib/axios_utils';
 import { ConnectorUsageCollector } from '../usage';
+import { z as z3 } from '@kbn/zod';
+import { SubActionConnector } from './sub_action_connector';
 
 jest.mock('axios');
 
@@ -224,6 +226,63 @@ describe('SubActionConnector', () => {
           }
         ])"
       `);
+    });
+
+    it('logs response data via debug when response validation fails', async () => {
+      const invalidData = { invalidField: 'test' };
+      requestMock.mockReturnValue({ data: invalidData });
+
+      await expect(async () =>
+        service.testUrl({ url: 'https://example.com' }, connectorUsageCollector)
+      ).rejects.toThrow('Response validation failed');
+
+      // logger.debug is called lazily with a function — resolve it and check the output
+      const debugCalls = (logger.debug as jest.Mock).mock.calls;
+      const lazyCall = debugCalls.find((args) => typeof args[0] === 'function');
+      expect(lazyCall).toBeDefined();
+      const message = lazyCall![0]();
+      expect(message).toContain('Response validation failed');
+      expect(message).toContain('invalidField');
+    });
+
+    it('validates the response correctly with a zod v3 schema', async () => {
+      // Create a connector subclass that uses a zod v3 responseSchema
+      class V3SchemaConnector extends SubActionConnector<
+        { url: string },
+        { username: string; password: string }
+      > {
+        protected getResponseErrorMessage(error: AxiosError) {
+          return `Error: ${error.message}`;
+        }
+
+        public async testV3(usageCollector: ConnectorUsageCollector) {
+          return this.request(
+            {
+              url: 'https://example.com',
+              responseSchema: z3.object({ status: z3.string() }),
+            },
+            usageCollector
+          );
+        }
+      }
+
+      const v3Service = new V3SchemaConnector({
+        configurationUtilities: mockedActionsConfig,
+        logger,
+        connector: { id: 'test-id', type: '.test' },
+        config: { url: 'https://example.com' },
+        secrets: { username: 'elastic', password: 'changeme' },
+        services,
+      });
+
+      requestMock.mockReturnValue({ data: { status: 'ok' } });
+      const res = await v3Service.testV3(connectorUsageCollector);
+      expect(res.data).toEqual({ status: 'ok' });
+
+      requestMock.mockReturnValue({ data: { wrongField: 123 } });
+      await expect(() => v3Service.testV3(connectorUsageCollector)).rejects.toThrow(
+        /Response validation failed/
+      );
     });
 
     it('formats the response error correctly', async () => {
