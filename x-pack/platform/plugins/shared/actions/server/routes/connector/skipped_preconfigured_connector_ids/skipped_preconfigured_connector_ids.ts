@@ -6,21 +6,12 @@
  */
 
 import type { IRouter } from '@kbn/core/server';
-import { schema } from '@kbn/config-schema';
 import type { ILicenseState } from '../../../lib';
 import { BASE_ACTION_API_PATH } from '../../../../common';
 import type { ActionsRequestHandlerContext } from '../../../types';
 import { verifyAccessAndContext } from '../../verify_access_and_context';
 import { DEFAULT_ACTION_ROUTE_SECURITY } from '../../constants';
-
-const responseSchema = schema.object({
-  skippedPreconfiguredConnectorIds: schema.arrayOf(schema.string(), {
-    meta: {
-      description:
-        'Preconfigured connector IDs that were skipped because they conflict with existing saved connectors.',
-    },
-  }),
-});
+import { getSkippedPreconfiguredConnectorIdsResponseSchemaV1 } from '../../../../common/routes/connector/apis/skipped_preconfigured_connector_ids';
 
 export const getSkippedPreconfiguredConnectorIdsRoute = (
   router: IRouter<ActionsRequestHandlerContext>,
@@ -31,7 +22,7 @@ export const getSkippedPreconfiguredConnectorIdsRoute = (
       path: `${BASE_ACTION_API_PATH}/connector/_conflicted_ids`,
       security: DEFAULT_ACTION_ROUTE_SECURITY,
       options: {
-        access: 'public',
+        access: 'internal',
         summary: 'Get preconfigured connector IDs that were skipped due to conflicts',
         description:
           'Returns preconfigured connector IDs that were skipped because they conflict with existing connectors.',
@@ -41,7 +32,7 @@ export const getSkippedPreconfiguredConnectorIdsRoute = (
         request: {},
         response: {
           200: {
-            body: () => responseSchema,
+            body: () => getSkippedPreconfiguredConnectorIdsResponseSchemaV1,
             description:
               'Returns preconfigured connector IDs that were skipped because they conflict with existing connectors.',
           },
@@ -52,7 +43,7 @@ export const getSkippedPreconfiguredConnectorIdsRoute = (
       verifyAccessAndContext(licenseState, async function (context, req, res) {
         const skippedIds = (await context.actions).getSkippedPreconfiguredConnectorIds();
         return res.ok({
-          body: { skippedPreconfiguredConnectorIds: Array.from(skippedIds) },
+          body: { skipped_preconfigured_connector_ids: Array.from(skippedIds) },
         });
       })
     )

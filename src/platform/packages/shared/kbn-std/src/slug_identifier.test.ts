@@ -39,24 +39,14 @@ describe('slug_identifier', () => {
       expect(toSlugIdentifier()).toEqual('');
     });
 
-    it('trims trailing hyphens', () => {
-      expect(toSlugIdentifier('slack ')).toEqual('slack');
-      expect(toSlugIdentifier('test!!!')).toEqual('test');
-    });
-
     it('trims leading hyphens', () => {
       expect(toSlugIdentifier(' slack')).toEqual('slack');
       expect(toSlugIdentifier('!!!test')).toEqual('test');
     });
 
-    it('trims both leading and trailing hyphens', () => {
-      expect(toSlugIdentifier(' slack ')).toEqual('slack');
-      expect(toSlugIdentifier('  my connector  ')).toEqual('my-connector');
-    });
-
     it('handles mixed cases and special characters', () => {
-      expect(toSlugIdentifier('My Email Connector (Production)')).toEqual(
-        'my-email-connector--production'
+      expect(toSlugIdentifier('My Email Connector-Production ')).toEqual(
+        'my-email-connector-production-'
       );
     });
   });
@@ -89,8 +79,8 @@ describe('slug_identifier', () => {
       expect(isValidSlugIdentifier('-my-connector')).toBe(false);
     });
 
-    it('returns false for identifiers with trailing hyphens', () => {
-      expect(isValidSlugIdentifier('my-connector-')).toBe(false);
+    it('returns true for identifiers with trailing hyphens', () => {
+      expect(isValidSlugIdentifier('my-connector-')).toBe(true);
     });
   });
 });

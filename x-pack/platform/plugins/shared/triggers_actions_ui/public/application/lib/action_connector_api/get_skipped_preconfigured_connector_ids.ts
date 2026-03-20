@@ -7,16 +7,19 @@
 import type { HttpSetup } from '@kbn/core/public';
 import { BASE_ACTION_API_PATH } from '../../constants';
 
-interface SkippedPreconfiguredConnectorIdsResponse {
+export interface SkippedPreconfiguredConnectorIdsResponse {
   skippedPreconfiguredConnectorIds: string[];
 }
 
-export const getSkippedPreconfiguredConnectorIds = ({
+export const getSkippedPreconfiguredConnectorIds = async ({
   http,
 }: {
   http: HttpSetup;
 }): Promise<SkippedPreconfiguredConnectorIdsResponse> => {
-  return http.get<SkippedPreconfiguredConnectorIdsResponse>(
-    `${BASE_ACTION_API_PATH}/connector/_conflicted_ids`
-  );
+  const { skipped_preconfigured_connector_ids } = await http.get<{
+    skipped_preconfigured_connector_ids: string[];
+  }>(`${BASE_ACTION_API_PATH}/connector/_conflicted_ids`);
+  return {
+    skippedPreconfiguredConnectorIds: skipped_preconfigured_connector_ids,
+  };
 };

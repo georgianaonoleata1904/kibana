@@ -35,7 +35,7 @@ describe('ConnectorFormFieldsGlobal', () => {
     jest.clearAllMocks();
     const httpMock = httpServiceMock.createStartContract();
     useKibanaMock().services.http = httpMock;
-    checkConnectorIdAvailability.mockResolvedValue({ isConnectorIdAvailable: true });
+    checkConnectorIdAvailability.mockResolvedValue({ is_available: true });
   });
 
   it('submits correctly', async () => {
@@ -88,7 +88,7 @@ describe('ConnectorFormFieldsGlobal', () => {
   });
 
   it('shows error when connector ID is already in use', async () => {
-    checkConnectorIdAvailability.mockResolvedValue({ isConnectorIdAvailable: false });
+    checkConnectorIdAvailability.mockResolvedValue({ is_available: false });
 
     render(
       <FormTestProvider onSubmit={onSubmit} defaultValue={defaultValue}>
@@ -105,6 +105,27 @@ describe('ConnectorFormFieldsGlobal', () => {
         expect(
           screen.getByText('A connector with this ID already exists. Please choose a different ID.')
         ).toBeInTheDocument();
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  it('shows error when connector ID availability check fails', async () => {
+    checkConnectorIdAvailability.mockRejectedValue(new Error('Network error'));
+
+    render(
+      <FormTestProvider onSubmit={onSubmit} defaultValue={defaultValue}>
+        <ConnectorFormFieldsGlobal canSave={true} isEdit={false} />
+      </FormTestProvider>
+    );
+
+    const idInput = screen.getByTestId('connectorIdInput');
+    await userEvent.clear(idInput);
+    await userEvent.type(idInput, 'some-connector-id');
+
+    await waitFor(
+      () => {
+        expect(screen.getByText('Unable to verify connector ID availability.')).toBeInTheDocument();
       },
       { timeout: 2000 }
     );

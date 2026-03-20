@@ -516,13 +516,13 @@ export class ActionsClient {
         );
       }
 
-      if (foundInMemoryConnector?.isPreconfigured) {
-        const savedObjectExists = await this.context.unsecuredSavedObjectsClient
-          .get('action', id)
-          .then(() => true)
-          .catch(() => false);
+      const userConfiguredActionExists = await this.context.unsecuredSavedObjectsClient
+        .get('action', id)
+        .then(() => true)
+        .catch(() => false);
 
-        if (!savedObjectExists) {
+      if (foundInMemoryConnector?.isPreconfigured) {
+        if (!userConfiguredActionExists) {
           throw new PreconfiguredActionDisabledModificationError(
             i18n.translate('xpack.actions.serverSideErrors.predefinedActionDeleteDisabled', {
               defaultMessage: 'Preconfigured action {id} is not allowed to delete.',

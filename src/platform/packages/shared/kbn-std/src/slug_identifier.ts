@@ -11,7 +11,7 @@
  * Converts a string value to a URL-safe slug identifier.
  * - Converts to lowercase
  * - Replaces non-alphanumeric characters (except underscores) with hyphens
- * - Trims leading and trailing hyphens
+ * - Trims leading hyphens
  *
  * @param value - The string to convert
  * @returns A slugified identifier
@@ -27,10 +27,6 @@ export function toSlugIdentifier(value = ''): string {
   while (result.startsWith('-')) {
     result = result.slice(1);
   }
-  while (result.endsWith('-')) {
-    result = result.slice(0, -1);
-  }
-
   return result;
 }
 

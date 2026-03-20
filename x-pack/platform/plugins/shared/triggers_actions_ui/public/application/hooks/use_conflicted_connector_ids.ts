@@ -16,6 +16,7 @@ export const useSkippedPreconfiguredConnectorIds = () => {
     queryKey: ['skippedPreconfiguredConnectorIds'],
     queryFn: () => getSkippedPreconfiguredConnectorIds({ http }),
     refetchOnWindowFocus: false,
+    staleTime: Infinity,
   });
 
   return {

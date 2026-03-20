@@ -14,31 +14,29 @@ beforeEach(() => jest.resetAllMocks());
 
 describe('checkConnectorIdAvailability', () => {
   it('calls the check availability endpoint with the correct parameters', async () => {
-    http.get.mockResolvedValueOnce({ connectorIdAvailable: true });
+    http.get.mockResolvedValueOnce({ is_available: true });
 
     const result = await checkConnectorIdAvailability({ http, id: 'my-connector-id' });
 
-    expect(http.get).toHaveBeenCalledWith(
-      '/api/actions/connector/my-connector-id/_check_availability'
-    );
-    expect(result).toEqual({ connectorIdAvailable: true });
+    expect(http.get).toHaveBeenCalledWith('/api/actions/connector/my-connector-id/_availability');
+    expect(result).toEqual({ isAvailable: true });
   });
 
   it('properly encodes special characters in the id', async () => {
-    http.get.mockResolvedValueOnce({ connectorIdAvailable: false });
+    http.get.mockResolvedValueOnce({ is_available: false });
 
     await checkConnectorIdAvailability({ http, id: 'my connector/id' });
 
     expect(http.get).toHaveBeenCalledWith(
-      '/api/actions/connector/my%20connector%2Fid/_check_availability'
+      '/api/actions/connector/my%20connector%2Fid/_availability'
     );
   });
 
-  it('returns connectorIdAvailable: false when connector exists', async () => {
-    http.get.mockResolvedValueOnce({ connectorIdAvailable: false });
+  it('returns is_available: false when connector exists', async () => {
+    http.get.mockResolvedValueOnce({ is_available: false });
 
     const result = await checkConnectorIdAvailability({ http, id: 'existing-id' });
 
-    expect(result.connectorIdAvailable).toBe(false);
+    expect(result.isAvailable).toBe(false);
   });
 });

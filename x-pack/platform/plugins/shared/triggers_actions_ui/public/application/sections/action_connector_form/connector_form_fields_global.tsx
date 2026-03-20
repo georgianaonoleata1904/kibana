@@ -40,6 +40,13 @@ const CONNECTOR_ID_EXISTS_ERROR = i18n.translate(
   }
 );
 
+const CONNECTOR_ID_CHECK_FAILED_ERROR = i18n.translate(
+  'xpack.triggersActionsUI.sections.actionConnectorForm.error.connectorIdCheckFailed',
+  {
+    defaultMessage: 'Unable to verify connector ID availability.',
+  }
+);
+
 const CONNECTOR_ID_MAX_LENGTH = 36;
 
 const nameConfig: FieldConfig<{ name: string }, ConnectorFormData> = {
@@ -139,7 +146,7 @@ const ConnectorFormFieldsGlobalComponent: React.FC<ConnectorFormFieldsProps> = (
 
   useEffect(() => {
     if (!isEdit && !usingCustomIdentifier && name) {
-      const slug = toSlugIdentifier(name).slice(0, CONNECTOR_ID_MAX_LENGTH).replace(/-+$/, '');
+      const slug = toSlugIdentifier(name).slice(0, CONNECTOR_ID_MAX_LENGTH);
       setFieldValue('id', slug);
     }
   }, [name, isEdit, setFieldValue, usingCustomIdentifier]);
@@ -162,9 +169,9 @@ const ConnectorFormFieldsGlobalComponent: React.FC<ConnectorFormFieldsProps> = (
 
       try {
         const response = await checkConnectorIdAvailability({ http, id });
-        idExistsErrorRef.current = response.connectorIdAvailable ? null : CONNECTOR_ID_EXISTS_ERROR;
+        idExistsErrorRef.current = response.isAvailable ? null : CONNECTOR_ID_EXISTS_ERROR;
       } catch {
-        idExistsErrorRef.current = null;
+        idExistsErrorRef.current = CONNECTOR_ID_CHECK_FAILED_ERROR;
       }
       validateFields(['id']);
     },

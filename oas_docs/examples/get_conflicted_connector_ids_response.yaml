@@ -1,4 +1,4 @@
 summary: Get conflicted preconfigured connector IDs.
 value:
-  skippedPreconfiguredConnectorIds:
+  skipped_preconfigured_connector_ids:
     - my-preconfigured-connector

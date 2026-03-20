@@ -37,7 +37,9 @@ describe('checkConnectorIdRoute', () => {
 
     const [config, handler] = router.get.mock.calls[0];
 
-    expect(config.path).toMatchInlineSnapshot(`"/api/actions/connector/{id}/_check_availability"`);
+    expect(config.path).toMatchInlineSnapshot(
+      `"/api/actions/connector/{connector_id}/_availability"`
+    );
 
     const actionsClient = actionsClientMock.create();
     actionsClient.get.mockResolvedValueOnce(
@@ -51,15 +53,19 @@ describe('checkConnectorIdRoute', () => {
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },
       {
-        params: { id: 'existing-connector' },
+        params: { connector_id: 'existing-connector' },
       },
       ['ok']
     );
 
     await handler(context, req, res);
 
+    expect(actionsClient.get).toHaveBeenCalledWith({
+      id: 'existing-connector',
+      throwIfSystemAction: false,
+    });
     expect(res.ok).toHaveBeenCalledWith({
-      body: { connectorIdAvailable: false },
+      body: { is_available: false },
     });
   });
 
@@ -77,7 +83,7 @@ describe('checkConnectorIdRoute', () => {
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },
       {
-        params: { id: 'new-connector-id' },
+        params: { connector_id: 'new-connector-id' },
       },
       ['ok']
     );
@@ -85,7 +91,7 @@ describe('checkConnectorIdRoute', () => {
     await handler(context, req, res);
 
     expect(res.ok).toHaveBeenCalledWith({
-      body: { connectorIdAvailable: true },
+      body: { is_available: true },
     });
   });
 
@@ -103,7 +109,7 @@ describe('checkConnectorIdRoute', () => {
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },
       {
-        params: { id: 'some-connector-id' },
+        params: { connector_id: 'some-connector-id' },
       },
       ['ok']
     );
@@ -125,7 +131,7 @@ describe('checkConnectorIdRoute', () => {
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },
       {
-        params: { id: 'test-id' },
+        params: { connector_id: 'test-id' },
       },
       ['ok']
     );

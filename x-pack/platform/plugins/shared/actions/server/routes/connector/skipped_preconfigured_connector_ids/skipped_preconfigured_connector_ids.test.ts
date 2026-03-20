@@ -50,7 +50,7 @@ describe('getSkippedPreconfiguredConnectorIdsRoute', () => {
     await handler(context, req, res);
 
     expect(res.ok).toHaveBeenCalledWith({
-      body: { skippedPreconfiguredConnectorIds: ['connector-a', 'connector-b'] },
+      body: { skipped_preconfigured_connector_ids: ['connector-a', 'connector-b'] },
     });
   });
 
@@ -67,7 +67,7 @@ describe('getSkippedPreconfiguredConnectorIdsRoute', () => {
     await handler(context, req, res);
 
     expect(res.ok).toHaveBeenCalledWith({
-      body: { skippedPreconfiguredConnectorIds: [] },
+      body: { skipped_preconfigured_connector_ids: [] },
     });
   });
 

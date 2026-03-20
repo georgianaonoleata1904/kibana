@@ -6,23 +6,16 @@
  */
 
 import type { IRouter } from '@kbn/core/server';
-import { schema } from '@kbn/config-schema';
 import type { ILicenseState } from '../../../lib';
 import { BASE_ACTION_API_PATH } from '../../../../common';
 import type { ActionsRequestHandlerContext } from '../../../types';
 import { verifyAccessAndContext } from '../../verify_access_and_context';
 import { DEFAULT_ACTION_ROUTE_SECURITY } from '../../constants';
-
-const paramsSchema = schema.object({
-  id: schema.string({
-    minLength: 1,
-    meta: { description: 'An identifier for the connector.' },
-  }),
-});
-
-const responseSchema = schema.object({
-  connectorIdAvailable: schema.boolean(),
-});
+import {
+  checkConnectorIdParamsSchemaV1,
+  checkConnectorIdResponseSchemaV1,
+} from '../../../../common/routes/connector/apis/check_id';
+import type { CheckConnectorIdParamsV1 } from '../../../../common/routes/connector/apis/check_id';
 
 export const checkConnectorIdRoute = (
   router: IRouter<ActionsRequestHandlerContext>,
@@ -30,20 +23,20 @@ export const checkConnectorIdRoute = (
 ) => {
   router.get(
     {
-      path: `${BASE_ACTION_API_PATH}/connector/{id}/_check_availability`,
+      path: `${BASE_ACTION_API_PATH}/connector/{connector_id}/_availability`,
       security: DEFAULT_ACTION_ROUTE_SECURITY,
       options: {
-        access: 'public',
+        access: 'internal',
         summary: 'Check if a connector ID is available',
         tags: ['oas-tag:connectors'],
       },
       validate: {
         request: {
-          params: paramsSchema,
+          params: checkConnectorIdParamsSchemaV1,
         },
         response: {
           200: {
-            body: () => responseSchema,
+            body: () => checkConnectorIdResponseSchemaV1,
             description: 'Returns whether the connector ID is available.',
           },
         },
@@ -52,17 +45,17 @@ export const checkConnectorIdRoute = (
     router.handleLegacyErrors(
       verifyAccessAndContext(licenseState, async function (context, req, res) {
         const actionsClient = (await context.actions).getActionsClient();
-        const { id } = req.params;
+        const { connector_id }: CheckConnectorIdParamsV1 = req.params;
 
         try {
-          await actionsClient.get({ id, throwIfSystemAction: false });
+          await actionsClient.get({ id: connector_id, throwIfSystemAction: false });
           return res.ok({
-            body: { connectorIdAvailable: false },
+            body: { is_available: false },
           });
         } catch (error) {
           if (error?.output?.statusCode === 404) {
             return res.ok({
-              body: { connectorIdAvailable: true },
+              body: { is_available: true },
             });
           }
           throw error;

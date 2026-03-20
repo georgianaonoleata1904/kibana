@@ -861,13 +861,14 @@ export class ActionsPlugin
 
     const internalRepo = core.savedObjects.createInternalRepository([ACTION_SAVED_OBJECT_TYPE]);
 
-    internalRepo
-      .find({
-        type: ACTION_SAVED_OBJECT_TYPE,
-        perPage: 1000,
-        namespaces: ['*'],
-      })
-      .then(({ saved_objects: savedObjects }) => {
+    void (async () => {
+      try {
+        const result = await internalRepo.find({
+          type: ACTION_SAVED_OBJECT_TYPE,
+          perPage: 1000,
+          namespaces: ['*'],
+        });
+        const savedObjects = result?.saved_objects ?? [];
         const conflictingIds = savedObjects
           .filter((so) => preconfiguredIds.has(so.id))
           .map((so) => so.id);
@@ -888,10 +889,10 @@ export class ActionsPlugin
             })
           );
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         this.logger.warn(`Failed to check for preconfigured connector conflicts: ${err.message}`);
-      });
+      }
+    })();
   };
 
   private throwIfSystemActionsInConfig = () => {

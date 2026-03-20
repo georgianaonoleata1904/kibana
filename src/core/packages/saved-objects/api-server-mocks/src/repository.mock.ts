@@ -20,7 +20,7 @@ const create = () => {
     bulkDelete: jest.fn(),
     delete: jest.fn(),
     bulkGet: jest.fn(),
-    find: jest.fn(),
+    find: jest.fn().mockResolvedValue({ saved_objects: [], total: 0, per_page: 0, page: 0 }),
     search: jest.fn(),
     get: jest.fn(),
     closePointInTime: jest.fn(),

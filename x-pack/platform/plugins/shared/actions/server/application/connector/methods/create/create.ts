@@ -18,6 +18,7 @@ import type { HookServices, ActionResult } from '../../../../types';
 import { tryCatch } from '../../../../lib';
 import { invokePostCreateListeners } from '../../../../lib/invoke_lifecycle_listeners';
 import { inferAuthMode } from '../../../../lib/infer_auth_mode';
+import { validateConnectorId } from '../../../../../common/validate_connector_id';
 
 export async function create({
   context,
@@ -25,6 +26,10 @@ export async function create({
   options,
 }: ConnectorCreateParams): Promise<ActionResult> {
   const id = options?.id || SavedObjectsUtils.generateId();
+
+  if (options?.id) {
+    validateConnectorId(options.id);
+  }
 
   try {
     await context.authorization.ensureAuthorized({
