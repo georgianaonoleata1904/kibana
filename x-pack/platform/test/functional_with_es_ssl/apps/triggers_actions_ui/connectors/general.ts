@@ -360,7 +360,9 @@ export default ({ getPageObjects, getPageObject, getService }: FtrProviderContex
       expect(await testSubjects.exists('deleteConnector')).to.be(false);
       expect(await testSubjects.exists('preConfiguredTitleMessage')).to.be(true);
 
-      const checkboxSelectRow = await testSubjects.find('checkboxSelectRow-my-server-log');
+      const checkboxSelectRow = await testSubjects.find(
+        'checkboxSelectRow-preconfigured_my-server-log'
+      );
       expect(await checkboxSelectRow.getAttribute('disabled')).to.be('true');
     });
 
