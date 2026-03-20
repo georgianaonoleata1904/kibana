@@ -201,8 +201,8 @@ test('should work with @kbn/zod v4', () => {
 });
 
 describe('Zod v4 config and secrets', () => {
-  test('validateConfig uses z4.prettifyError for v4 schema failures', () => {
-    const configSchema = z4.object({ apiUrl: z4.string() }).strict();
+  test('validateConfig uses z.prettifyError for v4 schema failures', () => {
+    const configSchema = z.object({ apiUrl: z.string() }).strict();
     const actionType: ActionType = {
       id: 'foo',
       name: 'bar',
@@ -210,9 +210,9 @@ describe('Zod v4 config and secrets', () => {
       supportedFeatureIds: ['alerting'],
       executor,
       validate: {
-        params: { schema: z4.object({}) },
+        params: { schema: z.object({}) },
         config: { schema: configSchema },
-        secrets: { schema: z4.object({}) },
+        secrets: { schema: z.object({}) },
         connector: () => null,
       },
     };
@@ -232,8 +232,8 @@ describe('Zod v4 config and secrets', () => {
     );
   });
 
-  test('validateSecrets uses z4.prettifyError for v4 schema failures', () => {
-    const secretsSchema = z4.object({ token: z4.string() }).strict();
+  test('validateSecrets uses z.prettifyError for v4 schema failures', () => {
+    const secretsSchema = z.object({ token: z.string() }).strict();
     const actionType: ActionType = {
       id: 'foo',
       name: 'bar',
@@ -241,8 +241,8 @@ describe('Zod v4 config and secrets', () => {
       supportedFeatureIds: ['alerting'],
       executor,
       validate: {
-        params: { schema: z4.object({}) },
-        config: { schema: z4.object({}) },
+        params: { schema: z.object({}) },
+        config: { schema: z.object({}) },
         secrets: { schema: secretsSchema },
         connector: () => null,
       },
@@ -266,7 +266,7 @@ describe('Zod v4 config and secrets', () => {
 
 describe('schema transforms and complex schemas', () => {
   test('returns transformed value when schema has transform', () => {
-    const transformSchema = z4.object({ count: z4.number() }).transform((v) => ({
+    const transformSchema = z.object({ count: z.number() }).transform((v) => ({
       ...v,
       doubled: v.count * 2,
     }));
@@ -278,8 +278,8 @@ describe('schema transforms and complex schemas', () => {
       executor,
       validate: {
         params: { schema: transformSchema },
-        config: { schema: z4.object({}) },
-        secrets: { schema: z4.object({}) },
+        config: { schema: z.object({}) },
+        secrets: { schema: z.object({}) },
         connector: () => null,
       },
     };
@@ -289,10 +289,10 @@ describe('schema transforms and complex schemas', () => {
   });
 
   test('validates optional and nullable fields', () => {
-    const schema = z4.object({
-      required: z4.string(),
-      optional: z4.string().optional(),
-      nullable: z4.string().nullable(),
+    const schema = z.object({
+      required: z.string(),
+      optional: z.string().optional(),
+      nullable: z.string().nullable(),
     });
     const actionType: ActionType = {
       id: 'foo',
@@ -302,8 +302,8 @@ describe('schema transforms and complex schemas', () => {
       executor,
       validate: {
         params: { schema },
-        config: { schema: z4.object({}) },
-        secrets: { schema: z4.object({}) },
+        config: { schema: z.object({}) },
+        secrets: { schema: z.object({}) },
         connector: () => null,
       },
     };
@@ -317,9 +317,9 @@ describe('schema transforms and complex schemas', () => {
   });
 
   test('validates union schema', () => {
-    const unionSchema = z4.union([
-      z4.object({ type: z4.literal('a'), value: z4.string() }),
-      z4.object({ type: z4.literal('b'), value: z4.number() }),
+    const unionSchema = z.union([
+      z.object({ type: z.literal('a'), value: z.string() }),
+      z.object({ type: z.literal('b'), value: z.number() }),
     ]);
     const actionType: ActionType = {
       id: 'foo',
@@ -329,8 +329,8 @@ describe('schema transforms and complex schemas', () => {
       executor,
       validate: {
         params: { schema: unionSchema },
-        config: { schema: z4.object({}) },
-        secrets: { schema: z4.object({}) },
+        config: { schema: z.object({}) },
+        secrets: { schema: z.object({}) },
         connector: () => null,
       },
     };

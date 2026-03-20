@@ -16,6 +16,7 @@ import type { ActionsConfigurationUtilities } from '../actions_config';
 import * as utils from '../lib/axios_utils';
 import { ConnectorUsageCollector } from '../usage';
 import { z as z3 } from '@kbn/zod';
+import type { z } from '@kbn/zod/v4';
 import { SubActionConnector } from './sub_action_connector';
 
 jest.mock('axios');
@@ -259,7 +260,9 @@ describe('SubActionConnector', () => {
           return this.request(
             {
               url: 'https://example.com',
-              responseSchema: z3.object({ status: z3.string() }),
+              responseSchema: z3.object({ status: z3.string() }) as unknown as z.ZodType<{
+                status: string;
+              }>,
             },
             usageCollector
           );
