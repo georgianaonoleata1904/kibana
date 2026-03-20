@@ -1,0 +1,3 @@
+summary: Check connector ID availability.
+value:
+  connectorIdAvailable: true

@@ -14,7 +14,10 @@ import { verifyAccessAndContext } from '../../verify_access_and_context';
 import { DEFAULT_ACTION_ROUTE_SECURITY } from '../../constants';
 
 const paramsSchema = schema.object({
-  id: schema.string({ minLength: 1 }),
+  id: schema.string({
+    minLength: 1,
+    meta: { description: 'An identifier for the connector.' },
+  }),
 });
 
 const responseSchema = schema.object({
