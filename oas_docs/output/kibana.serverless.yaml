@@ -437,6 +437,9 @@ paths:
                     type: array
                 required:
                   - skippedPreconfiguredConnectorIds
+              examples:
+                getConflictedIdsResponse:
+                  $ref: '#/components/examples/get_conflicted_connector_ids_response'
           description: Returns preconfigured connector IDs that were skipped because they conflict with existing connectors.
       summary: Get preconfigured connector IDs that were skipped due to conflicts
       tags:
@@ -953,7 +956,8 @@ paths:
     get:
       operationId: get-actions-connector-id-check-availability
       parameters:
-        - in: path
+        - description: An identifier for the connector.
+          in: path
           name: id
           required: true
           schema:
@@ -971,6 +975,9 @@ paths:
                     type: boolean
                 required:
                   - connectorIdAvailable
+              examples:
+                checkAvailabilityResponse:
+                  $ref: '#/components/examples/check_connector_id_availability_response'
           description: Returns whether the connector ID is available.
       summary: Check if a connector ID is available
       tags:
@@ -68382,6 +68389,11 @@ components:
           supported_feature_ids:
             - generativeAIForSecurity
           is_system_action_type: false
+    get_conflicted_connector_ids_response:
+      summary: Get conflicted preconfigured connector IDs.
+      value:
+        skippedPreconfiguredConnectorIds:
+          - my-preconfigured-connector
     get_connector_response:
       summary: Get connector details.
       value:
@@ -68496,6 +68508,10 @@ components:
         is_deprecated: false
         is_missing_secrets: false
         is_system_action: false
+    check_connector_id_availability_response:
+      summary: Check connector ID availability.
+      value:
+        connectorIdAvailable: true
     run_index_connector_request:
       summary: Run an index connector.
       value:
