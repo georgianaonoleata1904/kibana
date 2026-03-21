@@ -27,10 +27,6 @@ export async function create({
 }: ConnectorCreateParams): Promise<ActionResult> {
   const id = options?.id || SavedObjectsUtils.generateId();
 
-  if (options?.id) {
-    validateConnectorId(options.id);
-  }
-
   try {
     await context.authorization.ensureAuthorized({
       operation: 'create',
@@ -88,6 +84,10 @@ export async function create({
     validateConnector(actionType, { config, secrets });
   }
   context.actionTypeRegistry.ensureActionTypeEnabled(actionTypeId);
+
+  if (options?.id) {
+    validateConnectorId(options.id);
+  }
 
   const hookServices: HookServices = {
     scopedClusterClient: context.scopedClusterClient,

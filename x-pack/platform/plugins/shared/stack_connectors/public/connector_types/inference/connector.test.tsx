@@ -734,6 +734,13 @@ jest.mock('@kbn/triggers-actions-ui-plugin/public/common/lib/kibana', () => ({
   })),
 }));
 
+jest.mock('@kbn/triggers-actions-ui-plugin/public/application/lib/action_connector_api', () => ({
+  ...jest.requireActual(
+    '@kbn/triggers-actions-ui-plugin/public/application/lib/action_connector_api'
+  ),
+  checkConnectorIdAvailability: jest.fn().mockResolvedValue({ isAvailable: true }),
+}));
+
 jest.mock('@faker-js/faker', () => {
   const originalModule = jest.requireActual('@faker-js/faker');
   return {

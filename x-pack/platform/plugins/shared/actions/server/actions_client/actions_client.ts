@@ -516,12 +516,11 @@ export class ActionsClient {
         );
       }
 
-      const userConfiguredActionExists = await this.context.unsecuredSavedObjectsClient
-        .get('action', id)
-        .then(() => true)
-        .catch(() => false);
-
       if (foundInMemoryConnector?.isPreconfigured) {
+        const userConfiguredActionExists = await this.context.unsecuredSavedObjectsClient
+          .get('action', id)
+          .then(() => true)
+          .catch(() => false);
         if (!userConfiguredActionExists) {
           throw new PreconfiguredActionDisabledModificationError(
             i18n.translate('xpack.actions.serverSideErrors.predefinedActionDeleteDisabled', {
