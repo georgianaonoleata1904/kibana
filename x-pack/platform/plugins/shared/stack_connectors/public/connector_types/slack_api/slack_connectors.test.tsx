@@ -24,6 +24,13 @@ jest.mock('@kbn/triggers-actions-ui-plugin/public/common/lib/kibana', () => ({
   })),
 }));
 
+jest.mock('@kbn/triggers-actions-ui-plugin/public/application/lib/action_connector_api', () => ({
+  ...jest.requireActual(
+    '@kbn/triggers-actions-ui-plugin/public/application/lib/action_connector_api'
+  ),
+  checkConnectorIdAvailability: jest.fn().mockResolvedValue({ isAvailable: true }),
+}));
+
 describe('SlackActionFields renders', () => {
   const onSubmit = jest.fn();
 
