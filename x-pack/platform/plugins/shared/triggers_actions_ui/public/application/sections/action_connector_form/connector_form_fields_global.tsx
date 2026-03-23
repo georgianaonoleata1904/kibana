@@ -36,7 +36,7 @@ const { emptyField, maxLengthField } = fieldValidators;
 const CONNECTOR_ID_EXISTS_ERROR = i18n.translate(
   'xpack.triggersActionsUI.sections.actionConnectorForm.error.connectorIdExists',
   {
-    defaultMessage: 'A connector with this ID already exists. Please choose a different ID.',
+    defaultMessage: 'A connector is already using this ID. Choose a different ID.',
   }
 );
 
@@ -76,10 +76,10 @@ const createIdConfig = (
   }),
   helpText: isEdit
     ? i18n.translate('xpack.triggersActionsUI.sections.actionConnectorForm.idFieldHelpTextEdit', {
-        defaultMessage: 'The connector ID cannot be changed after creation.',
+        defaultMessage: 'After creating the connector ID, you cannot change it.',
       })
     : i18n.translate('xpack.triggersActionsUI.sections.actionConnectorForm.idFieldHelpText', {
-        defaultMessage: 'A unique identifier for this connector.',
+        defaultMessage: 'A unique identifier for the connector.',
       }),
   validations: [
     {
@@ -113,7 +113,7 @@ const createIdConfig = (
               'xpack.triggersActionsUI.sections.actionConnectorForm.error.invalidIdFormat',
               {
                 defaultMessage:
-                  'ID must contain only lowercase letters, numbers, underscores, and hyphens.',
+                  'Only lowercase letters, numbers, underscores, and hyphens are allowed.',
               }
             ),
           };

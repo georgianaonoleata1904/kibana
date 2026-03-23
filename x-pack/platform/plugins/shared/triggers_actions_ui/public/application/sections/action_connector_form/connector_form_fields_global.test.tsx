@@ -103,7 +103,7 @@ describe('ConnectorFormFieldsGlobal', () => {
     await waitFor(
       () => {
         expect(
-          screen.getByText('A connector with this ID already exists. Please choose a different ID.')
+          screen.getByText('A connector is already using this ID. Choose a different ID.')
         ).toBeInTheDocument();
       },
       { timeout: 2000 }
