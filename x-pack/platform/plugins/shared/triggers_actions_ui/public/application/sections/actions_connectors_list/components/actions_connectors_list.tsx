@@ -379,7 +379,7 @@ const ActionsConnectorsList = ({
                   setActions(
                     actions.map((connector) =>
                       connector.id === changedConnectorId
-                        ? { ...connector, currentUserConnectionStatus: status }
+                        ? { ...connector, userAuthStatus: status }
                         : connector
                     )
                   )
@@ -694,7 +694,7 @@ const OAuthOperations: React.FunctionComponent<{
 
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
-  const isUserConnectedToConnector = item.currentUserConnectionStatus === 'connected';
+  const isUserConnectedToConnector = item.userAuthStatus === 'connected';
 
   const { connect, cancelConnect, isConnecting, isAwaitingCallback } = useConnectorOAuthConnect({
     connectorId: item.id,

@@ -149,7 +149,7 @@ async function getAllHelper({
         isSystemAction: connector.isSystemAction,
         isConnectorTypeDeprecated: connectorTypeRegistry.isDeprecated(connector.actionTypeId),
         authMode: getAuthMode(connector.authMode),
-        currentUserConnectionStatus: 'not_applicable' as const,
+        userAuthStatus: 'not_applicable' as const,
         ...(connector.exposeConfig ? { config: connector.config } : {}),
       };
     }),
@@ -212,7 +212,7 @@ export async function getAllSystemConnectors({
           systemConnector.actionTypeId
         ),
         authMode: getAuthMode(systemConnector.authMode),
-        currentUserConnectionStatus: 'not_applicable' as const,
+        userAuthStatus: 'not_applicable' as const,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

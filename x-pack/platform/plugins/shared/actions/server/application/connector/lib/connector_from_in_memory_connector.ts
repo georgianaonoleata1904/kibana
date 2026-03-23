@@ -29,7 +29,7 @@ export function connectorFromInMemoryConnector({
     isDeprecated: isConnectorDeprecated(inMemoryConnector),
     isConnectorTypeDeprecated: actionTypeRegistry.isDeprecated(inMemoryConnector.actionTypeId),
     authMode: getAuthMode(inMemoryConnector.authMode),
-    currentUserConnectionStatus: 'not_applicable',
+    userAuthStatus: 'not_applicable',
   };
 
   if (inMemoryConnector.exposeConfig) {

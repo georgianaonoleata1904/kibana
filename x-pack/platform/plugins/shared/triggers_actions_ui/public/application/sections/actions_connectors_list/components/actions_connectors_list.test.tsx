@@ -831,7 +831,7 @@ describe('actions_connectors_list', () => {
       };
     });
 
-    it('shows Authorize button when currentUserConnectionStatus is not_connected', async () => {
+    it('shows Authorize button when userAuthStatus is not_connected', async () => {
       const actions: ActionConnector[] = [
         createMockActionConnector({
           id: 'oauth-connector',
@@ -839,7 +839,7 @@ describe('actions_connectors_list', () => {
           name: 'Google Drive Connector',
           referencedByCount: 1,
           config: { authType: 'oauth_authorization_code' },
-          currentUserConnectionStatus: 'not_connected',
+          userAuthStatus: 'not_connected',
         }),
       ];
 
@@ -861,7 +861,7 @@ describe('actions_connectors_list', () => {
       expect(screen.queryByTestId('disconnectConnector')).not.toBeInTheDocument();
     });
 
-    it('shows Disconnect button when currentUserConnectionStatus is connected', async () => {
+    it('shows Disconnect button when userAuthStatus is connected', async () => {
       const actions: ActionConnector[] = [
         createMockActionConnector({
           id: 'oauth-connector',
@@ -869,7 +869,7 @@ describe('actions_connectors_list', () => {
           name: 'Google Drive Connector',
           referencedByCount: 1,
           config: { authType: 'oauth_authorization_code' },
-          currentUserConnectionStatus: 'connected',
+          userAuthStatus: 'connected',
         }),
       ];
 
@@ -906,7 +906,7 @@ describe('actions_connectors_list', () => {
           name: 'Google Drive Connector',
           referencedByCount: 1,
           config: { authType: 'oauth_authorization_code' },
-          currentUserConnectionStatus: 'not_connected',
+          userAuthStatus: 'not_connected',
         }),
       ];
 
@@ -928,7 +928,7 @@ describe('actions_connectors_list', () => {
       expect(screen.queryByTestId('authorizeConnector')).not.toBeInTheDocument();
     });
 
-    it('calls setActions with updated currentUserConnectionStatus to connected after successful authorization', async () => {
+    it('calls setActions with updated userAuthStatus to connected after successful authorization', async () => {
       const setActions = jest.fn();
       const user = userEvent.setup();
 
@@ -946,7 +946,7 @@ describe('actions_connectors_list', () => {
           name: 'Google Drive Connector',
           referencedByCount: 1,
           config: { authType: 'oauth_authorization_code' },
-          currentUserConnectionStatus: 'not_connected',
+          userAuthStatus: 'not_connected',
         }),
       ];
 
@@ -971,7 +971,7 @@ describe('actions_connectors_list', () => {
           expect.arrayContaining([
             expect.objectContaining({
               id: 'oauth-connector',
-              currentUserConnectionStatus: 'connected',
+              userAuthStatus: 'connected',
             }),
           ])
         );
@@ -986,7 +986,7 @@ describe('actions_connectors_list', () => {
           name: 'Regular Connector',
           referencedByCount: 1,
           config: { authType: 'oauth_client_credentials' },
-          currentUserConnectionStatus: 'not_applicable',
+          userAuthStatus: 'not_applicable',
         }),
       ];
 

@@ -1310,7 +1310,7 @@ describe('getAll() with profileUid', () => {
     expect(tokenLookupCall).toBeUndefined();
   });
 
-  test('returns currentUserConnectionStatus "connected" for per-user connector whose id is in user tokens', async () => {
+  test('returns userAuthStatus "connected" for per-user connector whose id is in user tokens', async () => {
     unsecuredSavedObjectsClient.find
       .mockResolvedValueOnce({
         total: 1,
@@ -1363,10 +1363,10 @@ describe('getAll() with profileUid', () => {
     const result = await actionsClient.getAll({ profileUid: 'test-profile-uid' });
 
     const connector = result.find((c) => c.id === 'connector-per-user');
-    expect(connector?.currentUserConnectionStatus).toBe('connected');
+    expect(connector?.userAuthStatus).toBe('connected');
   });
 
-  test('returns currentUserConnectionStatus "not_connected" for per-user connector whose id is NOT in user tokens', async () => {
+  test('returns userAuthStatus "not_connected" for per-user connector whose id is NOT in user tokens', async () => {
     unsecuredSavedObjectsClient.find
       .mockResolvedValueOnce({
         total: 0,
@@ -1404,10 +1404,10 @@ describe('getAll() with profileUid', () => {
     const result = await actionsClient.getAll({ profileUid: 'test-profile-uid' });
 
     const connector = result.find((c) => c.id === 'connector-per-user');
-    expect(connector?.currentUserConnectionStatus).toBe('not_connected');
+    expect(connector?.userAuthStatus).toBe('not_connected');
   });
 
-  test('returns currentUserConnectionStatus "not_applicable" for shared connector even when profileUid is provided', async () => {
+  test('returns userAuthStatus "not_applicable" for shared connector even when profileUid is provided', async () => {
     unsecuredSavedObjectsClient.find
       .mockResolvedValueOnce({
         total: 0,
@@ -1445,10 +1445,10 @@ describe('getAll() with profileUid', () => {
     const result = await actionsClient.getAll({ profileUid: 'test-profile-uid' });
 
     const connector = result.find((c) => c.id === 'connector-shared');
-    expect(connector?.currentUserConnectionStatus).toBe('not_applicable');
+    expect(connector?.userAuthStatus).toBe('not_applicable');
   });
 
-  test('returns currentUserConnectionStatus "not_applicable" for in-memory connectors', async () => {
+  test('returns userAuthStatus "not_applicable" for in-memory connectors', async () => {
     unsecuredSavedObjectsClient.find
       .mockResolvedValueOnce({
         total: 0,
@@ -1481,7 +1481,7 @@ describe('getAll() with profileUid', () => {
     const result = await actionsClient.getAll({ profileUid: 'test-profile-uid' });
 
     const connector = result.find((c) => c.id === 'in-memory-connector');
-    expect(connector?.currentUserConnectionStatus).toBe('not_applicable');
+    expect(connector?.userAuthStatus).toBe('not_applicable');
   });
 });
 

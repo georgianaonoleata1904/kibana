@@ -52,7 +52,7 @@ describe('createConnectorRoute', () => {
         'isMissingSecrets',
         'isSystemAction',
         'isConnectorTypeDeprecated',
-        'currentUserConnectionStatus',
+        'userAuthStatus',
       ]),
       connector_type_id: createResult.actionTypeId,
       is_preconfigured: createResult.isPreconfigured,
@@ -60,7 +60,7 @@ describe('createConnectorRoute', () => {
       is_missing_secrets: createResult.isMissingSecrets,
       is_system_action: createResult.isSystemAction,
       is_connector_type_deprecated: createResult.isConnectorTypeDeprecated,
-      current_user_connection_status: createResult.currentUserConnectionStatus,
+      user_auth_status: createResult.userAuthStatus,
     };
 
     const actionsClient = actionsClientMock.create();

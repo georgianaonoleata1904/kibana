@@ -12,12 +12,12 @@ import type { RawAction } from '../../../types';
 import type { Connector } from '../types';
 import { getAuthMode } from './get_auth_mode';
 
-function getCurrentUserConnectionStatus(
+function getUserAuthStatus(
   connectorId: string,
   userTokenConnectors: GetUserTokenConnectorsSoResult,
-  authMode: AuthMode
+  authMode?: AuthMode
 ): 'connected' | 'not_connected' | 'not_applicable' {
-  if (authMode === 'shared') {
+  if (!authMode || authMode === 'shared') {
     return 'not_applicable';
   }
   if (userTokenConnectors.connectorIds.includes(connectorId)) {
@@ -42,8 +42,8 @@ export function connectorFromSavedObject(
     isSystemAction: false,
     isConnectorTypeDeprecated,
     authMode,
-    currentUserConnectionStatus: userTokenConnectors
-      ? getCurrentUserConnectionStatus(savedObject.id, userTokenConnectors, authMode)
+    userAuthStatus: userTokenConnectors
+      ? getUserAuthStatus(savedObject.id, userTokenConnectors, authMode)
       : 'not_applicable',
   };
 }

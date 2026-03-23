@@ -19,7 +19,7 @@ export function createMockConnector(overrides: Partial<Connector> = {}): Connect
     isDeprecated: false,
     isSystemAction: false,
     isConnectorTypeDeprecated: false,
-    currentUserConnectionStatus: 'not_applicable',
+    userAuthStatus: 'not_applicable',
     ...overrides,
   };
 }

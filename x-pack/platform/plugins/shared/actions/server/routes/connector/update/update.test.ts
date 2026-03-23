@@ -69,7 +69,7 @@ describe('updateConnectorRoute', () => {
         is_deprecated: false,
         is_system_action: false,
         is_connector_type_deprecated: false,
-        current_user_connection_status: 'not_applicable',
+        user_auth_status: 'not_applicable',
       },
     });
 

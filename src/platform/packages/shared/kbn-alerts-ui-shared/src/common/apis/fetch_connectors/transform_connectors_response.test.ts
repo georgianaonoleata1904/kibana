@@ -24,7 +24,7 @@ describe('transformConnectorsResponse', () => {
         secrets: {},
         config: {},
         is_connector_type_deprecated: false,
-        current_user_connection_status: 'not_applicable' as const,
+        user_auth_status: 'not_applicable' as const,
       },
       {
         id: 'test-connector-2',
@@ -38,7 +38,7 @@ describe('transformConnectorsResponse', () => {
         secrets: {},
         config: {},
         is_connector_type_deprecated: true,
-        current_user_connection_status: 'not_applicable' as const,
+        user_auth_status: 'not_applicable' as const,
       },
     ]);
 
@@ -55,7 +55,7 @@ describe('transformConnectorsResponse', () => {
         referencedByCount: 0,
         secrets: {},
         isConnectorTypeDeprecated: false,
-        currentUserConnectionStatus: 'not_applicable',
+        userAuthStatus: 'not_applicable',
       },
       {
         actionTypeId: 'test-2',
@@ -69,12 +69,12 @@ describe('transformConnectorsResponse', () => {
         referencedByCount: 0,
         secrets: {},
         isConnectorTypeDeprecated: true,
-        currentUserConnectionStatus: 'not_applicable',
+        userAuthStatus: 'not_applicable',
       },
     ]);
   });
 
-  test('should map current_user_connection_status enum values correctly', () => {
+  test('should map user_auth_status enum values correctly', () => {
     const result = transformConnectorResponse([
       {
         id: 'connector-connected',
@@ -85,7 +85,7 @@ describe('transformConnectorsResponse', () => {
         is_system_action: false,
         referenced_by_count: 0,
         is_connector_type_deprecated: false,
-        current_user_connection_status: 'connected' as const,
+        user_auth_status: 'connected' as const,
       },
       {
         id: 'connector-not-connected',
@@ -96,11 +96,11 @@ describe('transformConnectorsResponse', () => {
         is_system_action: false,
         referenced_by_count: 0,
         is_connector_type_deprecated: false,
-        current_user_connection_status: 'not_connected' as const,
+        user_auth_status: 'not_connected' as const,
       },
     ]);
 
-    expect(result[0].currentUserConnectionStatus).toBe('connected');
-    expect(result[1].currentUserConnectionStatus).toBe('not_connected');
+    expect(result[0].userAuthStatus).toBe('connected');
+    expect(result[1].userAuthStatus).toBe('not_connected');
   });
 });

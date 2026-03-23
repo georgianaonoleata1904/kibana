@@ -47,7 +47,7 @@ export const connectorResponseSchema = schema.object({
       },
     })
   ),
-  current_user_connection_status: schema.oneOf(
+  user_auth_status: schema.oneOf(
     [
       schema.literal('connected'),
       schema.literal('not_connected'),
