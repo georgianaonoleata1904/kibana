@@ -69,7 +69,7 @@ it('handles invalid objects', () => {
   ensureInvalid(loggerMock, [{ id: 'some-id', type: 'some-type', x: 42 }]);
 });
 
-describe('minLength: 1 constraints', () => {
+describe('empty string validation', () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });

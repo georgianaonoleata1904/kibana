@@ -16,19 +16,26 @@ import { buildValidators } from './validators';
 describe('Validators', () => {
   let mockedActionsConfig: jest.Mocked<ActionsConfigurationUtilities>;
 
+  const getConnector = (
+    overrides: Partial<SubActionConnectorType<TestConfig, TestSecrets>> = {}
+  ): SubActionConnectorType<TestConfig, TestSecrets> => ({
+    id: '.test',
+    name: 'Test',
+    minimumLicenseRequired: 'basic' as const,
+    supportedFeatureIds: ['alerting'],
+    schema: {
+      config: TestConfigSchema,
+      secrets: TestSecretsSchema,
+    },
+    getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
+      new TestSubActionConnector(serviceParams),
+    ...overrides,
+  });
+
   const createValidator = (Service: IService<TestConfig, TestSecrets>) => {
-    const connector = {
-      id: '.test',
-      name: 'Test',
-      minimumLicenseRequired: 'basic' as const,
-      supportedFeatureIds: ['alerting'],
-      schema: {
-        config: TestConfigSchema,
-        secrets: TestSecretsSchema,
-      },
-      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
-        new Service(serviceParams),
-    };
+    const connector = getConnector({
+      getService: (serviceParams) => new Service(serviceParams),
+    });
 
     return buildValidators({ configurationUtilities: mockedActionsConfig, connector });
   };
@@ -37,28 +44,13 @@ describe('Validators', () => {
     const configValidator = jest.fn();
     const secretsValidator = jest.fn();
 
-    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
-      id: '.test',
-      name: 'Test',
-      minimumLicenseRequired: 'basic' as const,
-      supportedFeatureIds: ['alerting'],
-      schema: {
-        config: TestConfigSchema,
-        secrets: TestSecretsSchema,
-      },
+    const connector = getConnector({
       validators: [
-        {
-          type: ValidatorType.CONFIG,
-          validator: configValidator,
-        },
-        {
-          type: ValidatorType.SECRETS,
-          validator: secretsValidator,
-        },
+        { type: ValidatorType.CONFIG, validator: configValidator },
+        { type: ValidatorType.SECRETS, validator: secretsValidator },
       ],
-      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
-        new Service(serviceParams),
-    };
+      getService: (serviceParams) => new Service(serviceParams),
+    });
 
     return {
       validators: buildValidators({ configurationUtilities: mockedActionsConfig, connector }),
@@ -156,24 +148,9 @@ describe('Validators', () => {
     const configValidator = jest.fn().mockImplementation(() => {
       throw new Error('Config validation failed');
     });
-    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
-      id: '.test',
-      name: 'Test',
-      minimumLicenseRequired: 'basic' as const,
-      supportedFeatureIds: ['alerting'],
-      schema: {
-        config: TestConfigSchema,
-        secrets: TestSecretsSchema,
-      },
-      validators: [
-        {
-          type: ValidatorType.CONFIG,
-          validator: configValidator,
-        },
-      ],
-      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
-        new TestSubActionConnector(serviceParams),
-    };
+    const connector = getConnector({
+      validators: [{ type: ValidatorType.CONFIG, validator: configValidator }],
+    });
 
     const { config } = buildValidators({
       configurationUtilities: mockedActionsConfig,
@@ -192,24 +169,9 @@ describe('Validators', () => {
     const secretsValidator = jest.fn().mockImplementation(() => {
       throw new Error('Secrets validation failed');
     });
-    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
-      id: '.test',
-      name: 'Test',
-      minimumLicenseRequired: 'basic' as const,
-      supportedFeatureIds: ['alerting'],
-      schema: {
-        config: TestConfigSchema,
-        secrets: TestSecretsSchema,
-      },
-      validators: [
-        {
-          type: ValidatorType.SECRETS,
-          validator: secretsValidator,
-        },
-      ],
-      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
-        new TestSubActionConnector(serviceParams),
-    };
+    const connector = getConnector({
+      validators: [{ type: ValidatorType.SECRETS, validator: secretsValidator }],
+    });
 
     const { secrets } = buildValidators({
       configurationUtilities: mockedActionsConfig,
@@ -227,22 +189,12 @@ describe('Validators', () => {
   it('runs multiple config validators in sequence', () => {
     const validator1 = jest.fn();
     const validator2 = jest.fn();
-    const connector: SubActionConnectorType<TestConfig, TestSecrets> = {
-      id: '.test',
-      name: 'Test',
-      minimumLicenseRequired: 'basic' as const,
-      supportedFeatureIds: ['alerting'],
-      schema: {
-        config: TestConfigSchema,
-        secrets: TestSecretsSchema,
-      },
+    const connector = getConnector({
       validators: [
         { type: ValidatorType.CONFIG, validator: validator1 },
         { type: ValidatorType.CONFIG, validator: validator2 },
       ],
-      getService: (serviceParams: ServiceParams<TestConfig, TestSecrets>) =>
-        new TestSubActionConnector(serviceParams),
-    };
+    });
 
     const { config } = buildValidators({
       configurationUtilities: mockedActionsConfig,
