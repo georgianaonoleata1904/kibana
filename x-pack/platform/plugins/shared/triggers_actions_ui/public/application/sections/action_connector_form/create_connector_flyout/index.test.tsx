@@ -66,6 +66,7 @@ describe('CreateConnectorFlyout', () => {
       actions: { save: true, show: true },
     };
     appMockRenderer.coreStart.http.post = jest.fn().mockResolvedValue(createConnectorResponse);
+    appMockRenderer.coreStart.http.get = jest.fn().mockResolvedValue({ is_available: true });
   });
 
   it('renders', async () => {
