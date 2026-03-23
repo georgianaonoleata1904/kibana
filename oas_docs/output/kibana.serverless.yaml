@@ -550,13 +550,6 @@ paths:
                   connector_type_id:
                     description: The connector type identifier.
                     type: string
-                  current_user_connection_status:
-                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
-                    enum:
-                      - connected
-                      - not_connected
-                      - not_applicable
-                    type: string
                   id:
                     description: The identifier for the connector.
                     type: string
@@ -578,6 +571,13 @@ paths:
                   name:
                     description: ' The name of the connector.'
                     type: string
+                  user_auth_status:
+                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
+                    enum:
+                      - connected
+                      - not_connected
+                      - not_applicable
+                    type: string
                 required:
                   - id
                   - name
@@ -586,7 +586,7 @@ paths:
                   - is_deprecated
                   - is_system_action
                   - is_connector_type_deprecated
-                  - current_user_connection_status
+                  - user_auth_status
               examples:
                 getConnectorResponse:
                   $ref: '#/components/examples/get_connector_response'
@@ -721,13 +721,6 @@ paths:
                   connector_type_id:
                     description: The connector type identifier.
                     type: string
-                  current_user_connection_status:
-                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
-                    enum:
-                      - connected
-                      - not_connected
-                      - not_applicable
-                    type: string
                   id:
                     description: The identifier for the connector.
                     type: string
@@ -749,6 +742,13 @@ paths:
                   name:
                     description: ' The name of the connector.'
                     type: string
+                  user_auth_status:
+                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
+                    enum:
+                      - connected
+                      - not_connected
+                      - not_applicable
+                    type: string
                 required:
                   - id
                   - name
@@ -757,7 +757,7 @@ paths:
                   - is_deprecated
                   - is_system_action
                   - is_connector_type_deprecated
-                  - current_user_connection_status
+                  - user_auth_status
               examples:
                 createEmailConnectorResponse:
                   $ref: '#/components/examples/create_email_connector_response'
@@ -887,13 +887,6 @@ paths:
                   connector_type_id:
                     description: The connector type identifier.
                     type: string
-                  current_user_connection_status:
-                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
-                    enum:
-                      - connected
-                      - not_connected
-                      - not_applicable
-                    type: string
                   id:
                     description: The identifier for the connector.
                     type: string
@@ -915,6 +908,13 @@ paths:
                   name:
                     description: ' The name of the connector.'
                     type: string
+                  user_auth_status:
+                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
+                    enum:
+                      - connected
+                      - not_connected
+                      - not_applicable
+                    type: string
                 required:
                   - id
                   - name
@@ -923,7 +923,7 @@ paths:
                   - is_deprecated
                   - is_system_action
                   - is_connector_type_deprecated
-                  - current_user_connection_status
+                  - user_auth_status
           description: Indicates a successful call.
         '403':
           description: Indicates that this call is forbidden.
@@ -1029,13 +1029,6 @@ paths:
                   connector_type_id:
                     description: The connector type identifier.
                     type: string
-                  current_user_connection_status:
-                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
-                    enum:
-                      - connected
-                      - not_connected
-                      - not_applicable
-                    type: string
                   id:
                     description: The identifier for the connector.
                     type: string
@@ -1057,6 +1050,13 @@ paths:
                   name:
                     description: ' The name of the connector.'
                     type: string
+                  user_auth_status:
+                    description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
+                    enum:
+                      - connected
+                      - not_connected
+                      - not_applicable
+                    type: string
                 required:
                   - id
                   - name
@@ -1065,7 +1065,7 @@ paths:
                   - is_deprecated
                   - is_system_action
                   - is_connector_type_deprecated
-                  - current_user_connection_status
+                  - user_auth_status
               examples:
                 runIndexConnectorResponse:
                   $ref: '#/components/examples/run_index_connector_response'
@@ -1113,13 +1113,6 @@ paths:
                     connector_type_id:
                       description: The connector type identifier.
                       type: string
-                    current_user_connection_status:
-                      description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
-                      enum:
-                        - connected
-                        - not_connected
-                        - not_applicable
-                      type: string
                     id:
                       description: The identifier for the connector.
                       type: string
@@ -1144,6 +1137,13 @@ paths:
                     referenced_by_count:
                       description: The number of saved objects that reference the connector. If is_preconfigured is true, this value is not calculated.
                       type: number
+                    user_auth_status:
+                      description: The current user's authorization status for this connector (per-user auth types only; shared is 'not_applicable').
+                      enum:
+                        - connected
+                        - not_connected
+                        - not_applicable
+                      type: string
                   required:
                     - id
                     - name
@@ -1152,7 +1152,7 @@ paths:
                     - is_deprecated
                     - is_system_action
                     - is_connector_type_deprecated
-                    - current_user_connection_status
+                    - user_auth_status
                     - referenced_by_count
                 type: array
               examples:
