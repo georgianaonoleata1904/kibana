@@ -27,6 +27,7 @@ import type { ActionTypeRegistry } from '../../../../action_type_registry';
 import { getAllUnsecured } from './get_all';
 import type { InferenceInferenceEndpointInfo } from '@elastic/elasticsearch/lib/api/types';
 import { createMockInMemoryConnector } from '../../mocks';
+import type { InMemoryConnector } from '../../../../types';
 import { encryptedSavedObjectsMock } from '@kbn/encrypted-saved-objects-plugin/server/mocks';
 import type { AuthTypeRegistry } from '../../../../auth_types/auth_type_registry';
 import { authTypeRegistryMock } from '../../../../auth_types/auth_type_registry.mock';
@@ -1267,7 +1268,7 @@ describe('getAll() with profileUid', () => {
     actionTypeRegistry.isDeprecated = jest.fn().mockReturnValue(false);
   });
 
-  function buildActionsClientWithAuthCode(inMemoryConnectors = []) {
+  function buildActionsClientWithAuthCode(inMemoryConnectors: InMemoryConnector[] = []) {
     return new ActionsClient({
       logger,
       actionTypeRegistry,

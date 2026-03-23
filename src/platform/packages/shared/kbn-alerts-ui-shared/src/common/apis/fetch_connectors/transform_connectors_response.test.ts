@@ -85,6 +85,8 @@ describe('transformConnectorsResponse', () => {
         is_system_action: false,
         referenced_by_count: 0,
         is_connector_type_deprecated: false,
+        secrets: {},
+        config: {},
         user_auth_status: 'connected' as const,
       },
       {
@@ -96,6 +98,8 @@ describe('transformConnectorsResponse', () => {
         is_system_action: false,
         referenced_by_count: 0,
         is_connector_type_deprecated: false,
+        secrets: {},
+        config: {},
         user_auth_status: 'not_connected' as const,
       },
     ]);

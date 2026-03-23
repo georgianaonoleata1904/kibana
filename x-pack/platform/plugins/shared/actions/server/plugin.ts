@@ -874,7 +874,6 @@ export class ActionsPlugin
       logger,
       getAxiosInstanceWithAuthHelper,
       spaces,
-      actionsConfig,
       connectorLifecycleListeners,
     } = this;
 
