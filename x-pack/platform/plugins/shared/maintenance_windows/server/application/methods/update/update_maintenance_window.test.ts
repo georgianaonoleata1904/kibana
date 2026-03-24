@@ -403,17 +403,14 @@ describe('MaintenanceWindowClient - update', () => {
       jest.useFakeTimers().setSystemTime(new Date(firstTimestamp));
 
       const mockMaintenanceWindow = getMockMaintenanceWindow({
-        schedule: {
-          custom: {
-            start: '2023-03-26T00:00:00.000Z',
-            duration: '1h',
-            timezone: 'CET',
-            recurring: {
-              every: '1w',
-              occurrences: 5,
-            },
-          },
-        },
+        duration: 60 * 60 * 1000,
+        rRule: {
+          tzid: 'CET',
+          dtstart: '2023-03-26T00:00:00.000Z',
+          freq: Frequency.WEEKLY,
+          interval: 1,
+          count: 5,
+        } as MaintenanceWindow['rRule'],
         events: [{ gte: '2023-03-26T00:00:00.000Z', lte: '2023-03-26T00:12:34.000Z' }],
         expirationDate: moment(new Date(firstTimestamp)).tz('UTC').add(2, 'week').toISOString(),
       });
@@ -436,17 +433,15 @@ describe('MaintenanceWindowClient - update', () => {
       await updateMaintenanceWindow(mockContext, {
         id: 'test-id',
         data: {
-          scope: {
-            alerting: {
-              kql: `kibana.alert.rule.name: ${kqlPattern}`,
-              filters: [],
-            },
+          scopedQuery: {
+            kql: `kibana.alert.rule.name: ${kqlPattern}`,
+            filters: [],
           },
         },
       });
 
-      const dsl = (savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow).scope!.alerting!
-        .dsl!;
+      const createdAttributes = savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow;
+      const dsl = createdAttributes.scopedQuery!.dsl!;
       const parsedDsl = JSON.parse(dsl);
 
       const wildcardClause = parsedDsl.bool.filter[0];
