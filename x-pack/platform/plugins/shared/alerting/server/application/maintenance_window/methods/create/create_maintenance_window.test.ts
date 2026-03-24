@@ -277,18 +277,15 @@ describe('MaintenanceWindowClient - create', () => {
           title: mockMaintenanceWindow.title,
           duration: mockMaintenanceWindow.duration,
           rRule: mockMaintenanceWindow.rRule as CreateMaintenanceWindowParams['data']['rRule'],
-          schedule: mockMaintenanceWindow.schedule,
-          scope: {
-            alerting: {
-              kql: `kibana.alert.rule.name: ${kqlPattern}`,
-              filters: [],
-            },
+          scopedQuery: {
+            kql: `kibana.alert.rule.name: ${kqlPattern}`,
+            filters: [],
           },
         },
       });
 
-      const dsl = (savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow).scope!.alerting!
-        .dsl!;
+      const createdAttributes = savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow;
+      const dsl = createdAttributes.scopedQuery!.dsl!;
       const parsedDsl = JSON.parse(dsl);
 
       const wildcardClause = parsedDsl.bool.filter[0];
@@ -387,30 +384,27 @@ describe('MaintenanceWindowClient - create', () => {
         title: mockMaintenanceWindow.title,
         duration: mockMaintenanceWindow.duration,
         rRule: mockMaintenanceWindow.rRule as CreateMaintenanceWindowParams['data']['rRule'],
-        schedule: mockMaintenanceWindow.schedule,
-        scope: {
-          alerting: {
-            kql: '',
-            filters: [
-              {
-                meta: {
-                  disabled: false,
-                  negate: false,
-                  alias: null,
-                },
-                $state: {
-                  store: FilterStateStore.APP_STATE,
-                },
-                query: wildcardQuery,
+        scopedQuery: {
+          kql: '',
+          filters: [
+            {
+              meta: {
+                disabled: false,
+                negate: false,
+                alias: null,
               },
-            ],
-          },
+              $state: {
+                store: FilterStateStore.APP_STATE,
+              },
+              query: wildcardQuery,
+            },
+          ],
         },
       },
     });
 
-    const dsl = (savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow).scope!.alerting!
-      .dsl!;
+    const createdAttributes = savedObjectsClient.create.mock.calls[0][1] as MaintenanceWindow;
+    const dsl = createdAttributes.scopedQuery!.dsl!;
     const parsedDsl = JSON.parse(dsl);
 
     // Query DSL filters are passed through translateToQuery() as filter.query,

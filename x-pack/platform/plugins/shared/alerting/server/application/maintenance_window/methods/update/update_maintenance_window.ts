@@ -12,7 +12,7 @@ import { buildEsQuery } from '@kbn/es-query';
 import type { MaintenanceWindowClientContext } from '../../../../../common';
 import { getScopedQueryErrorMessage } from '../../../../../common';
 import { getEsQueryConfig } from '../../../../lib/get_es_query_config';
-import { getAlertsDataViewBase } from '../../../lib/get_alerts_data_view_base';
+import { getAlertsDataViewBase } from '../../lib/get_alerts_data_view_base';
 import type { MaintenanceWindow } from '../../types';
 import {
   generateMaintenanceWindowEvents,
