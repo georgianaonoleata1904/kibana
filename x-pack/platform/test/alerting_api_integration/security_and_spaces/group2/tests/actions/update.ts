@@ -94,6 +94,7 @@ export default function updateConnectorTests({ getService }: FtrProviderContext)
                 config: {
                   unencrypted: `This value shouldn't get encrypted`,
                 },
+                user_auth_status: 'not_applicable',
               });
               // Ensure AAD isn't broken
               await checkAAD({

@@ -65,6 +65,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           tenantId: null,
           from: 'bob@example.com',
         },
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdActionId).to.be('string');
@@ -94,6 +95,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           tenantId: null,
         },
         auth_mode: 'shared',
+        user_auth_status: 'not_applicable',
       });
     });
 
@@ -453,6 +455,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           oauthTokenUrl: null,
           tenantId: null,
         },
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdAction.id).to.be('string');
@@ -482,6 +485,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           tenantId: null,
         },
         auth_mode: 'shared',
+        user_auth_status: 'not_applicable',
       });
     });
 
@@ -524,6 +528,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           oauthTokenUrl: null,
           tenantId: null,
         },
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdAction.id).to.be('string');
@@ -553,6 +558,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           tenantId: null,
         },
         auth_mode: 'shared',
+        user_auth_status: 'not_applicable',
       });
     });
 
@@ -602,6 +608,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           )}/1234567/oauth2/v2.0/token`,
           from: 'bob@example.com',
         },
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdMSExchangeActionId).to.be('string');
@@ -633,6 +640,7 @@ export default function emailTest({ getService }: FtrProviderContext) {
           tenantId: '1234567',
         },
         auth_mode: 'shared',
+        user_auth_status: 'not_applicable',
       });
     });
 

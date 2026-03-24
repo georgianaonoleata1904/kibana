@@ -76,6 +76,7 @@ export default function theHiveTest({ getService }: FtrProviderContext) {
           is_missing_secrets: false,
           config,
           is_connector_type_deprecated: false,
+          user_auth_status: 'not_applicable',
         });
       });
 
@@ -101,6 +102,7 @@ export default function theHiveTest({ getService }: FtrProviderContext) {
           is_missing_secrets: false,
           config: { ...config, organisation: 'test-organisation' },
           is_connector_type_deprecated: false,
+          user_auth_status: 'not_applicable',
         });
       });
 

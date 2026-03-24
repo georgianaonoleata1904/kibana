@@ -73,6 +73,7 @@ export default function xmattersTest({ getService }: FtrProviderContext) {
           usesBasic: false,
         },
         is_connector_type_deprecated: false,
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdAction.id).to.be('string');
@@ -109,6 +110,7 @@ export default function xmattersTest({ getService }: FtrProviderContext) {
           usesBasic: true,
         },
         is_connector_type_deprecated: false,
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdAction.id).to.be('string');

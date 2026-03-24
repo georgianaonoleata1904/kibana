@@ -72,6 +72,7 @@ export default function pagerdutyTest({ getService }: FtrProviderContext) {
           apiUrl: pagerdutySimulatorURL,
         },
         is_connector_type_deprecated: false,
+        user_auth_status: 'not_applicable',
       });
 
       expect(typeof createdAction.id).to.be('string');
@@ -93,6 +94,7 @@ export default function pagerdutyTest({ getService }: FtrProviderContext) {
         },
         is_connector_type_deprecated: false,
         auth_mode: 'shared',
+        user_auth_status: 'not_applicable',
       });
     });
 
