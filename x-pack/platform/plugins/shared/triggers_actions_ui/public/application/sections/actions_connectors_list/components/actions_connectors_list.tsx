@@ -428,10 +428,6 @@ const ActionsConnectorsList = ({
 
   const table = (
     <EuiInMemoryTable
-      tableCaption={i18n.translate(
-        'xpack.triggersActionsUI.sections.actionsConnectorsList.connectorsListTable.caption',
-        { defaultMessage: 'Connectors list' }
-      )}
       loading={isLoadingActions || isLoadingActionTypes}
       items={actionConnectorTableItems}
       sorting={true}
