@@ -52,6 +52,7 @@ const connectorsApiResponse = mockConnectorsAndExtras.map((c) => ({
   referenced_by_count: 0,
   is_missing_secrets: c.isMissingSecrets,
   is_system_action: false,
+  user_auth_status: 'not_applicable',
 }));
 
 const loadConnectorsResult = mockConnectors.map((c) => ({
