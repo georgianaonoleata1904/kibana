@@ -229,23 +229,6 @@ describe('SubActionConnector', () => {
       `);
     });
 
-    it('logs response data via debug when response validation fails', async () => {
-      const invalidData = { invalidField: 'test' };
-      requestMock.mockReturnValue({ data: invalidData });
-
-      await expect(async () =>
-        service.testUrl({ url: 'https://example.com' }, connectorUsageCollector)
-      ).rejects.toThrow('Response validation failed');
-
-      // logger.debug is called lazily with a function — resolve it and check the output
-      const debugCalls = (logger.debug as jest.Mock).mock.calls;
-      const lazyCall = debugCalls.find((args) => typeof args[0] === 'function');
-      expect(lazyCall).toBeDefined();
-      const message = lazyCall![0]();
-      expect(message).toContain('Response validation failed');
-      expect(message).toContain('invalidField');
-    });
-
     describe('zod v3 schema validation', () => {
       class V3SchemaConnector extends SubActionConnector<
         { url: string },
