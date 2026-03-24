@@ -258,6 +258,7 @@ export class ActionsPlugin
   private connectorUsageReportingTask: ConnectorUsageReportingTask | undefined;
   private connectorLifecycleListeners: ConnectorLifecycleListener[] = [];
   private skippedPreconfiguredConnectorIds: Set<string> = new Set();
+  private getInternalSoRepository: (() => ISavedObjectsRepository) | undefined;
 
   constructor(initContext: PluginInitializerContext) {
     this.logger = initContext.logger.get();
@@ -350,7 +351,8 @@ export class ActionsPlugin
       plugins.encryptedSavedObjects,
       this.actionTypeRegistry!,
       plugins.taskManager.index,
-      this.inMemoryConnectors
+      this.inMemoryConnectors,
+      () => this.getInternalSoRepository?.()
     );
 
     const usageCollection = plugins.usageCollection;
@@ -529,6 +531,9 @@ export class ActionsPlugin
      * Issue: https://github.com/elastic/kibana/issues/160797
      */
     this.setSystemActions();
+
+    this.getInternalSoRepository = () =>
+      core.savedObjects.createInternalRepository([ACTION_SAVED_OBJECT_TYPE]);
 
     this.detectPreconfiguredConflicts(core);
 

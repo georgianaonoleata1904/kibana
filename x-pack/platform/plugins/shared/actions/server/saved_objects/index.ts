@@ -9,6 +9,7 @@ import type {
   SavedObject,
   SavedObjectsExportTransformContext,
   SavedObjectsServiceSetup,
+  ISavedObjectsRepository,
 } from '@kbn/core/server';
 import type { EncryptedSavedObjectsPluginSetup } from '@kbn/encrypted-saved-objects-plugin/server';
 import { getOldestIdleActionTask } from '@kbn/task-manager-plugin/server';
@@ -46,7 +47,8 @@ export function setupSavedObjects(
   encryptedSavedObjects: EncryptedSavedObjectsPluginSetup,
   actionTypeRegistry: ActionTypeRegistry,
   taskManagerIndex: string,
-  inMemoryConnectors: InMemoryConnector[]
+  inMemoryConnectors: InMemoryConnector[],
+  getSoRepository: () => ISavedObjectsRepository | undefined
 ) {
   savedObjects.registerType({
     name: ACTION_SAVED_OBJECT_TYPE,
@@ -69,8 +71,32 @@ export function setupSavedObjects(
       ) {
         return transformConnectorsForExport(objects, actionTypeRegistry);
       },
-      onImport(connectors) {
-        const typedConnectors = connectors as Array<SavedObject<RawAction>>;
+      async onImport(connectors) {
+        const typedConnectors = connectors as Array<
+          SavedObject<RawAction> & { destinationId?: string }
+        >;
+
+        const preconfiguredIds = new Set(
+          inMemoryConnectors.filter((c) => c.isPreconfigured).map((c) => c.id)
+        );
+
+        const conflicting = typedConnectors.filter(
+          (c) => preconfiguredIds.has(c.id) && !c.destinationId
+        );
+
+        if (conflicting.length > 0) {
+          const repo = getSoRepository();
+          if (repo) {
+            await Promise.all(
+              conflicting.map((c) =>
+                repo.delete(ACTION_SAVED_OBJECT_TYPE, c.id, {
+                  namespace: c.namespaces?.[0],
+                })
+              )
+            );
+          }
+        }
+
         return {
           warnings: [
             ...getImportWarnings(typedConnectors),

@@ -56,7 +56,7 @@ export function getPreconfiguredConflictWarnings(
   const conflictingIds = conflictingConnectors.map((c) => c.id).join(', ');
   const message = i18n.translate('xpack.actions.savedObjects.preconfiguredConflictWarning', {
     defaultMessage:
-      '{count, plural, one {Connector} other {Connectors}} with {count, plural, one {ID} other {IDs}} [{ids}] {count, plural, one {conflicts} other {conflict}} with preconfigured {count, plural, one {connector} other {connectors}}. The preconfigured connector will take precedence',
+      '{count, plural, one {Connector} other {Connectors}} with {count, plural, one {ID} other {IDs}} [{ids}] {count, plural, one {conflicts} other {conflict}} with {count, plural, one {a} other {}} preconfigured {count, plural, one {connector} other {connectors}} and {count, plural, one {was} other {were}} removed. The preconfigured {count, plural, one {connector} other {connectors}} will be used instead.',
     values: {
       count: conflictingConnectors.length,
       ids: conflictingIds,
@@ -65,9 +65,11 @@ export function getPreconfiguredConflictWarnings(
 
   return [
     {
-      type: 'simple',
+      type: 'action_required',
       message,
-    },
+      actionPath: '/app/management/insightsAndAlerting/triggersActionsConnectors',
+      buttonLabel: GO_TO_CONNECTORS_BUTTON_LABLE,
+    } as SavedObjectsImportWarning,
   ];
 }
 
