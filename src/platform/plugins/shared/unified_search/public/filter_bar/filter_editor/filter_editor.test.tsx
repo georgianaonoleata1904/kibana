@@ -12,6 +12,7 @@ import type { UseEuiTheme, EuiThemeComputed } from '@elastic/eui';
 import type { TestBed } from '@kbn/test-jest-helpers';
 import { registerTestBed } from '@kbn/test-jest-helpers';
 import { coreMock } from '@kbn/core/public/mocks';
+import { FilterStateStore } from '@kbn/es-query';
 import type { FilterEditorProps } from '.';
 import { FilterEditor } from '.';
 import { dataViewMockList } from '../../dataview_picker/mocks/dataview';
@@ -83,6 +84,42 @@ describe('<FilterEditor />', () => {
       expect(find('saveFilter').props().disabled).toBe(false);
     });
   });
+  describe('submitting query dsl with no index patterns', () => {
+    it('should not crash when indexPatterns is empty and filter.meta.index is undefined', async () => {
+      const onSubmit = jest.fn();
+      const defaultProps: Omit<FilterEditorProps, 'intl'> = {
+        theme: {
+          euiTheme: {} as unknown as EuiThemeComputed<{}>,
+          colorMode: 'DARK',
+          modifications: [],
+          highContrastMode: false,
+        } as UseEuiTheme<{}>,
+        filter: {
+          meta: {
+            type: 'custom',
+          } as any,
+          $state: {
+            store: FilterStateStore.APP_STATE,
+          },
+        },
+        indexPatterns: [],
+        onCancel: jest.fn(),
+        onSubmit,
+        docLinks: coreMock.createStart().docLinks,
+        dataViews: dataMock.dataViews,
+      };
+      const testBed: TestBed = await registerTestBed(FilterEditor, { defaultProps })();
+      const { find } = testBed;
+
+      find('customEditorInput').simulate('change', {
+        target: { value: '{ "wildcard": { "kibana.alert.rule.name": "test*" } }' },
+      });
+
+      expect(() => find('saveFilter').simulate('click')).not.toThrow();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('handling data view fallback', () => {
     let testBed: TestBed;
 
