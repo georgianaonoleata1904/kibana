@@ -573,10 +573,17 @@ class FilterEditorComponent extends Component<FilterEditorProps, State> {
       return;
     }
 
-    const newIndex = index || this.state.indexPatterns[0].id!;
+    const newIndex = index ?? this.state.indexPatterns[0]?.id;
     try {
       const body = JSON.parse(queryDsl);
-      return buildCustomFilter(newIndex, body, disabled, negate, customLabel || null, $state.store);
+      return buildCustomFilter(
+        newIndex ?? '',
+        body,
+        disabled,
+        negate,
+        customLabel || null,
+        $state.store
+      );
     } catch {
       return null;
     }
