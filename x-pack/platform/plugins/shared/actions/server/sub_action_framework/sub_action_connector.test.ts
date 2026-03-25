@@ -291,6 +291,13 @@ describe('SubActionConnector', () => {
         );
       });
 
+      it('throws when a required field is an object instead of a string', async () => {
+        requestMock.mockReturnValue({ data: { status: {} } });
+        await expect(() => v3Service.testV3(connectorUsageCollector)).rejects.toThrow(
+          /Response validation failed/
+        );
+      });
+
       it('throws when the response data is not an object', async () => {
         requestMock.mockReturnValue({ data: 'not-an-object' });
         await expect(() => v3Service.testV3(connectorUsageCollector)).rejects.toThrow(

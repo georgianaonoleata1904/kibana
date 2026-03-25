@@ -929,7 +929,6 @@ describe('create()', () => {
 
     test('throws when secrets validation fails', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           secrets: {
             schema: z.any().refine(() => {
@@ -956,7 +955,6 @@ describe('create()', () => {
 
     test('throws when config fails Zod object schema validation', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.object({ requiredField: z.string() }) },
           secrets: { schema: z.any() },
@@ -980,7 +978,6 @@ describe('create()', () => {
 
     test('throws when secrets fail Zod object schema validation', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.object({ apiKey: z.string() }) },
@@ -1004,7 +1001,6 @@ describe('create()', () => {
 
     test('throws when config has wrong type for Zod schema', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.object({ port: z.number() }) },
           secrets: { schema: z.any() },
@@ -1028,7 +1024,6 @@ describe('create()', () => {
 
     test('throws when secrets have wrong type for Zod schema', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.object({ apiKey: z.string() }) },

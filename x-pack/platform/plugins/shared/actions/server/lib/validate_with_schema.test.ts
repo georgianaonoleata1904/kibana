@@ -316,6 +316,37 @@ describe('schema transforms and complex schemas', () => {
     expect(result).toEqual({ required: 'x', nullable: null });
   });
 
+  test('rejects null, undefined, and missing key for required z.string()', () => {
+    const schema = z.object({
+      required: z.string(),
+    });
+    const actionType: ActionType = {
+      id: 'foo',
+      name: 'bar',
+      minimumLicenseRequired: 'basic',
+      supportedFeatureIds: ['alerting'],
+      executor,
+      validate: {
+        params: { schema },
+        config: { schema: z.object({}) },
+        secrets: { schema: z.object({}) },
+        connector: () => null,
+      },
+    };
+
+    expect(() =>
+      validateParams(actionType, { required: null }, { configurationUtilities })
+    ).toThrow(/error validating action params/);
+
+    expect(() =>
+      validateParams(actionType, { required: undefined }, { configurationUtilities })
+    ).toThrow(/error validating action params/);
+
+    expect(() => validateParams(actionType, {}, { configurationUtilities })).toThrow(
+      /error validating action params/
+    );
+  });
+
   test('validates union schema', () => {
     const unionSchema = z.union([
       z.object({ type: z.literal('a'), value: z.string() }),

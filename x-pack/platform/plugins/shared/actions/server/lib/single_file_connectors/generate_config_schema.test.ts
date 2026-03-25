@@ -35,8 +35,11 @@ describe('generateConfigSchema', () => {
   it('returns z.object with authType when schema is undefined', () => {
     const result = generateConfigSchema(undefined);
 
-    const parsed = result.schema.parse({});
-    expect(parsed).toEqual({});
+    const withAuthType = result.schema.parse({ authType: 'basic' });
+    expect(withAuthType).toEqual({ authType: 'basic' });
+
+    const withoutAuthType = result.schema.parse({});
+    expect(withoutAuthType).toEqual({});
   });
 
   it('parses valid config with multiple fields', () => {
