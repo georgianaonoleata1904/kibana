@@ -123,7 +123,7 @@ beforeEach(() => {
   authTypeRegistry.get.mockImplementation((authTypeId: string) => ({
     id: authTypeId,
     schema: z.object({}),
-    configure: jest.fn(async (_ctx: unknown, axiosInstance: unknown) => axiosInstance),
+    configure: jest.fn(async (_ctx, axiosInstance) => axiosInstance),
     authMode: authTypeId === 'oauth_authorization_code' ? 'per-user' : 'shared',
   }));
 });
