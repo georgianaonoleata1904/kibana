@@ -85,7 +85,7 @@ describe('<FilterEditor />', () => {
     });
   });
   describe('submitting query dsl with no index patterns', () => {
-    it('should not crash when indexPatterns is empty and filter.meta.index is undefined', async () => {
+    it('should create filter when no index patterns are available', async () => {
       const onSubmit = jest.fn();
       const defaultProps: Omit<FilterEditorProps, 'intl'> = {
         theme: {
@@ -115,8 +115,17 @@ describe('<FilterEditor />', () => {
         target: { value: '{ "wildcard": { "kibana.alert.rule.name": "test*" } }' },
       });
 
-      expect(() => find('saveFilter').simulate('click')).not.toThrow();
-      expect(onSubmit).toHaveBeenCalledTimes(1);
+      find('saveFilter').simulate('click');
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          wildcard: { 'kibana.alert.rule.name': 'test*' },
+          meta: expect.objectContaining({
+            type: 'custom',
+            disabled: false,
+            negate: false,
+          }),
+        })
+      );
     });
   });
 
