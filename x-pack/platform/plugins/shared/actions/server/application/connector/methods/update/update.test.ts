@@ -12,6 +12,7 @@ import { elasticsearchServiceMock } from '@kbn/core-elasticsearch-server-mocks';
 import { httpServerMock } from '@kbn/core-http-server-mocks';
 import { auditLoggerMock } from '@kbn/security-plugin/server/audit/mocks';
 import { loggingSystemMock } from '@kbn/core-logging-server-mocks';
+import { z } from '@kbn/zod/v4';
 import type { Logger } from '@kbn/logging';
 import type { ActionTypeRegistry } from '../../../../action_type_registry';
 import type { AuthTypeRegistry } from '../../../../auth_types/auth_type_registry';
@@ -22,7 +23,6 @@ import type { ActionsClientContext } from '../../../../actions_client';
 import { actionExecutorMock } from '../../../../lib/action_executor.mock';
 import { connectorTokenClientMock } from '../../../../lib/connector_token_client.mock';
 import { encryptedSavedObjectsMock } from '@kbn/encrypted-saved-objects-plugin/server/mocks';
-import { z } from '@kbn/zod';
 
 const unsecuredSavedObjectsClient = savedObjectsClientMock.create();
 const scopedClusterClient = elasticsearchServiceMock.createScopedClusterClient();
@@ -52,11 +52,11 @@ const actionTypeRegistry: ActionTypeRegistry = {
   }),
 } as unknown as ActionTypeRegistry;
 
-const authTypeRegistry = authTypeRegistryMock.create() as unknown as AuthTypeRegistry;
+const authTypeRegistry = authTypeRegistryMock.create();
 
 const mockContext: ActionsClientContext = {
   actionTypeRegistry,
-  authTypeRegistry,
+  authTypeRegistry: authTypeRegistry as unknown as AuthTypeRegistry,
   authorization: authorization as unknown as ActionsAuthorization,
   unsecuredSavedObjectsClient,
   scopedClusterClient,
@@ -102,14 +102,38 @@ const savedObjectCreateResult = {
   references: [],
 };
 
+const makeSavedObjectResult = (attributes: Record<string, unknown>) => ({
+  id: '1',
+  type: 'action',
+  attributes: {
+    actionTypeId: '.test',
+    name: 'Test Connector',
+    isMissingSecrets: false,
+    config: {},
+    secrets: {},
+    ...attributes,
+  },
+  references: [],
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  authorization.ensureAuthorized.mockResolvedValue(undefined);
+  connectorTokenClient.deleteConnectorTokens.mockResolvedValue(undefined);
+  authTypeRegistry.get.mockImplementation((authTypeId: string) => ({
+    id: authTypeId,
+    schema: z.object({}),
+    configure: jest.fn(async (_ctx: unknown, axiosInstance: unknown) => axiosInstance),
+    authMode: authTypeId === 'oauth_authorization_code' ? 'per-user' : 'shared',
+  }));
+});
+
 describe('update()', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     unsecuredSavedObjectsClient.get.mockResolvedValue(existingRawAction as never);
     unsecuredSavedObjectsClient.create.mockResolvedValue(savedObjectCreateResult as never);
     (actionTypeRegistry.get as jest.Mock).mockReturnValue(
       getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any() },
@@ -117,8 +141,121 @@ describe('update()', () => {
         },
       })
     );
-    authorization.ensureAuthorized.mockResolvedValue(undefined);
-    connectorTokenClient.deleteConnectorTokens.mockResolvedValue(undefined);
+  });
+
+  describe('authMode in returned connector', () => {
+    test('returns authMode "shared" when saved object has authMode "shared"', async () => {
+      const soResult = makeSavedObjectResult({ authMode: 'shared' });
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+      unsecuredSavedObjectsClient.create.mockResolvedValueOnce(soResult);
+
+      const result = await update({
+        context: mockContext,
+        id: '1',
+        action: { name: 'Test Connector', config: {}, secrets: {} },
+      });
+
+      expect(result.authMode).toBe('shared');
+    });
+
+    test('returns authMode "per-user" when saved object has authMode "per-user"', async () => {
+      const soResult = makeSavedObjectResult({ authMode: 'per-user' });
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+      unsecuredSavedObjectsClient.create.mockResolvedValueOnce(soResult);
+
+      const result = await update({
+        context: mockContext,
+        id: '1',
+        action: { name: 'Test Connector', config: {}, secrets: {} },
+      });
+
+      expect(result.authMode).toBe('per-user');
+    });
+
+    test('defaults authMode to "shared" when not set in saved object', async () => {
+      const soResult = makeSavedObjectResult({});
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+      unsecuredSavedObjectsClient.create.mockResolvedValueOnce(soResult);
+
+      const result = await update({
+        context: mockContext,
+        id: '1',
+        action: { name: 'Test Connector', config: {}, secrets: {} },
+      });
+
+      expect(result.authMode).toBe('shared');
+    });
+  });
+
+  describe('authType change restrictions', () => {
+    test('rejects changing a per-user connector authType', async () => {
+      const soResult = makeSavedObjectResult({
+        authMode: 'per-user',
+        secrets: { authType: 'oauth_authorization_code' },
+      });
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+
+      await expect(
+        update({
+          context: mockContext,
+          id: '1',
+          action: {
+            name: 'Test Connector',
+            config: {},
+            secrets: { authType: 'bearer' },
+          },
+        })
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: Authentication type cannot be changed for per-user connectors. Connector: 1.]`
+      );
+
+      expect(unsecuredSavedObjectsClient.create).not.toHaveBeenCalled();
+    });
+
+    test('rejects changing a shared connector to a per-user authType', async () => {
+      const soResult = makeSavedObjectResult({
+        authMode: 'shared',
+        secrets: { authType: 'bearer' },
+      });
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+
+      await expect(
+        update({
+          context: mockContext,
+          id: '1',
+          action: {
+            name: 'Test Connector',
+            config: {},
+            secrets: { authType: 'oauth_authorization_code' },
+          },
+        })
+      ).rejects.toMatchInlineSnapshot(
+        `[Error: Authentication type cannot be changed to a per-user type for shared connectors. Connector: 1.]`
+      );
+
+      expect(unsecuredSavedObjectsClient.create).not.toHaveBeenCalled();
+    });
+
+    test('allows updating a per-user connector when authType does not change', async () => {
+      const soResult = makeSavedObjectResult({
+        authMode: 'per-user',
+        secrets: { authType: 'oauth_authorization_code' },
+      });
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+      unsecuredSavedObjectsClient.create.mockResolvedValueOnce(soResult);
+
+      const result = await update({
+        context: mockContext,
+        id: '1',
+        action: {
+          name: 'Test Connector',
+          config: {},
+          secrets: { authType: 'oauth_authorization_code' },
+        },
+      });
+
+      expect(result.authMode).toBe('per-user');
+    });
   });
 
   describe('authorization', () => {
@@ -142,6 +279,34 @@ describe('update()', () => {
           action: { name: 'new name', config: {}, secrets: {} },
         })
       ).rejects.toThrow('Unauthorized to update');
+    });
+
+    test('ensures user is authorised to update connector', async () => {
+      const soResult = makeSavedObjectResult({});
+      unsecuredSavedObjectsClient.get.mockResolvedValueOnce(soResult);
+      unsecuredSavedObjectsClient.create.mockResolvedValueOnce(soResult);
+
+      await update({
+        context: mockContext,
+        id: '1',
+        action: { name: 'Test Connector', config: {}, secrets: {} },
+      });
+
+      expect(authorization.ensureAuthorized).toHaveBeenCalledWith({ operation: 'update' });
+    });
+
+    test('throws when user is not authorised to update connector', async () => {
+      authorization.ensureAuthorized.mockRejectedValue(
+        new Error('Unauthorized to update connector')
+      );
+
+      await expect(
+        update({
+          context: mockContext,
+          id: '1',
+          action: { name: 'Test Connector', config: {}, secrets: {} },
+        })
+      ).rejects.toMatchInlineSnapshot(`[Error: Unauthorized to update connector]`);
     });
   });
 
@@ -199,12 +364,36 @@ describe('update()', () => {
         })
       ).rejects.toThrow('Preconfigured action connector-id can not be updated.');
     });
+
+    test('throws when trying to update a preconfigured connector', async () => {
+      await expect(
+        update({
+          context: {
+            ...mockContext,
+            inMemoryConnectors: [
+              {
+                id: '1',
+                isPreconfigured: true,
+                isSystemAction: false,
+                actionTypeId: '.test',
+                name: 'Test',
+                isDeprecated: false,
+                isConnectorTypeDeprecated: false,
+                config: {},
+                secrets: {},
+              },
+            ],
+          },
+          id: '1',
+          action: { name: 'Test Connector', config: {}, secrets: {} },
+        })
+      ).rejects.toThrow();
+    });
   });
 
   describe('schema validation', () => {
     test('validates config with the connector type schema and persists transformed value', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any().transform(() => ({ validated: true })) },
           secrets: { schema: z.any() },
@@ -228,7 +417,6 @@ describe('update()', () => {
 
     test('validates secrets with the connector type schema and persists transformed value', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any().transform(() => ({ validatedSecret: true })) },
@@ -252,7 +440,6 @@ describe('update()', () => {
 
     test('throws when config fails schema validation', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.object({ requiredField: z.string() }) },
           secrets: { schema: z.any() },
@@ -272,7 +459,6 @@ describe('update()', () => {
 
     test('throws when secrets fail schema validation', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.object({ apiKey: z.string() }) },
@@ -293,7 +479,6 @@ describe('update()', () => {
     test('calls validateConnector when connector validator is defined', async () => {
       const connectorValidator = jest.fn().mockReturnValue(null);
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any() },
@@ -314,7 +499,6 @@ describe('update()', () => {
 
     test('throws when connector validator returns an error', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any() },
@@ -337,7 +521,6 @@ describe('update()', () => {
 
     test('throws when config has wrong type for Zod schema', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.object({ port: z.number() }) },
           secrets: { schema: z.any() },
@@ -357,7 +540,6 @@ describe('update()', () => {
 
     test('throws when secrets have wrong type for Zod schema', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.object({ apiKey: z.string() }) },
@@ -394,6 +576,7 @@ describe('update()', () => {
         isSystemAction: false,
         isDeprecated: false,
         isConnectorTypeDeprecated: false,
+        authMode: 'shared',
       });
     });
 
@@ -479,7 +662,6 @@ describe('update()', () => {
   describe('hooks', () => {
     test('calls preSaveHook before saving when defined', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any() },
@@ -507,7 +689,6 @@ describe('update()', () => {
     test('throws when preSaveHook throws', async () => {
       preSaveHook.mockRejectedValue(new Error('pre-save failed'));
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any() },
@@ -528,7 +709,6 @@ describe('update()', () => {
 
     test('calls postSaveHook after saving when defined', async () => {
       const actionType = getConnectorType({
-        id: 'my-connector-type',
         validate: {
           config: { schema: z.any() },
           secrets: { schema: z.any() },
