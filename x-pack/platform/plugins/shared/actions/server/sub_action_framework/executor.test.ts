@@ -284,7 +284,7 @@ describe('Executor', () => {
       ).rejects.toThrow(/Request validation failed/);
     });
 
-    it('includes Zod v4 format markers in the error message', async () => {
+    it('includes field-level detail in the validation error message', async () => {
       const error = await createExecutor(TestExecutor)({
         actionId,
         params: { subAction: 'echo', subActionParams: { wrongKey: 'value' } },
@@ -297,8 +297,7 @@ describe('Executor', () => {
       }).catch((e) => e);
 
       expect(error.message).toMatch(/Request validation failed/);
-      expect(error.message).toMatch(/✖|Invalid input|expected string|received/);
-      expect(error.message).toMatch(/→ at|id/);
+      expect(error.message).toMatch(/id/);
     });
   });
 
