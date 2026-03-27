@@ -7,7 +7,6 @@
  * License v3.0 only", or the "Server Side Public License, v 1".
  */
 
-import { compact } from 'lodash';
 import type { InjectedIntl } from '@kbn/i18n-react';
 import { FormattedMessage, injectI18n } from '@kbn/i18n-react';
 import classNames from 'classnames';
@@ -341,10 +340,7 @@ export class SearchBarUI<QT extends (Query | AggregateQuery) | Query = Query> ex
   }
 
   private shouldRenderFilterBar() {
-    const hasIndexPatterns =
-      this.props.indexPatterns && compact(this.props.indexPatterns).length > 0;
-    const hasFilters = this.props.filters && this.props.filters.length > 0;
-    return !!(this.props.showFilterBar && this.props.filters && (hasIndexPatterns || hasFilters));
+    return this.props.showFilterBar && this.props.filters;
   }
 
   /*
