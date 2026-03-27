@@ -28,9 +28,6 @@ describe('generateExecutorFunction', () => {
       logger,
       connectorTokenClient: undefined,
       globalAuthHeaders: undefined,
-      signal: undefined,
-      authMode: undefined,
-      profileUid: undefined,
       // satisfies the type but unused by the function under test
       services: {} as never,
       configurationUtilities: {} as never,
@@ -130,9 +127,6 @@ describe('generateExecutorFunction', () => {
     it('calls getAxiosInstanceWithAuth with the correct options', async () => {
       const connectorTokenClient = {} as never;
       const globalAuthHeaders = { 'X-Custom': 'value' };
-      const signal = new AbortController().signal;
-      const authMode = 'basic' as never;
-      const profileUid = 'profile-123';
 
       const executor = generateExecutorFunction({
         actions: makeActions(),
@@ -143,9 +137,6 @@ describe('generateExecutorFunction', () => {
         ...makeExecOptions({ subAction: 'testAction', subActionParams: {} }),
         connectorTokenClient,
         globalAuthHeaders,
-        signal,
-        authMode,
-        profileUid,
       });
 
       expect(mockGetAxiosInstanceWithAuth).toHaveBeenCalledWith({
@@ -153,9 +144,6 @@ describe('generateExecutorFunction', () => {
         connectorTokenClient,
         additionalHeaders: globalAuthHeaders,
         secrets: { token: 'secret' },
-        signal,
-        authMode,
-        profileUid,
       });
     });
   });
@@ -191,7 +179,7 @@ describe('generateExecutorFunction', () => {
   });
 
   describe('handler error handling', () => {
-    it('returns status error with the error message when handler throws an Error', async () => {
+    it('returns status error with generic message when handler throws an Error', async () => {
       mockHandler.mockRejectedValue(new Error('handler failed'));
 
       const executor = generateExecutorFunction({
@@ -205,7 +193,7 @@ describe('generateExecutorFunction', () => {
 
       expect(result).toEqual({
         status: 'error',
-        message: 'handler failed',
+        message: 'error calling connector, unexpected error',
         actionId: connectorId,
       });
     });
@@ -220,10 +208,12 @@ describe('generateExecutorFunction', () => {
 
       await executor(makeExecOptions({ subAction: 'testAction', subActionParams: {} }));
 
-      expect(logger.error).toHaveBeenCalledWith(`error on ${connectorId} event: handler failed`);
+      expect(logger.error).toHaveBeenCalledWith(
+        `error on ${connectorId} event: Error: handler failed`
+      );
     });
 
-    it('returns status error with stringified value when handler throws a non-Error', async () => {
+    it('returns status error with generic message when handler throws a non-Error', async () => {
       mockHandler.mockRejectedValue('string error');
 
       const executor = generateExecutorFunction({
@@ -237,7 +227,7 @@ describe('generateExecutorFunction', () => {
 
       expect(result).toEqual({
         status: 'error',
-        message: 'string error',
+        message: 'error calling connector, unexpected error',
         actionId: connectorId,
       });
     });
