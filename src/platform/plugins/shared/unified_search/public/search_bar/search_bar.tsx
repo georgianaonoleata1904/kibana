@@ -346,10 +346,7 @@ export class SearchBarUI<QT extends (Query | AggregateQuery) | Query = Query> ex
   }
 
   private shouldRenderFilterBar() {
-    const hasIndexPatterns =
-      this.props.indexPatterns && compact(this.props.indexPatterns).length > 0;
-    const hasFilters = this.props.filters && this.props.filters.length > 0;
-    return !!(this.props.showFilterBar && this.props.filters && (hasIndexPatterns || hasFilters));
+    return this.props.showFilterBar && this.props.filters;
   }
 
   /*
