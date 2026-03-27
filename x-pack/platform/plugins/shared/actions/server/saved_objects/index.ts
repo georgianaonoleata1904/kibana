@@ -24,7 +24,12 @@ import {
 import { getActionsMigrations } from './actions_migrations';
 import { getActionTaskParamsMigrations } from './action_task_params_migrations';
 import type { InMemoryConnector, RawAction } from '../types';
-import { getImportWarnings, getPreconfiguredConflictWarnings } from './get_import_warnings';
+import {
+  getImportWarnings,
+  getPreconfiguredConflictWarnings,
+  getInvalidConnectorIdWarnings,
+  getConnectorsWithInvalidIds,
+} from './get_import_warnings';
 import { transformConnectorsForExport } from './transform_connectors_for_export';
 import type { ActionTypeRegistry } from '../action_type_registry';
 import {
@@ -80,15 +85,21 @@ export function setupSavedObjects(
           inMemoryConnectors.filter((c) => c.isPreconfigured).map((c) => c.id)
         );
 
-        const conflicting = typedConnectors.filter(
+        const preconfiguredConflicts = typedConnectors.filter(
           (c) => preconfiguredIds.has(c.id) && !c.destinationId
         );
+        const invalidIdConnectors = getConnectorsWithInvalidIds(typedConnectors);
 
-        if (conflicting.length > 0) {
+        const toDelete = [
+          ...preconfiguredConflicts,
+          ...invalidIdConnectors.filter((c) => !preconfiguredConflicts.some((p) => p.id === c.id)),
+        ];
+
+        if (toDelete.length > 0) {
           const repo = getSoRepository();
           if (repo) {
             await Promise.all(
-              conflicting.map((c) =>
+              toDelete.map((c) =>
                 repo.delete(ACTION_SAVED_OBJECT_TYPE, c.id, {
                   namespace: c.namespaces?.[0],
                 })
@@ -101,6 +112,7 @@ export function setupSavedObjects(
           warnings: [
             ...getImportWarnings(typedConnectors),
             ...getPreconfiguredConflictWarnings(typedConnectors, inMemoryConnectors),
+            ...getInvalidConnectorIdWarnings(typedConnectors),
           ],
         };
       },
