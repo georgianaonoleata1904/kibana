@@ -23,7 +23,7 @@ export const checkConnectorIdRoute = (
 ) => {
   router.get(
     {
-      path: `${BASE_ACTION_API_PATH}/connector/{connector_id}/_availability`,
+      path: `${INTERNAL_BASE_ACTION_API_PATH}/connector/{connector_id}/_availability`,
       security: DEFAULT_ACTION_ROUTE_SECURITY,
       options: {
         access: 'internal',
