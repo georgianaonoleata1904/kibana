@@ -356,7 +356,10 @@ export class ActionsPlugin
       this.actionTypeRegistry!,
       plugins.taskManager.index,
       this.inMemoryConnectors,
-      () => this.getInternalSoRepository?.()
+       async () => {
+        const [coreStart] = await core.getStartServices();
+        return coreStart.savedObjects.createInternalRepository([ACTION_SAVED_OBJECT_TYPE]);
+      }
     );
 
     const usageCollection = plugins.usageCollection;
