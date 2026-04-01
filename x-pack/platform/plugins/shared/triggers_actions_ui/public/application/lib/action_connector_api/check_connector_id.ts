@@ -5,7 +5,7 @@
  * 2.0.
  */
 import type { HttpSetup } from '@kbn/core/public';
-import { BASE_ACTION_API_PATH } from '../../constants';
+import { INTERNAL_BASE_ACTION_API_PATH } from '../../constants';
 
 export interface CheckConnectorIdResponse {
   isAvailable: boolean;
@@ -19,7 +19,7 @@ export async function checkConnectorIdAvailability({
   id: string;
 }): Promise<CheckConnectorIdResponse> {
   const { is_available } = await http.get<{ is_available: boolean }>(
-    `${BASE_ACTION_API_PATH}/connector/${encodeURIComponent(id)}/_availability`
+    `${INTERNAL_BASE_ACTION_API_PATH}/connector/${encodeURIComponent(id)}/_availability`
   );
   return { isAvailable: is_available };
 }

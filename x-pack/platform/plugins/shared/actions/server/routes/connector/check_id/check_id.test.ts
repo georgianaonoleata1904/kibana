@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import Boom from '@hapi/boom';
 import { checkConnectorIdRoute } from './check_id';
 import { httpServiceMock } from '@kbn/core/server/mocks';
 import { licenseStateMock } from '../../../lib/license_state.mock';
@@ -16,12 +17,6 @@ import { createMockConnector } from '../../../application/connector/mocks';
 jest.mock('../../verify_access_and_context', () => ({
   verifyAccessAndContext: jest.fn(),
 }));
-
-const createErrorWithStatusCode = (message: string, statusCode: number): Error => {
-  const error: Error & { output?: { statusCode: number } } = new Error(message);
-  error.output = { statusCode };
-  return error;
-};
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -38,7 +33,7 @@ describe('checkConnectorIdRoute', () => {
     const [config, handler] = router.get.mock.calls[0];
 
     expect(config.path).toMatchInlineSnapshot(
-      `"/api/actions/connector/{connector_id}/_availability"`
+      `"/internal/actions/connector/{connector_id}/_availability"`
     );
 
     const actionsClient = actionsClientMock.create();
@@ -78,7 +73,7 @@ describe('checkConnectorIdRoute', () => {
     const [, handler] = router.get.mock.calls[0];
 
     const actionsClient = actionsClientMock.create();
-    actionsClient.get.mockRejectedValueOnce(createErrorWithStatusCode('Not found', 404));
+    actionsClient.get.mockRejectedValueOnce(Boom.notFound('Not found'));
 
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },
@@ -104,7 +99,7 @@ describe('checkConnectorIdRoute', () => {
     const [, handler] = router.get.mock.calls[0];
 
     const actionsClient = actionsClientMock.create();
-    actionsClient.get.mockRejectedValueOnce(createErrorWithStatusCode('Server error', 500));
+    actionsClient.get.mockRejectedValueOnce(Boom.internal('Server error'));
 
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },
@@ -126,7 +121,7 @@ describe('checkConnectorIdRoute', () => {
     const [, handler] = router.get.mock.calls[0];
 
     const actionsClient = actionsClientMock.create();
-    actionsClient.get.mockRejectedValueOnce(createErrorWithStatusCode('Not found', 404));
+    actionsClient.get.mockRejectedValueOnce(Boom.notFound('Not found'));
 
     const [context, req, res] = mockHandlerArguments(
       { actionsClient },

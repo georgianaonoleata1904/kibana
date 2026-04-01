@@ -6,8 +6,9 @@
  */
 
 import type { IRouter } from '@kbn/core/server';
+import Boom from '@hapi/boom';
 import type { ILicenseState } from '../../../lib';
-import { BASE_ACTION_API_PATH } from '../../../../common';
+import { INTERNAL_BASE_ACTION_API_PATH } from '../../../../common';
 import type { ActionsRequestHandlerContext } from '../../../types';
 import { verifyAccessAndContext } from '../../verify_access_and_context';
 import { DEFAULT_ACTION_ROUTE_SECURITY } from '../../constants';
@@ -53,7 +54,7 @@ export const checkConnectorIdRoute = (
             body: { is_available: false },
           });
         } catch (error) {
-          if (error?.output?.statusCode === 404) {
+          if (Boom.isBoom(error) && error.output.statusCode === 404) {
             return res.ok({
               body: { is_available: true },
             });

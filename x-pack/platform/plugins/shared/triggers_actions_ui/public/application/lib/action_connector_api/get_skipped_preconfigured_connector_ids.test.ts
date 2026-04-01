@@ -14,15 +14,19 @@ beforeEach(() => jest.resetAllMocks());
 
 describe('getSkippedPreconfiguredConnectorIds', () => {
   it('calls the correct endpoint', async () => {
-    http.get.mockResolvedValueOnce({ skipped_preconfigured_connector_ids: [] });
+    http.get.mockResolvedValueOnce({
+      isAlertsAvailable: true,
+      skipped_preconfigured_connector_ids: [],
+    });
 
     await getSkippedPreconfiguredConnectorIds({ http });
 
-    expect(http.get).toHaveBeenCalledWith('/api/actions/connector/_conflicted_ids');
+    expect(http.get).toHaveBeenCalledWith('/internal/triggers_actions_ui/_health');
   });
 
   it('returns the mapped skipped connector IDs', async () => {
     http.get.mockResolvedValueOnce({
+      isAlertsAvailable: true,
       skipped_preconfigured_connector_ids: ['connector-a', 'connector-b'],
     });
 
@@ -34,7 +38,10 @@ describe('getSkippedPreconfiguredConnectorIds', () => {
   });
 
   it('returns an empty array when there are no skipped connectors', async () => {
-    http.get.mockResolvedValueOnce({ skipped_preconfigured_connector_ids: [] });
+    http.get.mockResolvedValueOnce({
+      isAlertsAvailable: true,
+      skipped_preconfigured_connector_ids: [],
+    });
 
     const result = await getSkippedPreconfiguredConnectorIds({ http });
 

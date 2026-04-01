@@ -18,7 +18,9 @@ describe('checkConnectorIdAvailability', () => {
 
     const result = await checkConnectorIdAvailability({ http, id: 'my-connector-id' });
 
-    expect(http.get).toHaveBeenCalledWith('/api/actions/connector/my-connector-id/_availability');
+    expect(http.get).toHaveBeenCalledWith(
+      '/internal/actions/connector/my-connector-id/_availability'
+    );
     expect(result).toEqual({ isAvailable: true });
   });
 
@@ -28,7 +30,7 @@ describe('checkConnectorIdAvailability', () => {
     await checkConnectorIdAvailability({ http, id: 'my connector/id' });
 
     expect(http.get).toHaveBeenCalledWith(
-      '/api/actions/connector/my%20connector%2Fid/_availability'
+      '/internal/actions/connector/my%20connector%2Fid/_availability'
     );
   });
 
