@@ -5,7 +5,8 @@
  * 2.0.
  */
 import type { HttpSetup } from '@kbn/core/public';
-import { INTERNAL_BASE_ACTION_API_PATH } from '../../constants';
+import { isHttpFetchError } from '@kbn/core-http-browser';
+import { BASE_ACTION_API_PATH } from '../../constants';
 
 export interface CheckConnectorIdResponse {
   isAvailable: boolean;
@@ -18,8 +19,14 @@ export async function checkConnectorIdAvailability({
   http: HttpSetup;
   id: string;
 }): Promise<CheckConnectorIdResponse> {
-  const { is_available } = await http.get<{ is_available: boolean }>(
-    `${INTERNAL_BASE_ACTION_API_PATH}/connector/${encodeURIComponent(id)}/_availability`
-  );
-  return { isAvailable: is_available };
+  const path = `${BASE_ACTION_API_PATH}/connector/${encodeURIComponent(id)}`;
+  try {
+    await http.head(path, { asResponse: true, rawResponse: true });
+    return { isAvailable: false };
+  } catch (error) {
+    if (isHttpFetchError(error) && error.response?.status === 404) {
+      return { isAvailable: true };
+    }
+    throw error;
+  }
 }

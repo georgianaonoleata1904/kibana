@@ -35,7 +35,7 @@ describe('ConnectorFormFieldsGlobal', () => {
     jest.clearAllMocks();
     const httpMock = httpServiceMock.createStartContract();
     useKibanaMock().services.http = httpMock;
-    checkConnectorIdAvailability.mockResolvedValue({ is_available: true });
+    checkConnectorIdAvailability.mockResolvedValue({ isAvailable: true });
   });
 
   it('submits correctly', async () => {
@@ -88,7 +88,7 @@ describe('ConnectorFormFieldsGlobal', () => {
   });
 
   it('shows error when connector ID is already in use', async () => {
-    checkConnectorIdAvailability.mockResolvedValue({ is_available: false });
+    checkConnectorIdAvailability.mockResolvedValue({ isAvailable: false });
 
     render(
       <FormTestProvider onSubmit={onSubmit} defaultValue={defaultValue}>
