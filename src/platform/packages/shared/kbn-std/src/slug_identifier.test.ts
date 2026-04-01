@@ -23,8 +23,8 @@ describe('slug_identifier', () => {
       expect(toSlugIdentifier('test@connector#1')).toEqual('test-connector-1');
     });
 
-    it('preserves underscores', () => {
-      expect(toSlugIdentifier('my_connector_name')).toEqual('my_connector_name');
+    it('replaces underscores with hyphens', () => {
+      expect(toSlugIdentifier('my_connector_name')).toEqual('my-connector-name');
     });
 
     it('preserves numbers', () => {
@@ -44,19 +44,51 @@ describe('slug_identifier', () => {
       expect(toSlugIdentifier('!!!test')).toEqual('test');
     });
 
+    it('trims trailing hyphens', () => {
+      expect(toSlugIdentifier('slack-')).toEqual('slack');
+      expect(toSlugIdentifier('test!!!')).toEqual('test');
+    });
+
     it('handles mixed cases and special characters', () => {
       expect(toSlugIdentifier('My Email Connector-Production ')).toEqual(
-        'my-email-connector-production-'
+        'my-email-connector-production'
       );
+    });
+
+    it('strips diacritics from accented characters', () => {
+      expect(toSlugIdentifier('  Tést  ')).toEqual('test');
+    });
+
+    it('returns empty string for non-latin characters', () => {
+      expect(toSlugIdentifier('日本語')).toEqual('');
+    });
+
+    it('replaces apostrophes with hyphens', () => {
+      expect(toSlugIdentifier("Connector's id")).toEqual('connector-s-id');
+    });
+
+    it('replaces repeated symbols with a single hyphen', () => {
+      expect(toSlugIdentifier('foo++ bar!')).toEqual('foo-bar');
+    });
+
+    it('handles leading and trailing underscores with mixed spacing', () => {
+      expect(toSlugIdentifier('__foo  bar--baz__')).toEqual('foo-bar-baz');
+    });
+
+    it('handles symbols mixed with numbers', () => {
+      expect(toSlugIdentifier('Foo bar #42 (draft)')).toEqual('foo-bar-42-draft');
+    });
+
+    it('collapses multiple consecutive spaces', () => {
+      expect(toSlugIdentifier('foo   bar')).toEqual('foo-bar');
     });
   });
 
   describe('isValidSlugIdentifier', () => {
     it('returns true for valid identifiers', () => {
       expect(isValidSlugIdentifier('my-connector')).toBe(true);
-      expect(isValidSlugIdentifier('my_connector')).toBe(true);
       expect(isValidSlugIdentifier('connector123')).toBe(true);
-      expect(isValidSlugIdentifier('my-connector_123')).toBe(true);
+      expect(isValidSlugIdentifier('my-connector-123')).toBe(true);
     });
 
     it('returns false for identifiers with uppercase', () => {
@@ -79,8 +111,16 @@ describe('slug_identifier', () => {
       expect(isValidSlugIdentifier('-my-connector')).toBe(false);
     });
 
-    it('returns true for identifiers with trailing hyphens', () => {
-      expect(isValidSlugIdentifier('my-connector-')).toBe(true);
+    it('returns false for identifiers with trailing hyphens', () => {
+      expect(isValidSlugIdentifier('my-connector-')).toBe(false);
+    });
+
+    it('returns false for identifiers with underscores', () => {
+      expect(isValidSlugIdentifier('my_connector')).toBe(false);
+    });
+
+    it('returns false for identifiers with consecutive hyphens', () => {
+      expect(isValidSlugIdentifier('my--connector')).toBe(false);
     });
   });
 });

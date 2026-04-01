@@ -112,8 +112,7 @@ const createIdConfig = (
             message: i18n.translate(
               'xpack.triggersActionsUI.sections.actionConnectorForm.error.invalidIdFormat',
               {
-                defaultMessage:
-                  'Only lowercase letters, numbers, underscores, and hyphens are allowed.',
+                defaultMessage: 'Only lowercase letters, numbers, and hyphens are allowed.',
               }
             ),
           };

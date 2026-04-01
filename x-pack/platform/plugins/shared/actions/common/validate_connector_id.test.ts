@@ -20,38 +20,22 @@ describe('validateConnectorId', () => {
     );
   });
 
-  it('throws when value contains uppercase letters', () => {
-    expect(() => validateConnectorId('My-Connector')).toThrow(
-      'Connector ID must contain only lowercase letters, numbers, underscores, and hyphens.'
+  it.each([
+    ['uppercase letters', 'My-Connector'],
+    ['spaces', 'my connector'],
+    ['special characters', 'my@connector!'],
+    ['underscores', 'my_connector'],
+  ])('throws when value contains %s', (_, value) => {
+    expect(() => validateConnectorId(value)).toThrow(
+      'Connector ID must contain only lowercase letters, numbers, and hyphens.'
     );
   });
 
-  it('throws when value contains spaces', () => {
-    expect(() => validateConnectorId('my connector')).toThrow(
-      'Connector ID must contain only lowercase letters, numbers, underscores, and hyphens.'
-    );
-  });
-
-  it('throws when value contains special characters', () => {
-    expect(() => validateConnectorId('my@connector!')).toThrow(
-      'Connector ID must contain only lowercase letters, numbers, underscores, and hyphens.'
-    );
-  });
-
-  it('does not throw for a valid lowercase slug', () => {
-    expect(() => validateConnectorId('my-connector')).not.toThrow();
-  });
-
-  it('does not throw for a value with numbers', () => {
-    expect(() => validateConnectorId('connector-123')).not.toThrow();
-  });
-
-  it('does not throw for a value with underscores', () => {
-    expect(() => validateConnectorId('my_connector')).not.toThrow();
-  });
-
-  it('does not throw for a value at exactly max length', () => {
-    const maxLength = 'a'.repeat(CONNECTOR_ID_MAX_LENGTH);
-    expect(() => validateConnectorId(maxLength)).not.toThrow();
+  it.each([
+    ['a valid lowercase slug', 'my-connector'],
+    ['numbers', 'connector-123'],
+    ['a value at exactly max length', 'a'.repeat(CONNECTOR_ID_MAX_LENGTH)],
+  ])('does not throw for %s', (_, value) => {
+    expect(() => validateConnectorId(value)).not.toThrow();
   });
 });

@@ -53,7 +53,10 @@ export function setupSavedObjects(
   actionTypeRegistry: ActionTypeRegistry,
   taskManagerIndex: string,
   inMemoryConnectors: InMemoryConnector[],
-  getSoRepository: () => ISavedObjectsRepository | undefined
+  getSoRepository: () =>
+    | Promise<ISavedObjectsRepository | undefined>
+    | ISavedObjectsRepository
+    | undefined
 ) {
   savedObjects.registerType({
     name: ACTION_SAVED_OBJECT_TYPE,
@@ -96,14 +99,11 @@ export function setupSavedObjects(
         ];
 
         if (toDelete.length > 0) {
-          const repo = getSoRepository();
+          const repo = await getSoRepository();
           if (repo) {
-            await Promise.all(
-              toDelete.map((c) =>
-                repo.delete(ACTION_SAVED_OBJECT_TYPE, c.id, {
-                  namespace: c.namespaces?.[0],
-                })
-              )
+            await repo.bulkDelete(
+              toDelete.map((c) => ({ type: ACTION_SAVED_OBJECT_TYPE, id: c.id })),
+              { namespace: toDelete[0]?.namespaces?.[0] }
             );
           }
         }

@@ -167,7 +167,7 @@ describe('getInvalidConnectorIdWarnings', () => {
     } as unknown as SavedObject<RawAction> & { destinationId?: string });
 
   it('returns empty array when all connector ids are valid slugs', () => {
-    const connectors = [createConnector('my-connector'), createConnector('another_one')];
+    const connectors = [createConnector('my-connector'), createConnector('another-one')];
     expect(getInvalidConnectorIdWarnings(connectors)).toEqual([]);
   });
 

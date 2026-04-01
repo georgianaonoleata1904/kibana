@@ -356,7 +356,7 @@ export class ActionsPlugin
       this.actionTypeRegistry!,
       plugins.taskManager.index,
       this.inMemoryConnectors,
-       async () => {
+      async () => {
         const [coreStart] = await core.getStartServices();
         return coreStart.savedObjects.createInternalRepository([ACTION_SAVED_OBJECT_TYPE]);
       }
@@ -877,20 +877,27 @@ export class ActionsPlugin
 
     void (async () => {
       try {
-        const result = await internalRepo.find({
+        const rawIds = Array.from(preconfiguredIds).map(
+          (id) => `${ACTION_SAVED_OBJECT_TYPE}:${id}`
+        );
+        const result = await internalRepo.search({
           type: ACTION_SAVED_OBJECT_TYPE,
-          perPage: 1000,
+          query: { ids: { values: rawIds } },
+          _source: false,
           namespaces: ['*'],
         });
-        const savedObjects = result?.saved_objects ?? [];
-        const conflictingIds = savedObjects
-          .filter((so) => preconfiguredIds.has(so.id))
-          .map((so) => so.id);
+
+        const conflictingIds = (result?.hits?.hits ?? [])
+          .map((hit) => hit._id?.replace(`${ACTION_SAVED_OBJECT_TYPE}:`, ''))
+          .filter((id): id is string => id !== undefined && preconfiguredIds.has(id));
 
         if (conflictingIds.length > 0) {
           this.skippedPreconfiguredConnectorIds = new Set(conflictingIds);
-          this.inMemoryConnectors = this.inMemoryConnectors.filter(
-            (c) => !c.isPreconfigured || !conflictingIds.includes(c.id)
+          const conflictSet = new Set(conflictingIds);
+          this.inMemoryConnectors.splice(
+            0,
+            this.inMemoryConnectors.length,
+            ...this.inMemoryConnectors.filter((c) => !(c.isPreconfigured && conflictSet.has(c.id)))
           );
           this.logger.error(
             i18n.translate('xpack.actions.preconfiguredConnectorConflictSkipped', {
@@ -904,7 +911,7 @@ export class ActionsPlugin
           );
         }
       } catch (err) {
-        this.logger.warn(`Failed to check for preconfigured connector conflicts: ${err.message}`);
+        this.logger.debug(`Failed to check for preconfigured connector conflicts: ${err.message}`);
       }
     })();
   };

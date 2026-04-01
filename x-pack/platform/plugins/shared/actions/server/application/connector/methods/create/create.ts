@@ -189,7 +189,7 @@ export async function create({
     if (SavedObjectsErrorHelpers.isConflictError(result)) {
       throw Boom.conflict(
         i18n.translate('xpack.actions.serverSideErrors.connectorIdConflict', {
-          defaultMessage: 'A connector with ID "{id}" already exists.',
+          defaultMessage: 'A connector is already using this ID. Choose a different ID.',
           values: { id },
         })
       );

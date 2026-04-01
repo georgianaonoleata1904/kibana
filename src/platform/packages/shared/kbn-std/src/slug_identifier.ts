@@ -11,7 +11,10 @@
  * Converts a string value to a URL-safe slug identifier.
  * - Converts to lowercase
  * - Replaces non-alphanumeric characters (except underscores) with hyphens
- * - Trims leading hyphens
+ * - Trims leading and trailing hyphens
+ * - Collapses multiple hyphens
+ * - Removes non-word chars
+ * - Converts spaces and underscores to hyphens
  *
  * @param value - The string to convert
  * @returns A slugified identifier
@@ -22,12 +25,18 @@
  */
 export function toSlugIdentifier(value = ''): string {
   if (value === null) return '';
-  let result = value.toLowerCase().replace(/[^a-z0-9_]/g, '-');
 
-  while (result.startsWith('-')) {
-    result = result.slice(1);
-  }
-  return result;
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036F\u1AB0-\u1AFF\u1DC0-\u1DFF]+/g, '') // strip diacritics
+    .normalize('NFC')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_]/g, '-')
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 /**

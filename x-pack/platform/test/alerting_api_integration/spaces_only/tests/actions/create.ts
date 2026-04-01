@@ -144,6 +144,28 @@ export default function createConnectorTests({ getService }: FtrProviderContext)
       });
     });
 
+    it('should return 400 when creating a connector with a non-slugified ID', async () => {
+      await supertest
+        .post(`${getUrlPrefix(Spaces.space1.id)}/api/actions/connector/My%20Invalid%20ID!`)
+        .set('kbn-xsrf', 'foo')
+        .send({
+          name: 'My connector',
+          connector_type_id: 'test.index-record',
+          config: {
+            unencrypted: `This value shouldn't get encrypted`,
+          },
+          secrets: {
+            encrypted: 'This value should be encrypted',
+          },
+        })
+        .expect(400, {
+          statusCode: 400,
+          error: 'Bad Request',
+          message:
+            '[request params.id]: Connector ID must contain only lowercase letters, numbers, and hyphens.',
+        });
+    });
+
     it('should return 409 conflict when creating a connector with a duplicate custom ID', async () => {
       const customId = 'duplicate-connector-id';
 

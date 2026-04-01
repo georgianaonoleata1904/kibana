@@ -16,8 +16,6 @@ export function validateConnectorId(value: string): void {
     throw new Error(`Connector ID must be ${CONNECTOR_ID_MAX_LENGTH} characters or less.`);
   }
   if (!isValidSlugIdentifier(value)) {
-    throw new Error(
-      'Connector ID must contain only lowercase letters, numbers, underscores, and hyphens.'
-    );
+    throw new Error('Connector ID must contain only lowercase letters, numbers, and hyphens.');
   }
 }

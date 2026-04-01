@@ -102,7 +102,7 @@ export function getInvalidConnectorIdWarnings(
   const invalidIds = invalidConnectors.map((c) => c.id).join(', ');
   const message = i18n.translate('xpack.actions.savedObjects.invalidConnectorIdWarning', {
     defaultMessage:
-      '{count, plural, one {Connector} other {Connectors}} with {count, plural, one {ID} other {IDs}} [{ids}] {count, plural, one {has an} other {have}} invalid {count, plural, one {ID} other {IDs}} and {count, plural, one {was} other {were}} removed. Connector IDs must contain only lowercase letters, numbers, underscores, and hyphens and be {maxLength} characters or less.',
+      '{count, plural, one {Connector} other {Connectors}} with {count, plural, one {ID} other {IDs}} [{ids}] {count, plural, one {has an} other {have}} invalid {count, plural, one {ID} other {IDs}} and {count, plural, one {was} other {were}} removed. Connector IDs must contain only lowercase letters, numbers, and hyphens and be {maxLength} characters or less.',
     values: {
       count: invalidConnectors.length,
       ids: invalidIds,
