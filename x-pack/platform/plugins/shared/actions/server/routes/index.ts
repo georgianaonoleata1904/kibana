@@ -53,7 +53,7 @@ export function defineRoutes(opts: RouteOptions) {
   getGlobalExecutionLogRoute(router, licenseState);
   getGlobalExecutionKPIRoute(router, licenseState);
   getOAuthAccessToken(router, licenseState, actionsConfigUtils);
-  oauthAuthorizeRoute(router, licenseState, logger, core, oauthRateLimiter);
+  oauthAuthorizeRoute(router, licenseState, logger, core, oauthRateLimiter, actionsConfigUtils);
   oauthCallbackRoute(router, licenseState, actionsConfigUtils, logger, core, oauthRateLimiter);
   oauthCallbackScriptRoute(router);
   oauthDisconnectRoute(router, licenseState, logger, core);
