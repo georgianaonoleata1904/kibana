@@ -262,7 +262,6 @@ export class ActionsPlugin
   private connectorUsageReportingTask: ConnectorUsageReportingTask | undefined;
   private connectorLifecycleListeners: ConnectorLifecycleListener[] = [];
   private skippedPreconfiguredConnectorIds: Set<string> = new Set();
-  private getInternalSoRepository: (() => ISavedObjectsRepository) | undefined;
 
   constructor(initContext: PluginInitializerContext) {
     this.logger = initContext.logger.get();
