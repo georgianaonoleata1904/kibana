@@ -539,9 +539,6 @@ export class ActionsPlugin
      */
     this.setSystemActions();
 
-    this.getInternalSoRepository = () =>
-      core.savedObjects.createInternalRepository([ACTION_SAVED_OBJECT_TYPE]);
-
     this.detectPreconfiguredConflicts(core);
 
     const createActionsClient = async ({
