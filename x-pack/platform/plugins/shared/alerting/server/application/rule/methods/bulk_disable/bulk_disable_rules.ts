@@ -148,16 +148,26 @@ const bulkDisableRulesWithOCC = async (
       })
   );
 
-  const rulesToDisable: Array<SavedObjectsBulkUpdateObject<RawRule>> = [];
-  const errors: BulkOperationError[] = [];
+  // Lightweight metadata that accumulates across pages
   const ruleNameToRuleIdMapping: Record<string, string> = {};
   const username = await context.getUserName();
 
+  // Aggregated results across pages
+  const errors: BulkOperationError[] = [];
+  const taskIdsToDisable: string[] = [];
+  const taskIdsToDelete: string[] = [];
+  const taskIdsToClearState: string[] = [];
+  const disabledRules: Array<SavedObjectsBulkUpdateObject<RawRule>> = [];
+
   await withSpan(
-    { name: 'Get rules, collect them and their attributes', type: 'rules' },
+    { name: 'Process rules page by page: collect, disable, persist', type: 'rules' },
     async () => {
       for await (const response of rulesFinder.find()) {
         await bulkMigrateLegacyActions({ context, rules: response.saved_objects });
+
+        // Build this page's list of rules to disable
+        const pageRulesToDisable: Array<SavedObjectsBulkUpdateObject<RawRule>> = [];
+
         await pMap(response.saved_objects, async (rule) => {
           const ruleName = rule.attributes.name;
 
@@ -186,7 +196,7 @@ const bulkDisableRulesWithOCC = async (
                 : {}),
             });
 
-            rulesToDisable.push({
+            pageRulesToDisable.push({
               ...rule,
               // TODO (http-versioning) Remove casts when updateMeta has been converted
               attributes: {
@@ -222,57 +232,54 @@ const bulkDisableRulesWithOCC = async (
             );
           }
         });
+
+        // Persist this page's disabled rules
+        // TODO (http-versioning): for whatever reasoning we are using SavedObjectsBulkUpdateObject
+        // everywhere when it should be SavedObjectsBulkCreateObject. We need to fix it in
+        // bulk_disable, bulk_enable, etc. to fix this cast
+        if (pageRulesToDisable.length > 0) {
+          const result = await bulkDisableRulesSo({
+            savedObjectsClient: context.unsecuredSavedObjectsClient,
+            bulkDisableRuleAttributes: pageRulesToDisable as Array<
+              SavedObjectsBulkCreateObject<RawRule>
+            >,
+            savedObjectsBulkCreateOptions: { overwrite: true },
+          });
+
+          result.saved_objects.forEach((rule) => {
+            if (rule.error === undefined) {
+              if (rule.attributes.scheduledTaskId) {
+                if (rule.attributes.scheduledTaskId !== rule.id) {
+                  taskIdsToDelete.push(rule.attributes.scheduledTaskId);
+                } else {
+                  taskIdsToDisable.push(rule.attributes.scheduledTaskId);
+                  if (rule.attributes.alertTypeId) {
+                    const { autoRecoverAlerts: isLifecycleAlert } = context.ruleTypeRegistry.get(
+                      rule.attributes.alertTypeId
+                    );
+                    if (isLifecycleAlert) {
+                      taskIdsToClearState.push(rule.attributes.scheduledTaskId);
+                    }
+                  }
+                }
+              }
+              disabledRules.push(rule);
+            } else {
+              errors.push({
+                message: rule.error.message ?? 'n/a',
+                status: rule.error.statusCode,
+                rule: {
+                  id: rule.id,
+                  name: ruleNameToRuleIdMapping[rule.id] ?? 'n/a',
+                },
+              });
+            }
+          });
+        }
       }
       await rulesFinder.close();
     }
   );
-
-  // TODO (http-versioning): for whatever reasoning we are using SavedObjectsBulkUpdateObject
-  // everywhere when it should be SavedObjectsBulkCreateObject. We need to fix it in
-  // bulk_disable, bulk_enable, etc. to fix this cast
-
-  const result = await withSpan(
-    { name: 'unsecuredSavedObjectsClient.bulkCreate', type: 'rules' },
-    () =>
-      bulkDisableRulesSo({
-        savedObjectsClient: context.unsecuredSavedObjectsClient,
-        bulkDisableRuleAttributes: rulesToDisable as Array<SavedObjectsBulkCreateObject<RawRule>>,
-        savedObjectsBulkCreateOptions: { overwrite: true },
-      })
-  );
-
-  const taskIdsToDisable: string[] = [];
-  const taskIdsToDelete: string[] = [];
-  const taskIdsToClearState: string[] = [];
-  const disabledRules: Array<SavedObjectsBulkUpdateObject<RawRule>> = [];
-
-  result.saved_objects.forEach((rule) => {
-    if (rule.error === undefined) {
-      if (rule.attributes.scheduledTaskId) {
-        if (rule.attributes.scheduledTaskId !== rule.id) {
-          taskIdsToDelete.push(rule.attributes.scheduledTaskId);
-        } else {
-          taskIdsToDisable.push(rule.attributes.scheduledTaskId);
-          if (rule.attributes.alertTypeId) {
-            const { autoRecoverAlerts: isLifecycleAlert } = context.ruleTypeRegistry.get(
-              rule.attributes.alertTypeId
-            );
-            if (isLifecycleAlert) taskIdsToClearState.push(rule.attributes.scheduledTaskId);
-          }
-        }
-      }
-      disabledRules.push(rule);
-    } else {
-      errors.push({
-        message: rule.error.message ?? 'n/a',
-        status: rule.error.statusCode,
-        rule: {
-          id: rule.id,
-          name: ruleNameToRuleIdMapping[rule.id] ?? 'n/a',
-        },
-      });
-    }
-  });
 
   return {
     errors,
