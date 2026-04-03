@@ -339,10 +339,6 @@ export class SearchBarUI<QT extends (Query | AggregateQuery) | Query = Query> ex
     this.renderSavedQueryManagement.clear();
   }
 
-  private shouldRenderFilterBar() {
-    return this.props.showFilterBar && this.props.filters;
-  }
-
   /*
    * This Function is here to show the toggle in saved query form
    * in case you the date range (from/to)
@@ -609,7 +605,7 @@ export class SearchBarUI<QT extends (Query | AggregateQuery) | Query = Query> ex
   };
 
   private shouldShowDatePickerAsBadge() {
-    return this.shouldRenderFilterBar() && !this.props.showQueryInput;
+    return this.props.showFilterBar && !this.props.showQueryInput;
   }
 
   public render() {
@@ -703,12 +699,12 @@ export class SearchBarUI<QT extends (Query | AggregateQuery) | Query = Query> ex
     ) : undefined;
 
     let filterBar;
-    if (this.shouldRenderFilterBar()) {
+    if (this.props.showFilterBar) {
       filterBar = this.shouldShowDatePickerAsBadge() ? (
         <FilterItems
-          filters={this.props.filters!}
+          filters={this.props.filters ?? []}
           onFiltersUpdated={this.props.onFiltersUpdated}
-          indexPatterns={this.props.indexPatterns!}
+          indexPatterns={this.props.indexPatterns ?? []}
           timeRangeForSuggestionsOverride={timeRangeForSuggestionsOverride}
           filtersForSuggestions={this.props.filtersForSuggestions}
           hiddenPanelOptions={this.props.hiddenFilterPanelOptions}
@@ -718,9 +714,9 @@ export class SearchBarUI<QT extends (Query | AggregateQuery) | Query = Query> ex
       ) : (
         <FilterBar
           afterQueryBar
-          filters={this.props.filters!}
+          filters={this.props.filters ?? []}
           onFiltersUpdated={this.props.onFiltersUpdated}
-          indexPatterns={this.props.indexPatterns!}
+          indexPatterns={this.props.indexPatterns ?? []}
           timeRangeForSuggestionsOverride={timeRangeForSuggestionsOverride}
           filtersForSuggestions={this.props.filtersForSuggestions}
           hiddenPanelOptions={this.props.hiddenFilterPanelOptions}
