@@ -41,12 +41,12 @@ describe('createHealthRoute', () => {
     expect(mockResponse.ok).toHaveBeenCalledWith({
       body: {
         isAlertsAvailable: true,
-        skipped_preconfigured_connector_ids: ['connector-a', 'connector-b'],
+        skippedPreconfiguredConnectorIds: ['connector-a', 'connector-b'],
       },
     });
   });
 
-  it('returns empty skipped_preconfigured_connector_ids when none are skipped', async () => {
+  it('returns empty skippedPreconfiguredConnectorIds when none are skipped', async () => {
     const router = httpServiceMock.createRouter();
     const logger = loggingSystemMock.create().get();
 
@@ -65,7 +65,7 @@ describe('createHealthRoute', () => {
     expect(mockResponse.ok).toHaveBeenCalledWith({
       body: {
         isAlertsAvailable: false,
-        skipped_preconfigured_connector_ids: [],
+        skippedPreconfiguredConnectorIds: [],
       },
     });
   });

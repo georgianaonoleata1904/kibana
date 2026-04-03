@@ -64,8 +64,8 @@ describe('useCreateConnector', () => {
 
     const { result } = renderHook(() => useCreateConnector());
 
-    await act(async () => {
-      await result.current.createConnector({
+    act(() => {
+      result.current.createConnector({
         actionTypeId: '.test',
         name: 'test',
         config: {},

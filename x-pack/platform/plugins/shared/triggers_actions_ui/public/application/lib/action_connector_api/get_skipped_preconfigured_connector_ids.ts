@@ -15,11 +15,9 @@ export const getSkippedPreconfiguredConnectorIds = async ({
 }: {
   http: HttpSetup;
 }): Promise<SkippedPreconfiguredConnectorIdsResponse> => {
-  const { skipped_preconfigured_connector_ids } = await http.get<{
+  const { skippedPreconfiguredConnectorIds } = await http.get<{
     isAlertsAvailable: boolean;
-    skipped_preconfigured_connector_ids: string[];
+    skippedPreconfiguredConnectorIds: string[];
   }>('/internal/triggers_actions_ui/_health');
-  return {
-    skippedPreconfiguredConnectorIds: skipped_preconfigured_connector_ids,
-  };
+  return { skippedPreconfiguredConnectorIds };
 };

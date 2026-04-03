@@ -23,8 +23,13 @@
  * toSlugIdentifier('My Connector') // 'my-connector'
  * toSlugIdentifier('Test Space ') // 'test-space'
  */
+const MAX_SLUG_INPUT_SIZE = 1000;
+
 export function toSlugIdentifier(value = ''): string {
   if (value === null) return '';
+  if (value.length > MAX_SLUG_INPUT_SIZE) {
+    throw new Error(`Input too long: must be ${MAX_SLUG_INPUT_SIZE} characters or fewer`);
+  }
 
   return value
     .normalize('NFD')

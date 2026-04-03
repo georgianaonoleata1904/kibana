@@ -16,7 +16,7 @@ describe('getSkippedPreconfiguredConnectorIds', () => {
   it('calls the correct endpoint', async () => {
     http.get.mockResolvedValueOnce({
       isAlertsAvailable: true,
-      skipped_preconfigured_connector_ids: [],
+      skippedPreconfiguredConnectorIds: [],
     });
 
     await getSkippedPreconfiguredConnectorIds({ http });
@@ -27,7 +27,7 @@ describe('getSkippedPreconfiguredConnectorIds', () => {
   it('returns the mapped skipped connector IDs', async () => {
     http.get.mockResolvedValueOnce({
       isAlertsAvailable: true,
-      skipped_preconfigured_connector_ids: ['connector-a', 'connector-b'],
+      skippedPreconfiguredConnectorIds: ['connector-a', 'connector-b'],
     });
 
     const result = await getSkippedPreconfiguredConnectorIds({ http });
@@ -40,7 +40,7 @@ describe('getSkippedPreconfiguredConnectorIds', () => {
   it('returns an empty array when there are no skipped connectors', async () => {
     http.get.mockResolvedValueOnce({
       isAlertsAvailable: true,
-      skipped_preconfigured_connector_ids: [],
+      skippedPreconfiguredConnectorIds: [],
     });
 
     const result = await getSkippedPreconfiguredConnectorIds({ http });

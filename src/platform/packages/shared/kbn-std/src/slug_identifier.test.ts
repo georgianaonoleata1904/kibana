@@ -82,6 +82,14 @@ describe('slug_identifier', () => {
     it('collapses multiple consecutive spaces', () => {
       expect(toSlugIdentifier('foo   bar')).toEqual('foo-bar');
     });
+
+    it('throws for input exceeding 1000 characters', () => {
+      expect(() => toSlugIdentifier('a'.repeat(1001))).toThrow('Input too long');
+    });
+
+    it('accepts input of exactly 1000 characters', () => {
+      expect(() => toSlugIdentifier('a'.repeat(1000))).not.toThrow();
+    });
   });
 
   describe('isValidSlugIdentifier', () => {

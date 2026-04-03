@@ -53,7 +53,7 @@ export function createHealthRoute(
     const skippedIds = actionsContext.getSkippedPreconfiguredConnectorIds();
     const result = {
       isAlertsAvailable,
-      skipped_preconfigured_connector_ids: Array.from(skippedIds),
+      skippedPreconfiguredConnectorIds: Array.from(skippedIds),
     };
 
     logger.debug(() => `route ${path} response: ${JSON.stringify(result)}`);

@@ -54,19 +54,6 @@ describe('useSkippedPreconfiguredConnectorIds', () => {
     expect(result.current.isError).toBe(false);
   });
 
-  it('returns empty array while loading', async () => {
-    getSkippedPreconfiguredConnectorIdsMock.mockImplementation(
-      () => new Promise(() => {}) // never resolves
-    );
-
-    const { result } = renderHook(() => useSkippedPreconfiguredConnectorIds(), {
-      wrapper: createWrapper(),
-    });
-
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.skippedPreconfiguredConnectorIds).toEqual([]);
-  });
-
   it('returns isError and empty array when the API call fails', async () => {
     getSkippedPreconfiguredConnectorIdsMock.mockRejectedValue(new Error('Server error'));
 

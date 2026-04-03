@@ -151,39 +151,4 @@ describe('getConnectorRoute', () => {
 
     expect(verifyAccessAndContext).toHaveBeenCalledWith(licenseState, expect.any(Function));
   });
-
-  it('uses throwIfSystemAction false for HEAD requests so system connector IDs are treated as taken', async () => {
-    const licenseState = licenseStateMock.create();
-    const router = httpServiceMock.createRouter();
-
-    getConnectorRoute(router, licenseState);
-
-    const [, handler] = router.get.mock.calls[0];
-
-    const actionsClient = actionsClientMock.create();
-    actionsClient.get.mockResolvedValueOnce(
-      createMockConnector({
-        id: 'system-connector-cases',
-        actionTypeId: '.cases',
-        name: 'Cases',
-        isSystemAction: true,
-      })
-    );
-
-    const [context, req, res] = mockHandlerArguments(
-      { actionsClient },
-      {
-        params: { id: 'system-connector-cases' },
-        route: { method: 'head' },
-      },
-      ['ok']
-    );
-
-    await handler(context, req, res);
-
-    expect(actionsClient.get).toHaveBeenCalledWith({
-      id: 'system-connector-cases',
-      throwIfSystemAction: false,
-    });
-  });
 });

@@ -48,12 +48,7 @@ export const getConnectorRoute = (
       verifyAccessAndContext(licenseState, async function (context, req, res) {
         const actionsClient = (await context.actions).getActionsClient();
         const { id }: GetConnectorParamsV1 = req.params;
-        const method = String(req.route?.method ?? 'get').toLowerCase();
-        const isHead = method === 'head';
-        const connector = await actionsClient.get({
-          id,
-          ...(isHead ? { throwIfSystemAction: false } : {}),
-        });
+        const connector = await actionsClient.get({ id });
         return res.ok({
           body: transformConnectorResponseV1(connector),
         });

@@ -5,10 +5,12 @@
  * 2.0.
  */
 
-import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
-import useDebounce from 'react-use/lib/useDebounce';
+import React, { memo, useState, useCallback, useEffect } from 'react';
 
-import type { FieldConfig } from '@kbn/es-ui-shared-plugin/static/forms/hook_form_lib';
+import type {
+  FieldConfig,
+  ValidationCancelablePromise,
+} from '@kbn/es-ui-shared-plugin/static/forms/hook_form_lib';
 import {
   UseField,
   useFormContext,
@@ -69,7 +71,7 @@ const nameConfig: FieldConfig<{ name: string }, ConnectorFormData> = {
 
 const createIdConfig = (
   isEdit: boolean,
-  getIdExistsError: () => string | null
+  http: ReturnType<typeof useKibana>['services']['http']
 ): FieldConfig<{ id: string }, ConnectorFormData> => ({
   label: i18n.translate('xpack.triggersActionsUI.sections.actionConnectorForm.idFieldLabel', {
     defaultMessage: 'Connector ID',
@@ -120,11 +122,28 @@ const createIdConfig = (
       },
     },
     {
-      validator: () => {
-        const error = getIdExistsError();
-        if (error) {
-          return { message: error };
-        }
+      isAsync: true,
+      validator: ({ value }) => {
+        if (isEdit || !value || typeof value !== 'string') return;
+        let cancelFn: () => void = () => {};
+
+        const promise = new Promise<{ message: string } | void>((resolve) => {
+          const timerId = setTimeout(async () => {
+            try {
+              const { isAvailable } = await checkConnectorIdAvailability({ http, id: value });
+              resolve(isAvailable ? undefined : { message: CONNECTOR_ID_EXISTS_ERROR });
+            } catch {
+              resolve({ message: CONNECTOR_ID_CHECK_FAILED_ERROR });
+            }
+          }, 500);
+
+          cancelFn = () => {
+            clearTimeout(timerId);
+            resolve(undefined);
+          };
+        }) as ValidationCancelablePromise<string>;
+        promise.cancel = cancelFn;
+        return promise;
       },
     },
   ],
@@ -135,13 +154,9 @@ const ConnectorFormFieldsGlobalComponent: React.FC<ConnectorFormFieldsProps> = (
   isEdit,
 }) => {
   const { http } = useKibana().services;
-  const { setFieldValue, validateFields } = useFormContext();
-  const [{ name, id }] = useFormData<ConnectorFormData>({ watch: ['name', 'id'] });
+  const { setFieldValue } = useFormContext();
+  const [{ name }] = useFormData<ConnectorFormData>({ watch: ['name', 'id'] });
   const [usingCustomIdentifier, setUsingCustomIdentifier] = useState(false);
-  const idExistsErrorRef = useRef<string | null>(null);
-  const lastCheckedIdRef = useRef<string | null>(null);
-
-  const getIdExistsError = useCallback(() => idExistsErrorRef.current, []);
 
   useEffect(() => {
     if (!isEdit && !usingCustomIdentifier && name) {
@@ -149,34 +164,6 @@ const ConnectorFormFieldsGlobalComponent: React.FC<ConnectorFormFieldsProps> = (
       setFieldValue('id', slug);
     }
   }, [name, isEdit, setFieldValue, usingCustomIdentifier]);
-
-  useDebounce(
-    async () => {
-      if (isEdit || !id || !isValidSlugIdentifier(id)) {
-        if (idExistsErrorRef.current) {
-          idExistsErrorRef.current = null;
-          validateFields(['id']);
-        }
-        lastCheckedIdRef.current = id;
-        return;
-      }
-
-      if (lastCheckedIdRef.current === id) {
-        return;
-      }
-      lastCheckedIdRef.current = id;
-
-      try {
-        const response = await checkConnectorIdAvailability({ http, id });
-        idExistsErrorRef.current = response.isAvailable ? null : CONNECTOR_ID_EXISTS_ERROR;
-      } catch {
-        idExistsErrorRef.current = CONNECTOR_ID_CHECK_FAILED_ERROR;
-      }
-      validateFields(['id']);
-    },
-    500,
-    [id]
-  );
 
   const handleIdChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,7 +175,7 @@ const ConnectorFormFieldsGlobalComponent: React.FC<ConnectorFormFieldsProps> = (
     [name, setFieldValue]
   );
 
-  const idConfig = createIdConfig(isEdit, getIdExistsError);
+  const idConfig = createIdConfig(isEdit, http);
 
   return (
     <>

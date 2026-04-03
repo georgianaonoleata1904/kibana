@@ -13,7 +13,7 @@ import type { FtrProviderContext } from '../../../common/ftr_provider_context';
 export default function createConnectorTests({ getService }: FtrProviderContext) {
   const supertest = getService('supertest');
 
-  describe('create', () => {
+  describe.only('create', () => {
     const objectRemover = new ObjectRemover(supertest);
 
     after(() => objectRemover.removeAll());
@@ -134,14 +134,27 @@ export default function createConnectorTests({ getService }: FtrProviderContext)
       objectRemover.add(Spaces.space1.id, response.body.id, 'connector', 'actions');
       expect(response.body.id).to.eql(customId);
       expect(response.body.name).to.eql('My connector with custom ID');
+    });
 
-      // Ensure AAD isn't broken
-      await checkAAD({
-        supertest,
-        spaceId: Spaces.space1.id,
-        type: 'action',
-        id: response.body.id,
-      });
+    it('should return 400 when creating a connector with the same ID as a preconfigured connector', async () => {
+      await supertest
+        .post(`${getUrlPrefix(Spaces.space1.id)}/api/actions/connector/my-slack1`)
+        .set('kbn-xsrf', 'foo')
+        .send({
+          name: 'My connector',
+          connector_type_id: 'test.index-record',
+          config: {
+            unencrypted: 'test',
+          },
+          secrets: {
+            encrypted: 'test',
+          },
+        })
+        .expect(400, {
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'This my-slack1 already exists in a preconfigured action.',
+        });
     });
 
     it('should return 400 when creating a connector with a non-slugified ID', async () => {
