@@ -8,7 +8,7 @@
 import React from 'react';
 import ConnectorFields from './connector';
 import { ConnectorFormTestProvider } from '../lib/test_utils';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DEFAULT_MODEL, OpenAiProviderType } from '@kbn/connector-schemas/openai/constants';
 import { useKibana } from '@kbn/triggers-actions-ui-plugin/public';
@@ -21,6 +21,12 @@ jest.mock('@kbn/triggers-actions-ui-plugin/public/common/lib/kibana', () => ({
   useKibana: jest.fn(() => ({
     services: mockUseKibanaReturnValue,
   })),
+}));
+jest.mock('@kbn/triggers-actions-ui-plugin/public/application/lib/action_connector_api', () => ({
+  ...jest.requireActual(
+    '@kbn/triggers-actions-ui-plugin/public/application/lib/action_connector_api'
+  ),
+  checkConnectorIdAvailability: jest.fn().mockResolvedValue({ isAvailable: true }),
 }));
 jest.mock('../lib/gen_ai/use_get_dashboard');
 
@@ -426,17 +432,13 @@ describe('ConnectorFields renders', () => {
         </ConnectorFormTestProvider>
       );
 
-      await act(async () => {
-        await userEvent.click(getByTestId('form-test-provide-submit'));
-      });
+      await userEvent.click(getByTestId('form-test-provide-submit'));
 
-      await waitFor(async () => {
-        expect(onSubmit).toHaveBeenCalled();
-      });
-
-      expect(onSubmit).toBeCalledWith({
-        data: openAiConnector,
-        isValid: true,
+      await waitFor(() => {
+        expect(onSubmit).toBeCalledWith({
+          data: openAiConnector,
+          isValid: true,
+        });
       });
     });
 
@@ -455,14 +457,11 @@ describe('ConnectorFields renders', () => {
         </ConnectorFormTestProvider>
       );
 
-      await act(async () => {
-        await userEvent.click(res.getByTestId('form-test-provide-submit'));
-      });
-      await waitFor(async () => {
-        expect(onSubmit).toHaveBeenCalled();
-      });
+      await userEvent.click(res.getByTestId('form-test-provide-submit'));
 
-      expect(onSubmit).toHaveBeenCalledWith({ data: {}, isValid: false });
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({ data: {}, isValid: false });
+      });
     });
 
     const tests: Array<[string, string]> = [
@@ -492,11 +491,10 @@ describe('ConnectorFields renders', () => {
       }
 
       await userEvent.click(res.getByTestId('form-test-provide-submit'));
-      await waitFor(async () => {
-        expect(onSubmit).toHaveBeenCalled();
-      });
 
-      expect(onSubmit).toHaveBeenCalledWith({ data: {}, isValid: false });
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalledWith({ data: {}, isValid: false });
+      });
     });
   });
 
