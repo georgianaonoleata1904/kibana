@@ -9,7 +9,7 @@ import React from 'react';
 
 import ConnectorFields from './connector';
 import { ConnectorFormTestProvider } from '../lib/test_utils';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStartServicesMock } from '@kbn/triggers-actions-ui-plugin/public/common/lib/kibana/kibana_react.mock';
 import { createMockActionConnector } from '@kbn/alerts-ui-shared/src/common/test_utils/connector.mock';
@@ -867,7 +867,9 @@ describe('ConnectorFields renders', () => {
       );
       await userEvent.click(screen.getByTestId('form-test-provide-submit'));
 
-      expect(onSubmit).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalled();
+      });
       expect(onSubmit).toBeCalledWith({
         data: {
           config: {
@@ -911,7 +913,9 @@ describe('ConnectorFields renders', () => {
 
       await userEvent.click(screen.getByTestId('form-test-provide-submit'));
 
-      expect(onSubmit).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalled();
+      });
       expect(onSubmit).toHaveBeenCalledWith({ data: {}, isValid: false });
     }, 60000);
 
@@ -933,7 +937,10 @@ describe('ConnectorFields renders', () => {
       await userEvent.type(screen.getByTestId('api_key-password'), `{selectall}{backspace}`);
 
       await userEvent.click(screen.getByTestId('form-test-provide-submit'));
-      expect(onSubmit).toHaveBeenCalled();
+
+      await waitFor(() => {
+        expect(onSubmit).toHaveBeenCalled();
+      });
       expect(onSubmit).toHaveBeenCalledWith({ data: {}, isValid: false });
     }, 60000);
   });

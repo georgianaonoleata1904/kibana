@@ -18,6 +18,7 @@ import { TECH_PREVIEW_LABEL } from '../../translations';
 jest.mock('../../../lib/action_connector_api', () => ({
   ...(jest.requireActual('../../../lib/action_connector_api') as any),
   loadActionTypes: jest.fn(),
+  checkConnectorIdAvailability: jest.fn().mockResolvedValue({ isAvailable: true }),
 }));
 
 const { loadActionTypes } = jest.requireMock('../../../lib/action_connector_api');
@@ -594,10 +595,18 @@ describe('CreateConnectorFlyout', () => {
       await userEvent.click(await screen.findByTestId('nameInput'));
       await userEvent.paste('My test');
 
+      // Wait for the connector ID field to be auto-populated and validated
+      await waitFor(() => {
+        expect(screen.getByTestId('connectorIdInput')).toHaveValue('my-test');
+      });
+
       await userEvent.click(await screen.findByTestId('create-connector-flyout-save-btn'));
-      expect(onClose).toHaveBeenCalled();
-      expect(onConnectorCreated).toHaveBeenCalled();
-      expect(screen.queryByTestId('connector-form-header-error-label')).not.toBeInTheDocument();
+
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalled();
+        expect(onConnectorCreated).toHaveBeenCalled();
+        expect(screen.queryByTestId('connector-form-header-error-label')).not.toBeInTheDocument();
+      });
     });
 
     it('runs pre submit validator correctly', async () => {
