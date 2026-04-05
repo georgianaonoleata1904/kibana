@@ -102,6 +102,7 @@ describe('ResilientActionConnectorFields renders', () => {
               apiUrl: 'https://test.com',
               orgId: '201',
             },
+            id: 'resilient',
             secrets: {
               apiKeyId: 'key',
               apiKeySecret: 'secret',
