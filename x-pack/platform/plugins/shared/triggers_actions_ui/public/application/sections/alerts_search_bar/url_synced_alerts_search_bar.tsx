@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState, useMemo, memo } from 'react';
 import type { BoolQuery, Filter } from '@kbn/es-query';
 import { i18n } from '@kbn/i18n';
 import { AlertFilterControls } from '@kbn/alerts-ui-shared/src/alert_filter_controls';
+import type { FilterControlConfig } from '@kbn/alerts-ui-shared/src/alert_filter_controls/types';
 import { Storage } from '@kbn/kibana-utils-plugin/public';
 import { EuiButton, EuiCallOut, EuiSpacer } from '@elastic/eui';
 import { useKibana } from '../../..';
@@ -73,8 +74,10 @@ export interface UrlSyncedAlertsSearchBarProps
   > {
   showFilterControls?: boolean;
   urlStorageKey?: string;
+  filterControlsStorageKey?: string;
   onEsQueryChange: (esQuery: { bool: BoolQuery }) => void;
   onFilterSelected?: (filters: Filter[]) => void;
+  defaultFilterControls?: FilterControlConfig[];
 }
 
 /**
@@ -84,8 +87,10 @@ export const UrlSyncedAlertsSearchBar = ({
   ruleTypeIds,
   showFilterControls = false,
   urlStorageKey = ALERTS_SEARCH_BAR_PARAMS_URL_STORAGE_KEY,
+  filterControlsStorageKey: filterControlsStorageKeyProp,
   onEsQueryChange,
   onFilterSelected,
+  defaultFilterControls,
   ...rest
 }: UrlSyncedAlertsSearchBarProps) => {
   const {
@@ -174,14 +179,25 @@ export const UrlSyncedAlertsSearchBar = ({
   );
 
   const filterControlsStorageKey = useMemo(
-    () => ['alertsSearchBar', spaceId, 'filterControls'].filter(Boolean).join('.'),
-    [spaceId]
+    () =>
+      filterControlsStorageKeyProp ??
+      ['alertsSearchBar', spaceId, 'filterControls'].filter(Boolean).join('.'),
+    [filterControlsStorageKeyProp, spaceId]
   );
 
   const resetFilters = useCallback(() => {
     new Storage(window.localStorage).remove(filterControlsStorageKey);
     window.location.reload();
   }, [filterControlsStorageKey]);
+
+  // When a custom set of default controls is provided, strip any URL/localStorage-persisted
+  // controls whose field is not in that set, so stale entries (e.g. a Rule control saved from
+  // another page) cannot override the caller's intended control layout.
+  const effectiveControlsUrlState = useMemo(() => {
+    if (!defaultFilterControls) return filterControls;
+    const allowedFields = new Set(defaultFilterControls.map((c) => c.field_name));
+    return filterControls?.filter((c) => allowedFields.has(c.field_name));
+  }, [defaultFilterControls, filterControls]);
 
   return (
     <>
@@ -207,10 +223,11 @@ export const UrlSyncedAlertsSearchBar = ({
               title: '.alerts-*',
             }}
             spaceId={spaceId}
-            controlsUrlState={filterControls}
+            controlsUrlState={effectiveControlsUrlState}
             filters={controlFilters}
             onFiltersChange={onControlFiltersChange}
             storageKey={filterControlsStorageKey}
+            {...(defaultFilterControls ? { defaultControls: defaultFilterControls } : {})}
             services={{
               http,
               notifications,

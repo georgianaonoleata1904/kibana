@@ -12,7 +12,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import useObservable from 'react-use/lib/useObservable';
 import { EuiSpacer, EuiFlexGroup, EuiFlexItem, EuiTabbedContent, useEuiTheme } from '@elastic/eui';
 import type { AlertStatusValues } from '@kbn/alerting-plugin/common';
-import { ALERT_RULE_UUID, ALERT_STATUS } from '@kbn/rule-data-utils';
+import { ALERT_RULE_NAME, ALERT_RULE_UUID, ALERT_STATUS } from '@kbn/rule-data-utils';
 import type { PublicAlertStatus } from '@kbn/rule-data-utils';
 import { setStateToKbnUrl } from '@kbn/kibana-utils-plugin/public';
 import { DEFAULT_CONTROLS } from '@kbn/alerts-ui-shared/src/alert_filter_controls/constants';
@@ -257,7 +257,9 @@ export function RuleComponent({
       setAlertSummaryWidgetTimeRange(getDefaultAlertSummaryTimeRange());
       setSelectedTabId(ALERT_LIST_TAB);
 
-      const controlConfigs = DEFAULT_CONTROLS.map((control) => {
+      const controlConfigs = DEFAULT_CONTROLS.filter(
+        (control) => control.field_name !== ALERT_RULE_NAME
+      ).map((control) => {
         if (control.field_name === ALERT_STATUS) {
           return {
             ...control,
