@@ -52,7 +52,7 @@ describe('RuleAlertSearchBar', () => {
     render(<RuleAlertSearchBar ruleTypeId="my.rule.type" onEsQueryChange={jest.fn()} />);
 
     const [props] = jest.mocked(UrlSyncedAlertsSearchBar).mock.calls[0];
-    const { defaultFilterControls } = props as Record<string, unknown> & {
+    const { defaultFilterControls } = props as unknown as {
       defaultFilterControls: Array<{ field_name: string }>;
     };
 
