@@ -99,11 +99,15 @@ export function setupSavedObjects(
         ];
 
         if (toDelete.length > 0) {
+          // All connectors in a single import operation target the same space,
+          // so using the namespace from the first connector applies correctly to
+          // the entire batch. bulkDelete does not support per-object namespaces.
+          const namespace = toDelete[0]?.namespaces?.[0];
           const repo = await getSoRepository();
           if (repo) {
             await repo.bulkDelete(
               toDelete.map((c) => ({ type: ACTION_SAVED_OBJECT_TYPE, id: c.id })),
-              { namespace: toDelete[0]?.namespaces?.[0] }
+              { namespace }
             );
           }
         }
