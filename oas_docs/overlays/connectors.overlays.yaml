@@ -113,26 +113,6 @@ actions:
             examples:
               updateIndexConnectorRequest:
                 $ref: '../examples/update_index_connector_request.yaml'
-  - target: "$.paths['/api/actions/connector/_conflicted_ids']['get']"
-    description: 'Add examples to get conflicted connector IDs API'
-    update:
-      responses:
-        200:
-          content:
-            application/json:
-              examples:
-                getConflictedIdsResponse:
-                  $ref: '../examples/get_conflicted_connector_ids_response.yaml'
-  - target: "$.paths['/api/actions/connector/{connector_id}/_availability']['get']"
-    description: 'Add examples to check connector ID availability API'
-    update:
-      responses:
-        200:
-          content:
-            application/json:
-              examples:
-                checkAvailabilityResponse:
-                  $ref: '../examples/check_connector_id_availability_response.yaml'
   # Remove the automated empty connector config and secrets
   - target: "$.paths['/api/actions/connector/{id}']['post'].requestBody.content.*.schema.properties.config"
     description: 'Remove config in create connector API'
