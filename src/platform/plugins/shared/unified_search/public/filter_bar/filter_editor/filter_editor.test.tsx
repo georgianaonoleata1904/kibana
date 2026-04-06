@@ -128,6 +128,7 @@ describe('<FilterEditor />', () => {
       );
     });
   });
+
   describe('handling data view fallback', () => {
     let testBed: TestBed;
 
