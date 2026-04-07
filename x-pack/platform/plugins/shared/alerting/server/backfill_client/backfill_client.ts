@@ -536,15 +536,13 @@ export class BackfillClient {
         ...(namespace ? { namespaces: [namespace] } : undefined),
       });
 
-      const adHocRuns: Array<SavedObjectsFindResult<AdHocRunSO>> = [];
       for await (const response of adHocRunFinder.find()) {
-        adHocRuns.push(...response.saved_objects);
+        await this.deleteAdHocRunsAndTasks({
+          unsecuredSavedObjectsClient,
+          adHocRuns: response.saved_objects,
+        });
       }
       await adHocRunFinder.close();
-      await this.deleteAdHocRunsAndTasks({
-        unsecuredSavedObjectsClient,
-        adHocRuns,
-      });
     } catch (error) {
       this.logger.warn(
         `Error deleting backfill jobs for rule IDs: ${ruleIds.join(',')} - ${error.message}`
@@ -567,20 +565,18 @@ export class BackfillClient {
         perPage: 100,
         filter: `${AD_HOC_RUN_SAVED_OBJECT_TYPE}.attributes.initiatorId: "${initiatorId}"`,
       });
-      const adHocRuns: Array<SavedObjectsFindResult<AdHocRunSO>> = [];
       for await (const response of adHocRunFinder.find()) {
-        adHocRuns.push(...response.saved_objects);
+        await this.deleteAdHocRunsAndTasks({
+          unsecuredSavedObjectsClient,
+          adHocRuns: response.saved_objects,
+          shouldUpdateGaps,
+          internalSavedObjectsRepository,
+          eventLogClient,
+          eventLogger,
+          actionsClient,
+        });
       }
       await adHocRunFinder.close();
-      await this.deleteAdHocRunsAndTasks({
-        unsecuredSavedObjectsClient,
-        adHocRuns,
-        shouldUpdateGaps,
-        internalSavedObjectsRepository,
-        eventLogClient,
-        eventLogger,
-        actionsClient,
-      });
     } catch (error) {
       this.logger.warn(
         `Error deleting backfill jobs for initiatorId ${initiatorId} - ${(error as Error).message}`

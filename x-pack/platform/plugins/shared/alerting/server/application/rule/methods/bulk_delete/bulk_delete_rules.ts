@@ -169,7 +169,6 @@ const bulkDeleteWithOCC = async (
       })
   );
 
-  // Lightweight metadata maps that accumulate across pages
   const apiKeyToRuleIdMapping: Record<string, string> = {};
   const uiamApiKeyToRuleIdMapping: Record<string, string> = {};
   const taskIdToRuleIdMapping: Record<string, string> = {};
@@ -191,7 +190,6 @@ const bulkDeleteWithOCC = async (
           skipActionsValidation: true,
         });
 
-        // Collect lightweight metadata and emit audit events for this page
         for (const rule of response.saved_objects) {
           const { apiKey, apiKeyCreatedByUser, uiamApiKey } = rule.attributes;
 
@@ -222,12 +220,10 @@ const bulkDeleteWithOCC = async (
           );
         }
 
-        // Untrack alerts for this page — avoids accumulating all rules before untracking
         for (const { id, attributes } of response.saved_objects) {
           await untrackRuleAlerts(context, id, attributes as RawRule);
         }
 
-        // Soft delete gaps for this page's rules
         const pageRuleIds = response.saved_objects.map((rule) => rule.id);
         try {
           const eventLogClient = await context.getEventLogClient();
@@ -238,7 +234,6 @@ const bulkDeleteWithOCC = async (
             eventLogger: context.eventLogger,
           });
         } catch (error) {
-          // Failing to soft delete gaps should not block the rule deletion
           context.logger.error(
             `delete(): Failed to soft delete gaps for rules: ${pageRuleIds.join(',')}: ${
               error.message
@@ -246,13 +241,12 @@ const bulkDeleteWithOCC = async (
           );
         }
 
-        // Bulk delete this page's rules
+        // Bulk delete rules for this page
         const result = await bulkDeleteRulesSo({
           savedObjectsClient: context.unsecuredSavedObjectsClient,
           ids: pageRuleIds,
         });
 
-        // Process delete results for this page
         const pageDeletedIds = new Set<string>();
         result.statuses.forEach((status) => {
           if (status.error === undefined) {
@@ -278,7 +272,7 @@ const bulkDeleteWithOCC = async (
           }
         });
 
-        // Only retain successfully deleted rules (needed for return type)
+        // Only save successfully deleted rules
         for (const rule of response.saved_objects) {
           if (pageDeletedIds.has(rule.id)) {
             deletedRules.push(rule);

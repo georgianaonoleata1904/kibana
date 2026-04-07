@@ -148,7 +148,6 @@ const bulkDisableRulesWithOCC = async (
       })
   );
 
-  // Lightweight metadata that accumulates across pages
   const ruleNameToRuleIdMapping: Record<string, string> = {};
   const username = await context.getUserName();
 
@@ -165,7 +164,6 @@ const bulkDisableRulesWithOCC = async (
       for await (const response of rulesFinder.find()) {
         await bulkMigrateLegacyActions({ context, rules: response.saved_objects });
 
-        // Build this page's list of rules to disable
         const pageRulesToDisable: Array<SavedObjectsBulkUpdateObject<RawRule>> = [];
 
         await pMap(response.saved_objects, async (rule) => {
