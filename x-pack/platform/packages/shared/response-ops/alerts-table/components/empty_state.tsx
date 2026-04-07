@@ -178,7 +178,11 @@ export const EmptyState: React.FC<
         >
           <EuiFlexGroup alignItems="center" justifyContent="center">
             <EuiFlexItem grow={false}>
-              <EuiPanel hasBorder={variant === 'subdued'} hasShadow={false}>
+              <EuiPanel
+                hasBorder={variant === 'subdued'}
+                hasShadow={false}
+                css={error ? undefined : panelStyle}
+              >
                 <EuiFlexGroup alignItems={variant === 'transparent' ? 'center' : 'flexStart'}>
                   <EuiFlexItem>{error ? renderErrorState() : renderEmptyState()}</EuiFlexItem>
                   <EuiFlexItem grow={false}>
