@@ -54,8 +54,36 @@ describe('EmptyState', () => {
       </IntlProvider>
     );
 
-    expect(await screen.findByText('Test error message')).toBeInTheDocument();
+    expect(await screen.findByTestId('errorPanelContent')).toBeInTheDocument();
     expect(screen.queryByText('There are currently no alerts to display.')).not.toBeInTheDocument();
+  });
+
+  it('renders the error title headline instead of raw error text', async () => {
+    const error = new Error('Test error message');
+    render(
+      <IntlProvider locale="en">
+        <EmptyState error={error} />
+      </IntlProvider>
+    );
+
+    expect(await screen.findByText('Cannot display alerts')).toBeInTheDocument();
+    expect(screen.queryByText('Test error message')).not.toBeVisible();
+  });
+
+  it('shows error details in accordion after clicking "Show details"', async () => {
+    const error = new Error('Test error message');
+    render(
+      <IntlProvider locale="en">
+        <EmptyState error={error} />
+      </IntlProvider>
+    );
+
+    expect(screen.queryByTestId('errorStateMessageContent')).not.toBeVisible();
+
+    await userEvent.click(screen.getByText('Show details'));
+
+    expect(await screen.findByTestId('errorStateMessageContent')).toBeVisible();
+    expect(screen.getByText('Test error message')).toBeInTheDocument();
   });
 
   it('renders the reset button with Reset text when error has no field name', async () => {
@@ -98,7 +126,7 @@ describe('EmptyState', () => {
       </IntlProvider>
     );
 
-    expect(await screen.findByText('Test error message')).toBeInTheDocument();
+    expect(await screen.findByTestId('errorPanelContent')).toBeInTheDocument();
 
     const resetButton = await screen.findByTestId('resetButton');
     expect(resetButton).toBeInTheDocument();
