@@ -190,10 +190,7 @@ export const UrlSyncedAlertsSearchBar = ({
     window.location.reload();
   }, [filterControlsStorageKey]);
 
-  // When a custom set of default controls is provided, strip any URL/localStorage-persisted
-  // controls whose field is not in that set, so stale entries (e.g. a Rule control saved from
-  // another page) cannot override the caller's intended control layout.
-  const effectiveControlsUrlState = useMemo(() => {
+  const sanitizedFilterControls = useMemo(() => {
     if (!defaultFilterControls) return filterControls;
     const allowedFields = new Set(defaultFilterControls.map((c) => c.field_name));
     return filterControls?.filter((c) => allowedFields.has(c.field_name));
@@ -223,11 +220,11 @@ export const UrlSyncedAlertsSearchBar = ({
               title: '.alerts-*',
             }}
             spaceId={spaceId}
-            controlsUrlState={effectiveControlsUrlState}
+            controlsUrlState={sanitizedFilterControls}
             filters={controlFilters}
             onFiltersChange={onControlFiltersChange}
             storageKey={filterControlsStorageKey}
-            {...(defaultFilterControls ? { defaultControls: defaultFilterControls } : {})}
+            defaultControls={defaultFilterControls}
             services={{
               http,
               notifications,

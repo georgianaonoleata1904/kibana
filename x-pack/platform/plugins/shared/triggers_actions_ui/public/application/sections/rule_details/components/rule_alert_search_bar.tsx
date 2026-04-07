@@ -25,8 +25,6 @@ interface RuleAlertSearchBarProps {
   onEsQueryChange: (esQuery: { bool: BoolQuery }) => void;
 }
 
-// On the rule details page the rule is already pre-filtered via ALERT_RULE_UUID in the base
-// query, so we remove the redundant Rule control from the filter bar.
 const RULE_DETAILS_FILTER_CONTROLS = DEFAULT_CONTROLS.filter(
   (control) => control.field_name !== ALERT_RULE_NAME
 );
