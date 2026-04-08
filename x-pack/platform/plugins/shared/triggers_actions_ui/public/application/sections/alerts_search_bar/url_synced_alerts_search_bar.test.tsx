@@ -88,6 +88,15 @@ describe('UrlSyncedAlertsSearchBar', () => {
     expect(screen.getByText('AlertFilterControls')).toBeInTheDocument();
   });
 
+  it('should use filterControlsStorageKey as storageKey prefix when provided', () => {
+    jest.mocked(AlertFilterControls).mockImplementation(() => <div>AlertFilterControls</div>);
+    render(<TestComponent showFilterControls filterControlsStorageKey="ruleDetailsAlerts" />);
+    expect(jest.mocked(AlertFilterControls)).toHaveBeenCalledWith(
+      expect.objectContaining({ storageKey: 'ruleDetailsAlerts.filterControls' }),
+      expect.anything()
+    );
+  });
+
   describe('defaultFilterControls', () => {
     beforeEach(() => {
       jest.mocked(AlertFilterControls).mockImplementation(() => <div>AlertFilterControls</div>);

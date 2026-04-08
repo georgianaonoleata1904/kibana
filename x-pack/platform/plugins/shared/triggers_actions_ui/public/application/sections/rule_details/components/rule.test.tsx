@@ -18,6 +18,8 @@ import { coreMock } from '@kbn/core/public/mocks';
 import { RuleComponent, alertToListItem } from './rule';
 import type { RuleSummary, AlertStatus, RuleType, RuleTypeModel } from '../../../../types';
 import type { AlertStatusValues } from '@kbn/alerting-plugin/common';
+import { ALERT_RULE_NAME } from '@kbn/rule-data-utils';
+import { setStateToKbnUrl } from '@kbn/kibana-utils-plugin/public';
 import { mockRule, mockLogResponse } from './test_helpers';
 import { ruleTypeRegistryMock } from '../../../rule_type_registry.mock';
 import { useKibana } from '../../../../common/lib/kibana';
@@ -56,6 +58,18 @@ jest.mock('../../../hooks/use_multiple_spaces', () => ({
     namespaces: undefined,
     activeSpace: undefined,
   })),
+}));
+
+const mockAlertSummaryWidget = jest.fn((_props: Record<string, unknown>) => (
+  <div data-test-subj="alertSummaryWidget" />
+));
+jest.mock('../../alert_summary_widget', () => ({
+  AlertSummaryWidget: (props: Record<string, unknown>) => mockAlertSummaryWidget(props),
+}));
+
+jest.mock('@kbn/kibana-utils-plugin/public', () => ({
+  ...jest.requireActual('@kbn/kibana-utils-plugin/public'),
+  setStateToKbnUrl: jest.fn(() => '/mocked-path'),
 }));
 
 const mockAlertsTable = jest.fn(() => {
@@ -744,6 +758,43 @@ describe('cases ownership based on solution context', () => {
       expect.objectContaining({
         casesConfiguration: expect.objectContaining({ owner: ['cases'] }),
       }),
+      expect.anything()
+    );
+  });
+});
+
+describe('scrollAlertsIntoView', () => {
+  it('excludes ALERT_RULE_NAME from controlConfigs written to the URL', async () => {
+    const rule = mockRule();
+    const ruleType = mockRuleType({ hasAlertsMappings: true });
+    const ruleSummary = mockRuleSummary();
+
+    renderWithProviders(
+      <RuleComponent
+        {...mockAPIs}
+        rule={rule}
+        ruleType={ruleType}
+        ruleSummary={ruleSummary}
+        readOnly={false}
+      />
+    );
+
+    await screen.findByTestId('alertSummaryWidget');
+    Element.prototype.scrollIntoView = jest.fn();
+
+    const { onClick } = mockAlertSummaryWidget.mock.calls[0][0] as unknown as {
+      onClick: (status?: string) => void;
+    };
+    onClick('active');
+
+    expect(setStateToKbnUrl).toHaveBeenCalledWith(
+      'searchBarParams',
+      expect.objectContaining({
+        controlConfigs: expect.not.arrayContaining([
+          expect.objectContaining({ field_name: ALERT_RULE_NAME }),
+        ]),
+      }),
+      expect.anything(),
       expect.anything()
     );
   });

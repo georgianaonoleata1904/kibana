@@ -180,8 +180,9 @@ export const UrlSyncedAlertsSearchBar = ({
 
   const filterControlsStorageKey = useMemo(
     () =>
-      filterControlsStorageKeyProp ??
-      ['alertsSearchBar', spaceId, 'filterControls'].filter(Boolean).join('.'),
+      [filterControlsStorageKeyProp ?? 'alertsSearchBar', spaceId, 'filterControls']
+        .filter(Boolean)
+        .join('.'),
     [filterControlsStorageKeyProp, spaceId]
   );
 
