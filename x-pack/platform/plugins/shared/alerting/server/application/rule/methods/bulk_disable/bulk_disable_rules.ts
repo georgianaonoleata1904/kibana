@@ -9,7 +9,6 @@ import { nodeBuilder } from '@kbn/es-query';
 import type { SavedObjectsBulkUpdateObject, SavedObjectsBulkCreateObject } from '@kbn/core/server';
 import Boom from '@hapi/boom';
 import { withSpan } from '@kbn/apm-utils';
-import pMap from 'p-map';
 import type { Logger } from '@kbn/core/server';
 import type { TaskManagerStartContract } from '@kbn/task-manager-plugin/server';
 import { RULE_SAVED_OBJECT_TYPE } from '../../../../saved_objects';
@@ -143,7 +142,7 @@ const bulkDisableRulesWithOCC = async (
       context.encryptedSavedObjectsClient.createPointInTimeFinderDecryptedAsInternalUser<RawRule>({
         filter,
         type: RULE_SAVED_OBJECT_TYPE,
-        perPage: 100,
+        perPage: 50,
         ...(context.namespace ? { namespaces: [context.namespace] } : undefined),
       })
   );
@@ -166,7 +165,7 @@ const bulkDisableRulesWithOCC = async (
 
         const pageRulesToDisable: Array<SavedObjectsBulkUpdateObject<RawRule>> = [];
 
-        await pMap(response.saved_objects, async (rule) => {
+        for (const rule of response.saved_objects) {
           const ruleName = rule.attributes.name;
 
           try {
@@ -229,7 +228,7 @@ const bulkDisableRulesWithOCC = async (
               })
             );
           }
-        });
+        }
 
         // Persist this page's disabled rules
         // TODO (http-versioning): for whatever reasoning we are using SavedObjectsBulkUpdateObject

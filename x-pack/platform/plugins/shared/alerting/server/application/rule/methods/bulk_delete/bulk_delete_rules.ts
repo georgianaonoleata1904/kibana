@@ -164,7 +164,7 @@ const bulkDeleteWithOCC = async (
       context.encryptedSavedObjectsClient.createPointInTimeFinderDecryptedAsInternalUser<RawRule>({
         filter,
         type: RULE_SAVED_OBJECT_TYPE,
-        perPage: 100,
+        perPage: 50,
         ...(context.namespace ? { namespaces: [context.namespace] } : undefined),
       })
   );

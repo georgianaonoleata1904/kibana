@@ -290,7 +290,6 @@ describe('bulkEnableRules', () => {
 
     encryptedSavedObjects.createPointInTimeFinderDecryptedAsInternalUser = jest
       .fn()
-      // Attempt 1: interval scan + processing
       .mockResolvedValueOnce({
         close: jest.fn(),
         find: function* asyncGenerator() {
@@ -300,36 +299,9 @@ describe('bulkEnableRules', () => {
       .mockResolvedValueOnce({
         close: jest.fn(),
         find: function* asyncGenerator() {
-          yield { saved_objects: [disabledRule1, disabledRule2] };
-        },
-      })
-      // Retry 1: interval scan + processing
-      .mockResolvedValueOnce({
-        close: jest.fn(),
-        find: function* asyncGenerator() {
           yield { saved_objects: [disabledRule2] };
         },
       })
-      .mockResolvedValueOnce({
-        close: jest.fn(),
-        find: function* asyncGenerator() {
-          yield { saved_objects: [disabledRule2] };
-        },
-      })
-      // Retry 2: interval scan + processing
-      .mockResolvedValueOnce({
-        close: jest.fn(),
-        find: function* asyncGenerator() {
-          yield { saved_objects: [disabledRule2] };
-        },
-      })
-      .mockResolvedValueOnce({
-        close: jest.fn(),
-        find: function* asyncGenerator() {
-          yield { saved_objects: [disabledRule2] };
-        },
-      })
-      // Retry 3: interval scan + processing
       .mockResolvedValueOnce({
         close: jest.fn(),
         find: function* asyncGenerator() {
@@ -365,24 +337,10 @@ describe('bulkEnableRules', () => {
 
     encryptedSavedObjects.createPointInTimeFinderDecryptedAsInternalUser = jest
       .fn()
-      // Attempt 1: interval scan + processing
       .mockResolvedValueOnce({
         close: jest.fn(),
         find: function* asyncGenerator() {
           yield { saved_objects: [disabledRule1, disabledRule2] };
-        },
-      })
-      .mockResolvedValueOnce({
-        close: jest.fn(),
-        find: function* asyncGenerator() {
-          yield { saved_objects: [disabledRule1, disabledRule2] };
-        },
-      })
-      // Retry 1: interval scan + processing (succeeds)
-      .mockResolvedValueOnce({
-        close: jest.fn(),
-        find: function* asyncGenerator() {
-          yield { saved_objects: [disabledRule2] };
         },
       })
       .mockResolvedValueOnce({
@@ -998,15 +956,7 @@ describe('bulkEnableRules', () => {
       ];
       encryptedSavedObjects.createPointInTimeFinderDecryptedAsInternalUser = jest
         .fn()
-        // interval scan
-        .mockResolvedValueOnce({
-          close: jest.fn(),
-          find: function* asyncGenerator() {
-            yield { saved_objects: savedObjects };
-          },
-        })
-        // processing pass
-        .mockResolvedValueOnce({
+        .mockResolvedValue({
           close: jest.fn(),
           find: function* asyncGenerator() {
             yield { saved_objects: savedObjects };
