@@ -6,7 +6,10 @@
  */
 
 import React from 'react';
+import { render, screen, within } from '@testing-library/react';
+import { IntlProvider } from 'react-intl';
 import { mountWithIntl } from '@kbn/test-jest-helpers';
+import type { PagerDutyActionParams } from '../types';
 import { EventActionOptions, SeverityActionOptions } from '../types';
 import PagerDutyParamsFields from './pagerduty_params';
 
@@ -133,99 +136,78 @@ describe('PagerDutyParamsFields renders', () => {
   });
 
   describe('selected action group "recovered"', () => {
-    test('event action dropdown is disabled and only shows Resolve', () => {
-      const actionParams = {
+    const renderWithRecoveredGroup = (
+      params: Partial<PagerDutyActionParams> = {
         eventAction: EventActionOptions.RESOLVE,
         dedupKey: 'test-dedup',
-      };
-
-      const wrapper = mountWithIntl(
-        <PagerDutyParamsFields
-          actionParams={actionParams}
-          errors={{ summary: [], timestamp: [], dedupKey: [] }}
-          editAction={() => {}}
-          index={0}
-          selectedActionGroupId="recovered"
-        />
+      }
+    ) =>
+      render(
+        <IntlProvider locale="en">
+          <PagerDutyParamsFields
+            actionParams={params}
+            errors={{ summary: [], timestamp: [], dedupKey: [] }}
+            editAction={() => {}}
+            index={0}
+            selectedActionGroupId="recovered"
+          />
+        </IntlProvider>
       );
 
-      const select = wrapper.find('[data-test-subj="eventActionSelect"]').first();
-      expect(select.prop('value')).toStrictEqual('resolve');
-      expect(select.prop('disabled')).toBe(true);
-      expect(select.prop('options')).toEqual([expect.objectContaining({ value: 'resolve' })]);
+    test('event action dropdown is disabled and only shows Resolve', () => {
+      renderWithRecoveredGroup();
+
+      const select = screen.getByTestId('eventActionSelect');
+      expect(select).toBeDisabled();
+      expect(select).toHaveValue('resolve');
+
+      const options = within(select).getAllByRole('option');
+      expect(options).toHaveLength(1);
+      expect(options[0]).toHaveValue('resolve');
     });
 
     test('dedupKey field is still rendered', () => {
-      const actionParams = {
-        eventAction: EventActionOptions.RESOLVE,
-        dedupKey: 'test-dedup',
-      };
+      renderWithRecoveredGroup();
 
-      const wrapper = mountWithIntl(
-        <PagerDutyParamsFields
-          actionParams={actionParams}
-          errors={{ summary: [], timestamp: [], dedupKey: [] }}
-          editAction={() => {}}
-          index={0}
-          selectedActionGroupId="recovered"
-        />
-      );
-
-      expect(wrapper.find('[data-test-subj="dedupKeyInput"]').length > 0).toBeTruthy();
-      expect(wrapper.find('[data-test-subj="dedupKeyInput"]').first().prop('value')).toStrictEqual(
-        'test-dedup'
-      );
+      const dedupKeyInput = screen.getByTestId('dedupKeyInput');
+      expect(dedupKeyInput).toBeInTheDocument();
+      expect(dedupKeyInput).toHaveValue('test-dedup');
     });
 
     test('trigger-only fields are not rendered', () => {
-      const actionParams = {
-        eventAction: EventActionOptions.RESOLVE,
-        dedupKey: 'test-dedup',
-      };
+      renderWithRecoveredGroup();
 
-      const wrapper = mountWithIntl(
-        <PagerDutyParamsFields
-          actionParams={actionParams}
-          errors={{ summary: [], timestamp: [], dedupKey: [] }}
-          editAction={() => {}}
-          index={0}
-          selectedActionGroupId="recovered"
-        />
-      );
-
-      expect(wrapper.find('[data-test-subj="summaryInput"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="severitySelect"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="timestampInput"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="componentInput"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="groupInput"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="sourceInput"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="customDetailsJsonEditor"]').length).toBe(0);
-      expect(wrapper.find('[data-test-subj="linksList"]').length).toBe(0);
+      expect(screen.queryByTestId('summaryInput')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('severitySelect')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('timestampInput')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('componentInput')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('groupInput')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('sourceInput')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('customDetailsJsonEditor')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('linksList')).not.toBeInTheDocument();
     });
   });
 
   test('event action dropdown shows all options when selectedActionGroupId is not "recovered"', () => {
-    const actionParams = {
-      eventAction: EventActionOptions.TRIGGER,
-      dedupKey: 'test',
-    };
-
-    const wrapper = mountWithIntl(
-      <PagerDutyParamsFields
-        actionParams={actionParams}
-        errors={{ summary: [], timestamp: [], dedupKey: [] }}
-        editAction={() => {}}
-        index={0}
-        selectedActionGroupId="default"
-      />
+    render(
+      <IntlProvider locale="en">
+        <PagerDutyParamsFields
+          actionParams={{ eventAction: EventActionOptions.TRIGGER, dedupKey: 'test' }}
+          errors={{ summary: [], timestamp: [], dedupKey: [] }}
+          editAction={() => {}}
+          index={0}
+          selectedActionGroupId="default"
+        />
+      </IntlProvider>
     );
 
-    const select = wrapper.find('[data-test-subj="eventActionSelect"]').first();
-    expect(select.prop('disabled')).toBeFalsy();
-    expect(select.prop('options')).toEqual([
-      expect.objectContaining({ value: 'trigger' }),
-      expect.objectContaining({ value: 'resolve' }),
-      expect.objectContaining({ value: 'acknowledge' }),
-    ]);
+    const select = screen.getByTestId('eventActionSelect');
+    expect(select).not.toBeDisabled();
+
+    const options = within(select).getAllByRole('option');
+    expect(options).toHaveLength(3);
+    expect(options[0]).toHaveValue('trigger');
+    expect(options[1]).toHaveValue('resolve');
+    expect(options[2]).toHaveValue('acknowledge');
   });
 });
