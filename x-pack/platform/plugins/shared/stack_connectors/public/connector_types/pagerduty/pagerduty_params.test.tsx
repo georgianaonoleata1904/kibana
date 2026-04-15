@@ -131,4 +131,101 @@ describe('PagerDutyParamsFields renders', () => {
     expect(wrapper.find('[data-test-subj="sourceInput"]').length > 0).toBeFalsy();
     expect(wrapper.find('[data-test-subj="summaryInput"]').length > 0).toBeFalsy();
   });
+
+  describe('selected action group "recovered"', () => {
+    test('event action dropdown is disabled and only shows Resolve', () => {
+      const actionParams = {
+        eventAction: EventActionOptions.RESOLVE,
+        dedupKey: 'test-dedup',
+      };
+
+      const wrapper = mountWithIntl(
+        <PagerDutyParamsFields
+          actionParams={actionParams}
+          errors={{ summary: [], timestamp: [], dedupKey: [] }}
+          editAction={() => {}}
+          index={0}
+          selectedActionGroupId="recovered"
+        />
+      );
+
+      const select = wrapper.find('[data-test-subj="eventActionSelect"]').first();
+      expect(select.prop('value')).toStrictEqual('resolve');
+      expect(select.prop('disabled')).toBe(true);
+      expect(select.prop('options')).toEqual([expect.objectContaining({ value: 'resolve' })]);
+    });
+
+    test('dedupKey field is still rendered', () => {
+      const actionParams = {
+        eventAction: EventActionOptions.RESOLVE,
+        dedupKey: 'test-dedup',
+      };
+
+      const wrapper = mountWithIntl(
+        <PagerDutyParamsFields
+          actionParams={actionParams}
+          errors={{ summary: [], timestamp: [], dedupKey: [] }}
+          editAction={() => {}}
+          index={0}
+          selectedActionGroupId="recovered"
+        />
+      );
+
+      expect(wrapper.find('[data-test-subj="dedupKeyInput"]').length > 0).toBeTruthy();
+      expect(wrapper.find('[data-test-subj="dedupKeyInput"]').first().prop('value')).toStrictEqual(
+        'test-dedup'
+      );
+    });
+
+    test('trigger-only fields are not rendered', () => {
+      const actionParams = {
+        eventAction: EventActionOptions.RESOLVE,
+        dedupKey: 'test-dedup',
+      };
+
+      const wrapper = mountWithIntl(
+        <PagerDutyParamsFields
+          actionParams={actionParams}
+          errors={{ summary: [], timestamp: [], dedupKey: [] }}
+          editAction={() => {}}
+          index={0}
+          selectedActionGroupId="recovered"
+        />
+      );
+
+      expect(wrapper.find('[data-test-subj="summaryInput"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="severitySelect"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="timestampInput"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="componentInput"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="groupInput"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="sourceInput"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="customDetailsJsonEditor"]').length).toBe(0);
+      expect(wrapper.find('[data-test-subj="linksList"]').length).toBe(0);
+    });
+  });
+
+  test('event action dropdown shows all options when selectedActionGroupId is not "recovered"', () => {
+    const actionParams = {
+      eventAction: EventActionOptions.TRIGGER,
+      dedupKey: 'test',
+    };
+
+    const wrapper = mountWithIntl(
+      <PagerDutyParamsFields
+        actionParams={actionParams}
+        errors={{ summary: [], timestamp: [], dedupKey: [] }}
+        editAction={() => {}}
+        index={0}
+        selectedActionGroupId="default"
+      />
+    );
+
+    const select = wrapper.find('[data-test-subj="eventActionSelect"]').first();
+    expect(select.prop('disabled')).toBeFalsy();
+    expect(select.prop('options')).toEqual([
+      expect.objectContaining({ value: 'trigger' }),
+      expect.objectContaining({ value: 'resolve' }),
+      expect.objectContaining({ value: 'acknowledge' }),
+    ]);
+  });
 });
