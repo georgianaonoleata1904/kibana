@@ -18,8 +18,8 @@ import { coreMock } from '@kbn/core/public/mocks';
 import { RuleComponent, alertToListItem } from './rule';
 import type { RuleSummary, AlertStatus, RuleType, RuleTypeModel } from '../../../../types';
 import type { AlertStatusValues } from '@kbn/alerting-plugin/common';
-import { ALERT_RULE_NAME } from '@kbn/rule-data-utils';
 import { setStateToKbnUrl } from '@kbn/kibana-utils-plugin/public';
+import { RULE_DETAILS_FILTER_CONTROLS } from './rule_alert_search_bar';
 import { mockRule, mockLogResponse } from './test_helpers';
 import { ruleTypeRegistryMock } from '../../../rule_type_registry.mock';
 import { useKibana } from '../../../../common/lib/kibana';
@@ -764,7 +764,7 @@ describe('cases ownership based on solution context', () => {
 });
 
 describe('scrollAlertsIntoView', () => {
-  it('excludes ALERT_RULE_NAME from controlConfigs written to the URL', async () => {
+  it('uses RULE_DETAILS_FILTER_CONTROLS for controlConfigs written to the URL', async () => {
     const rule = mockRule();
     const ruleType = mockRuleType({ hasAlertsMappings: true });
     const ruleSummary = mockRuleSummary();
@@ -787,16 +787,12 @@ describe('scrollAlertsIntoView', () => {
     };
     onClick('active');
 
-    expect(setStateToKbnUrl).toHaveBeenCalledWith(
-      'searchBarParams',
-      expect.objectContaining({
-        controlConfigs: expect.not.arrayContaining([
-          expect.objectContaining({ field_name: ALERT_RULE_NAME }),
-        ]),
-      }),
-      expect.anything(),
-      expect.anything()
-    );
+    const { controlConfigs } = (setStateToKbnUrl as jest.Mock).mock.calls[0][1] as {
+      controlConfigs: Array<{ field_name: string }>;
+    };
+    const controlFields = controlConfigs.map((c) => c.field_name);
+    const expectedFields = RULE_DETAILS_FILTER_CONTROLS.map((c) => c.field_name);
+    expect(controlFields).toEqual(expectedFields);
   });
 });
 

@@ -25,7 +25,7 @@ interface RuleAlertSearchBarProps {
   onEsQueryChange: (esQuery: { bool: BoolQuery }) => void;
 }
 
-const RULE_DETAILS_FILTER_CONTROLS = DEFAULT_CONTROLS.filter(
+export const RULE_DETAILS_FILTER_CONTROLS = DEFAULT_CONTROLS.filter(
   (control) => control.field_name !== ALERT_RULE_NAME
 );
 
