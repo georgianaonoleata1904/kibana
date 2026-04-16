@@ -150,6 +150,22 @@ describe('EmptyState', () => {
     expect(screen.queryByTestId('resetButton')).not.toBeInTheDocument();
   });
 
+  it('shows default error message when error has no message', async () => {
+    const error = new Error();
+    render(
+      <IntlProvider locale="en">
+        <EmptyState error={error} />
+      </IntlProvider>
+    );
+
+    await userEvent.click(screen.getByText('Show details'));
+
+    expect(await screen.findByTestId('errorStateMessageContent')).toBeVisible();
+    expect(
+      screen.getByText('An error occurred while rendering the alerts table')
+    ).toBeInTheDocument();
+  });
+
   it('does not render the reset button when onReset is not provided', async () => {
     const error = new Error('Test error message');
     render(

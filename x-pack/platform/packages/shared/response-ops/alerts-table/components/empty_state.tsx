@@ -27,8 +27,8 @@ import icon from '../assets/illustration_product_no_results_magnifying_glass.svg
 import { AlertsQueryInspector } from './alerts_query_inspector';
 import {
   ALERTS_TABLE_TITLE,
-  ALERTS_TABLE_UNKNOWN_ERROR_TITLE,
   ALERTS_TABLE_SHOW_ERROR_DETAILS,
+  ALERTS_TABLE_UNKNOWN_ERROR_MESSAGE,
 } from '../translations';
 import type { AlertsTableProps } from '../types';
 
@@ -75,7 +75,7 @@ export const EmptyState: React.FC<
             <h3>
               <FormattedMessage
                 id="xpack.triggersActionsUI.error.title"
-                defaultMessage={ALERTS_TABLE_UNKNOWN_ERROR_TITLE}
+                defaultMessage={'Cannot display alerts'}
               />
             </h3>
           </EuiTitle>
@@ -89,7 +89,7 @@ export const EmptyState: React.FC<
         >
           <EuiPanel data-test-subj="errorStateMessageContent">
             <EuiCodeBlock language="jsx" isCopyable overflowHeight={200}>
-              {error?.message}
+              {error?.message || ALERTS_TABLE_UNKNOWN_ERROR_MESSAGE}
             </EuiCodeBlock>
           </EuiPanel>
         </EuiAccordion>
