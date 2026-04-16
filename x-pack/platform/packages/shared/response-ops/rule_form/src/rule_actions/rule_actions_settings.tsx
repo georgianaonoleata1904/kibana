@@ -160,6 +160,9 @@ export const RuleActionsSettings = (props: RuleActionsSettingsProps) => {
     ruleTypeModel: selectedRuleTypeModel,
   });
 
+  const isRecoveredActionGroup =
+    selectedActionGroup?.id === selectedRuleType.recoveryActionGroup?.id;
+
   const actionError = actionsErrors[action.uuid!] || {};
 
   const showSelectActionGroup = actionGroups && selectedActionGroup && !action.frequency?.summary;
@@ -203,18 +206,6 @@ export const RuleActionsSettings = (props: RuleActionsSettingsProps) => {
       <EuiFlexItem>
         <EuiFlexGroup alignItems="flexEnd">
           <EuiFlexItem>
-            <RuleActionsNotifyWhen
-              frequency={action.frequency}
-              throttle={actionThrottle}
-              throttleUnit={actionThrottleUnit}
-              hasAlertsMappings={selectedRuleType.hasAlertsMappings}
-              onChange={onNotifyWhenChange}
-              onUseDefaultMessage={onUseDefaultMessageChange}
-              showMinimumThrottleWarning={showMinimumThrottleWarning}
-              showMinimumThrottleUnitWarning={showMinimumThrottleUnitWarning}
-            />
-          </EuiFlexItem>
-          <EuiFlexItem>
             {showSelectActionGroup && (
               <EuiSuperSelect
                 prepend={
@@ -247,6 +238,19 @@ export const RuleActionsSettings = (props: RuleActionsSettingsProps) => {
                 onChange={onActionGroupChange}
               />
             )}
+          </EuiFlexItem>
+          <EuiFlexItem>
+            <RuleActionsNotifyWhen
+              frequency={action.frequency}
+              throttle={actionThrottle}
+              throttleUnit={actionThrottleUnit}
+              hasAlertsMappings={selectedRuleType.hasAlertsMappings}
+              onChange={onNotifyWhenChange}
+              onUseDefaultMessage={onUseDefaultMessageChange}
+              showMinimumThrottleWarning={showMinimumThrottleWarning}
+              showMinimumThrottleUnitWarning={showMinimumThrottleUnitWarning}
+              isRecoveredActionGroup={isRecoveredActionGroup}
+            />
           </EuiFlexItem>
         </EuiFlexGroup>
       </EuiFlexItem>

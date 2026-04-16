@@ -157,6 +157,7 @@ export interface RuleActionsNotifyWhenProps {
   notifyWhenSelectOptions?: NotifyWhenSelectOptions[];
   onChange: (frequency: RuleActionFrequency) => void;
   onUseDefaultMessage: () => void;
+  isRecoveredActionGroup?: boolean;
 }
 
 export const RuleActionsNotifyWhen = ({
@@ -169,6 +170,7 @@ export const RuleActionsNotifyWhen = ({
   notifyWhenSelectOptions = NOTIFY_WHEN_OPTIONS,
   onChange,
   onUseDefaultMessage,
+  isRecoveredActionGroup = false,
 }: RuleActionsNotifyWhenProps) => {
   const [summaryMenuOpen, setSummaryMenuOpen] = useState(false);
 
@@ -192,8 +194,17 @@ export const RuleActionsNotifyWhen = ({
   );
 
   const forEachAlertNotifyWhenOptions = useMemo(
-    () => notifyWhenSelectOptions.filter((o) => o.isForEachAlertOption).map((o) => o.value),
-    [notifyWhenSelectOptions]
+    () =>
+      notifyWhenSelectOptions
+        .filter((o) => {
+          if (!o.isForEachAlertOption) return;
+          if (isRecoveredActionGroup) {
+            return o.value.value === RuleNotifyWhen.CHANGE;
+          }
+          return true;
+        })
+        .map((o) => o.value),
+    [notifyWhenSelectOptions, isRecoveredActionGroup]
   );
 
   const notifyWhenOptions = useMemo(
