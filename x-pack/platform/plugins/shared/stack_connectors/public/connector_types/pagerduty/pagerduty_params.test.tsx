@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
-import { IntlProvider } from '@kbn/i18n-react';
+import { __IntlProvider as IntlProvider } from '@kbn/i18n-react';
 import { mountWithIntl } from '@kbn/test-jest-helpers';
 import type { PagerDutyActionParams } from '../types';
 import { EventActionOptions, SeverityActionOptions } from '../types';
