@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { css } from '@emotion/css'; // We can't use @emotion/react - this component gets used with plugins that use both styled-components and Emotion
 import { i18n } from '@kbn/i18n';
 import type { RuleNotifyWhenType, RuleAction, RuleActionFrequency } from '@kbn/alerting-types';
@@ -234,6 +234,16 @@ export const RuleActionsNotifyWhen = ({
     },
     [forEachAlertNotifyWhenOptions, summaryNotifyWhenOptions]
   );
+
+  useEffect(() => {
+    if (selectedOptionDoesNotExist(frequency.summary)) {
+      onChange({
+        ...frequency,
+        notifyWhen: getDefaultNotifyWhenOption(frequency.summary),
+        throttle: frequency.summary ? frequency.throttle : null,
+      });
+    }
+  }, [frequency, selectedOptionDoesNotExist, getDefaultNotifyWhenOption, onChange]);
 
   const selectSummaryOption = useCallback(
     (summary: boolean) => {
