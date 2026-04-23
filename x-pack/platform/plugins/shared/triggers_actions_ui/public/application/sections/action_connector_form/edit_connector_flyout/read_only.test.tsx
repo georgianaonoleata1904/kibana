@@ -43,4 +43,24 @@ describe('ReadOnlyConnectorMessage', () => {
 
     expect(getByText('Extra Component')).toBeInTheDocument();
   });
+
+  it('should wrap all content in a single EuiText with size="s" for consistent typography', () => {
+    const { getByText, container } = render(
+      <ReadOnlyConnectorMessage
+        connectorId="123"
+        connectorName="Test Connector"
+        extraComponent={ExtraComponent}
+        href="https://example.com"
+      />,
+      { wrapper: I18nProvider }
+    );
+
+    const wrapper = container.firstElementChild!;
+    expect(wrapper.className).toContain('euiText-s');
+
+    const readOnlyMessage = getByText('This connector is read-only.');
+    const extraComponent = getByText('Extra Component');
+    expect(wrapper.contains(readOnlyMessage)).toBe(true);
+    expect(wrapper.contains(extraComponent)).toBe(true);
+  });
 });
