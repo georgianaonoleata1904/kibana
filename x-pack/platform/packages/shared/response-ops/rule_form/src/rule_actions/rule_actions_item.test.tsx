@@ -210,7 +210,7 @@ describe('ruleActionsItem', () => {
     );
 
     expect(screen.getByTestId('ruleActionsItem')).toBeInTheDocument();
-    expect(screen.queryByText('ruleActionsSettings')).toBeInTheDocument();
+    expect(screen.getByText('ruleActionsSettings')).toBeInTheDocument();
     expect(screen.getByText('ruleActionsMessage')).toBeInTheDocument();
   });
 
