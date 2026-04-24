@@ -20,7 +20,7 @@
  */
 
 import { i18n } from '@kbn/i18n';
-import { z } from '@kbn/zod/v4';
+import { z, lazySchema } from '@kbn/zod/v4';
 import type { ConnectorSpec } from '../../connector_spec';
 
 /**
@@ -114,16 +114,18 @@ export const VirusTotalConnector: ConnectorSpec = {
   actions: {
     scanFileHash: {
       isTool: true,
-      input: z.object({
-        hash: z.string().min(32).describe('File hash (MD5, SHA-1, or SHA-256)'),
-        failOnError: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            'If true, throw error on API failures. If false (default), return error details'
-          ),
-      }),
+      input: lazySchema(() =>
+        z.object({
+          hash: z.string().min(32).describe('File hash (MD5, SHA-1, or SHA-256)'),
+          failOnError: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              'If true, throw error on API failures. If false (default), return error details'
+            ),
+        })
+      ),
       handler: async (ctx, input) => {
         const typedInput = input as { hash: string; failOnError?: boolean };
         try {
@@ -147,16 +149,18 @@ export const VirusTotalConnector: ConnectorSpec = {
 
     scanUrl: {
       isTool: true,
-      input: z.object({
-        url: z.url().describe('URL to scan'),
-        failOnError: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            'If true, throw error on API failures. If false (default), return error details'
-          ),
-      }),
+      input: lazySchema(() =>
+        z.object({
+          url: z.url().describe('URL to scan'),
+          failOnError: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              'If true, throw error on API failures. If false (default), return error details'
+            ),
+        })
+      ),
       handler: async (ctx, input) => {
         const typedInput = input as { url: string; failOnError?: boolean };
         try {
@@ -190,17 +194,19 @@ export const VirusTotalConnector: ConnectorSpec = {
 
     submitFile: {
       isTool: true,
-      input: z.object({
-        file: z.string().describe('Base64-encoded file content'),
-        filename: z.string().optional().describe('Original filename'),
-        failOnError: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            'If true, throw error on API failures. If false (default), return error details'
-          ),
-      }),
+      input: lazySchema(() =>
+        z.object({
+          file: z.string().describe('Base64-encoded file content'),
+          filename: z.string().optional().describe('Original filename'),
+          failOnError: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              'If true, throw error on API failures. If false (default), return error details'
+            ),
+        })
+      ),
       handler: async (ctx, input) => {
         const typedInput = input as { file: string; filename?: string; failOnError?: boolean };
         try {
@@ -229,16 +235,18 @@ export const VirusTotalConnector: ConnectorSpec = {
 
     getIpReport: {
       isTool: true,
-      input: z.object({
-        ip: z.ipv4().describe('IP address'),
-        failOnError: z
-          .boolean()
-          .optional()
-          .default(false)
-          .describe(
-            'If true, throw error on API failures. If false (default), return error details'
-          ),
-      }),
+      input: lazySchema(() =>
+        z.object({
+          ip: z.ipv4().describe('IP address'),
+          failOnError: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe(
+              'If true, throw error on API failures. If false (default), return error details'
+            ),
+        })
+      ),
       handler: async (ctx, input) => {
         const typedInput = input as { ip: string; failOnError?: boolean };
         try {

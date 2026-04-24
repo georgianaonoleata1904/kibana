@@ -22,7 +22,7 @@
  */
 
 import { i18n } from '@kbn/i18n';
-import { z } from '@kbn/zod/v4';
+import { z, lazySchema } from '@kbn/zod/v4';
 import type { ConnectorSpec } from '../../connector_spec';
 import {
   CallRestApiInputSchema,
@@ -55,25 +55,27 @@ export const SharepointServer: ConnectorSpec = {
     types: ['basic'],
   },
 
-  schema: z.object({
-    siteUrl: z
-      .string()
-      .url()
-      .transform((val) => val.replace(/\/+$/, ''))
-      .describe('SharePoint Server site URL')
-      .meta({
-        label: 'Site URL',
-        widget: 'text',
-        placeholder: 'https://sharepoint.company.com/sites/mysite',
-      }),
-  }),
+  schema: lazySchema(() =>
+    z.object({
+      siteUrl: z
+        .string()
+        .url()
+        .transform((val) => val.replace(/\/+$/, ''))
+        .describe('SharePoint Server site URL')
+        .meta({
+          label: 'Site URL',
+          widget: 'text',
+          placeholder: 'https://sharepoint.company.com/sites/mysite',
+        }),
+    })
+  ),
 
   actions: {
     getWeb: {
       isTool: true,
       description:
         'Get metadata about the SharePoint site (title, URL, description, locale). Use this as a starting point to confirm the site is reachable and to retrieve the site title before browsing lists or folders.',
-      input: z.object({}).optional(),
+      input: lazySchema(() => z.object({}).optional()),
       output: z.any(),
       handler: async (ctx) => {
         const { siteUrl } = ctx.config as { siteUrl: string };
@@ -89,7 +91,7 @@ export const SharepointServer: ConnectorSpec = {
       isTool: true,
       description:
         "List all lists and document libraries on the SharePoint site. Returns each list's Id, Title, ItemCount, Description, Created, and LastItemModifiedDate. Use the Title field as input to getListItems, and RootFolder.ServerRelativeUrl as the path input to getFolderContents.",
-      input: z.object({}).optional(),
+      input: lazySchema(() => z.object({}).optional()),
       output: ODataCollectionOutputSchema,
       handler: async (ctx) => {
         const { siteUrl } = ctx.config as { siteUrl: string };

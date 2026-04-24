@@ -375,7 +375,7 @@ export const Slack: ConnectorSpec = {
   },
 
   // No additional configuration needed beyond OAuth credentials
-  schema: z.object({}),
+  schema: lazySchema(() => z.object({})),
 
   actions: {
     // https://api.slack.com/methods/assistant.search.context
