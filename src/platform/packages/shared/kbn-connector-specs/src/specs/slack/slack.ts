@@ -8,7 +8,7 @@
  */
 
 import { i18n } from '@kbn/i18n';
-import { z } from '@kbn/zod/v4';
+import { z, lazySchema } from '@kbn/zod/v4';
 import type { AxiosError, AxiosResponse } from 'axios';
 import type { ConnectorSpec, ActionContext } from '../../connector_spec';
 import type { SlackAssistantSearchContextResponse, SlackErrorFields } from './types';
@@ -33,168 +33,183 @@ const SLACK_MAX_RETRIES = 5;
 // Tiny async sleep helper
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const SlackSearchMessagesInputSchema = z.object({
-  query: z
-    .string()
-    .min(1)
-    .describe(
-      'Plain text search query to find messages. Do NOT embed Slack search operators like from: or in: here — use the dedicated fromUser, inChannel, after, and before parameters instead. Keep queries focused on a few keywords rather than long phrases for better results.'
-    ),
-  inChannel: z
-    .string()
-    .optional()
-    .describe(
-      'Optional Slack search constraint. Adds `in:CHANNEL_NAME` to the query (e.g. in:general).'
-    ),
-  fromUser: z
-    .string()
-    .optional()
-    .describe(
-      "Optional Slack search constraint. Adds `from:USER_ID` (e.g. from:U012ABCDEF) or `from:username` to the query. Accepts a Slack username or user ID, NOT a full name. If you only know a person's full name, search for it as keywords in the query parameter first, then use the sender.username field from results for subsequent filtered searches."
-    ),
-  after: z
-    .string()
-    .optional()
-    .describe(
-      'Optional Slack search constraint. Adds `after:YYYY-MM-DD` to the query (e.g. after:2026-02-10).'
-    ),
-  before: z
-    .string()
-    .optional()
-    .describe(
-      'Optional Slack search constraint. Adds `before:YYYY-MM-DD` to the query (e.g. before:2026-02-10).'
-    ),
-  sort: z
-    .enum(['score', 'timestamp'])
-    .optional()
-    .describe('Sort order: score (relevance) or timestamp'),
-  sortDir: z.enum(['asc', 'desc']).optional().describe('Sort direction'),
-  count: z
-    .number()
-    .int()
-    .min(1)
-    .max(SLACK_MAX_SEARCH_RESULTS_PER_PAGE)
-    .optional()
-    .describe(
-      `Number of results to return (1-${SLACK_MAX_SEARCH_RESULTS_PER_PAGE}). Slack returns up to ${SLACK_MAX_SEARCH_RESULTS_PER_PAGE} results per page.`
-    ),
-  cursor: z
-    .string()
-    .optional()
-    .describe(
-      'Pagination cursor to fetch the next page of results (use response_metadata.next_cursor from a previous call).'
-    ),
-  includeContextMessages: z
-    .boolean()
-    .optional()
-    .describe(
-      'Include contextual messages (messages before/after the matched message, or thread context). Defaults to true.'
-    ),
-  includeBots: z.boolean().optional().describe('Include bot-authored messages. Defaults to false.'),
-  includeMessageBlocks: z
-    .boolean()
-    .optional()
-    .describe(
-      'Include Block Kit blocks in message results (useful for extracting mentions/links). Defaults to true.'
-    ),
-  raw: z
-    .boolean()
-    .optional()
-    .describe('Return the full raw Slack API response instead of a compact, LLM-friendly result.'),
-});
+const SlackSearchMessagesInputSchema = lazySchema(() =>
+  z.object({
+    query: z
+      .string()
+      .min(1)
+      .describe(
+        'Plain text search query to find messages. Do NOT embed Slack search operators like from: or in: here — use the dedicated fromUser, inChannel, after, and before parameters instead. Keep queries focused on a few keywords rather than long phrases for better results.'
+      ),
+    inChannel: z
+      .string()
+      .optional()
+      .describe(
+        'Optional Slack search constraint. Adds `in:CHANNEL_NAME` to the query (e.g. in:general).'
+      ),
+    fromUser: z
+      .string()
+      .optional()
+      .describe(
+        "Optional Slack search constraint. Adds `from:USER_ID` (e.g. from:U012ABCDEF) or `from:username` to the query. Accepts a Slack username or user ID, NOT a full name. If you only know a person's full name, search for it as keywords in the query parameter first, then use the sender.username field from results for subsequent filtered searches."
+      ),
+    after: z
+      .string()
+      .optional()
+      .describe(
+        'Optional Slack search constraint. Adds `after:YYYY-MM-DD` to the query (e.g. after:2026-02-10).'
+      ),
+    before: z
+      .string()
+      .optional()
+      .describe(
+        'Optional Slack search constraint. Adds `before:YYYY-MM-DD` to the query (e.g. before:2026-02-10).'
+      ),
+    sort: z
+      .enum(['score', 'timestamp'])
+      .optional()
+      .describe('Sort order: score (relevance) or timestamp'),
+    sortDir: z.enum(['asc', 'desc']).optional().describe('Sort direction'),
+    count: z
+      .number()
+      .int()
+      .min(1)
+      .max(SLACK_MAX_SEARCH_RESULTS_PER_PAGE)
+      .optional()
+      .describe(
+        `Number of results to return (1-${SLACK_MAX_SEARCH_RESULTS_PER_PAGE}). Slack returns up to ${SLACK_MAX_SEARCH_RESULTS_PER_PAGE} results per page.`
+      ),
+    cursor: z
+      .string()
+      .optional()
+      .describe(
+        'Pagination cursor to fetch the next page of results (use response_metadata.next_cursor from a previous call).'
+      ),
+    includeContextMessages: z
+      .boolean()
+      .optional()
+      .describe(
+        'Include contextual messages (messages before/after the matched message, or thread context). Defaults to true.'
+      ),
+    includeBots: z
+      .boolean()
+      .optional()
+      .describe('Include bot-authored messages. Defaults to false.'),
+    includeMessageBlocks: z
+      .boolean()
+      .optional()
+      .describe(
+        'Include Block Kit blocks in message results (useful for extracting mentions/links). Defaults to true.'
+      ),
+    raw: z
+      .boolean()
+      .optional()
+      .describe(
+        'Return the full raw Slack API response instead of a compact, LLM-friendly result.'
+      ),
+  })
+);
 type SlackSearchMessagesInput = z.infer<typeof SlackSearchMessagesInputSchema>;
 
-const SlackResolveChannelIdInputSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .describe(
-      'Channel name to resolve (e.g. "general" or "#general"). Returns the matching conversation ID (C.../G...).'
-    ),
-  types: z
-    .array(z.enum(SLACK_CONVERSATION_TYPES))
-    .optional()
-    .describe(
-      'Conversation types to search. Defaults to public_channel. Valid: public_channel, private_channel, im, mpim.'
-    ),
-  match: z
-    .enum(['exact', 'contains'])
-    .optional()
-    .describe(
-      'How to match the channel name. exact is fastest/most precise. contains can help when you only know part of the name.'
-    ),
-  excludeArchived: z.boolean().default(true).describe('Exclude archived channels (default true)'),
-  cursor: z
-    .string()
-    .optional()
-    .describe('Optional cursor to resume a previous scan (advanced). Usually omit.'),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(SLACK_MAX_CONVERSATIONS_LIST_LIMIT)
-    .optional()
-    .describe(
-      `Channels per page to request (1-${SLACK_MAX_CONVERSATIONS_LIST_LIMIT}). Defaults to ${SLACK_DEFAULT_CONVERSATIONS_LIST_LIMIT}.`
-    ),
-  maxPages: z
-    .number()
-    .int()
-    .min(1)
-    .max(SLACK_MAX_RESOLVE_CHANNEL_MAX_PAGES)
-    .optional()
-    .describe(
-      `Maximum number of pages to scan before giving up. Defaults to ${SLACK_DEFAULT_RESOLVE_CHANNEL_MAX_PAGES}.`
-    ),
-});
+const SlackResolveChannelIdInputSchema = lazySchema(() =>
+  z.object({
+    name: z
+      .string()
+      .min(1)
+      .describe(
+        'Channel name to resolve (e.g. "general" or "#general"). Returns the matching conversation ID (C.../G...).'
+      ),
+    types: z
+      .array(z.enum(SLACK_CONVERSATION_TYPES))
+      .optional()
+      .describe(
+        'Conversation types to search. Defaults to public_channel. Valid: public_channel, private_channel, im, mpim.'
+      ),
+    match: z
+      .enum(['exact', 'contains'])
+      .optional()
+      .describe(
+        'How to match the channel name. exact is fastest/most precise. contains can help when you only know part of the name.'
+      ),
+    excludeArchived: z.boolean().default(true).describe('Exclude archived channels (default true)'),
+    cursor: z
+      .string()
+      .optional()
+      .describe('Optional cursor to resume a previous scan (advanced). Usually omit.'),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(SLACK_MAX_CONVERSATIONS_LIST_LIMIT)
+      .optional()
+      .describe(
+        `Channels per page to request (1-${SLACK_MAX_CONVERSATIONS_LIST_LIMIT}). Defaults to ${SLACK_DEFAULT_CONVERSATIONS_LIST_LIMIT}.`
+      ),
+    maxPages: z
+      .number()
+      .int()
+      .min(1)
+      .max(SLACK_MAX_RESOLVE_CHANNEL_MAX_PAGES)
+      .optional()
+      .describe(
+        `Maximum number of pages to scan before giving up. Defaults to ${SLACK_DEFAULT_RESOLVE_CHANNEL_MAX_PAGES}.`
+      ),
+  })
+);
 type SlackResolveChannelIdInput = z.infer<typeof SlackResolveChannelIdInputSchema>;
 
-const SlackCreateConversationInputSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .describe(
-      'Name of the channel to create. Channel names can only contain lowercase letters, numbers, hyphens, and underscores, and must be 80 characters or fewer.'
-    ),
-  isPrivate: z
-    .boolean()
-    .optional()
-    .describe('Whether to create a private channel. Defaults to false (public).'),
-});
+const SlackCreateConversationInputSchema = lazySchema(() =>
+  z.object({
+    name: z
+      .string()
+      .min(1)
+      .describe(
+        'Name of the channel to create. Channel names can only contain lowercase letters, numbers, hyphens, and underscores, and must be 80 characters or fewer.'
+      ),
+    isPrivate: z
+      .boolean()
+      .optional()
+      .describe('Whether to create a private channel. Defaults to false (public).'),
+  })
+);
 type SlackCreateConversationInput = z.infer<typeof SlackCreateConversationInputSchema>;
 
-const SlackInviteToConversationInputSchema = z.object({
-  channel: z
-    .string()
-    .min(1)
-    .describe('The ID of the channel to invite users to (e.g. C... or G...).'),
-  users: z
-    .string()
-    .min(1)
-    .describe(
-      'Comma-separated list of user IDs to invite to the channel (e.g. U01PWE77HD2,U02ABC1234).'
-    ),
-});
+const SlackInviteToConversationInputSchema = lazySchema(() =>
+  z.object({
+    channel: z
+      .string()
+      .min(1)
+      .describe('The ID of the channel to invite users to (e.g. C... or G...).'),
+    users: z
+      .string()
+      .min(1)
+      .describe(
+        'Comma-separated list of user IDs to invite to the channel (e.g. U01PWE77HD2,U02ABC1234).'
+      ),
+  })
+);
 type SlackInviteToConversationInput = z.infer<typeof SlackInviteToConversationInputSchema>;
 
-const SlackSendMessageInputSchema = z.object({
-  channel: z
-    .string()
-    .min(1)
-    .describe(
-      'Conversation ID to send the message to (e.g. C... for channels, G... for private channels, D... for DMs). Use resolveChannelId to discover channel IDs.'
-    ),
-  text: z.string().min(1).describe('The message text to send'),
-  threadTs: z
-    .string()
-    .optional()
-    .describe('Timestamp of another message to reply to (creates a threaded reply)'),
-  unfurlLinks: z
-    .boolean()
-    .optional()
-    .describe('Whether to enable unfurling of primarily text-based content'),
-  unfurlMedia: z.boolean().optional().describe('Whether to enable unfurling of media content'),
-});
+const SlackSendMessageInputSchema = lazySchema(() =>
+  z.object({
+    channel: z
+      .string()
+      .min(1)
+      .describe(
+        'Conversation ID to send the message to (e.g. C... for channels, G... for private channels, D... for DMs). Use resolveChannelId to discover channel IDs.'
+      ),
+    text: z.string().min(1).describe('The message text to send'),
+    threadTs: z
+      .string()
+      .optional()
+      .describe('Timestamp of another message to reply to (creates a threaded reply)'),
+    unfurlLinks: z
+      .boolean()
+      .optional()
+      .describe('Whether to enable unfurling of primarily text-based content'),
+    unfurlMedia: z.boolean().optional().describe('Whether to enable unfurling of media content'),
+  })
+);
 type SlackSendMessageInput = z.infer<typeof SlackSendMessageInputSchema>;
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
