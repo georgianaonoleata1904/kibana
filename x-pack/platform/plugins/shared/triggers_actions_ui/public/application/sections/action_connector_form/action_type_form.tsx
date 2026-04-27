@@ -436,7 +436,8 @@ export const ActionTypeForm = ({
 
   const showActionAlertsFilter = ruleType?.hasAlertsMappings || producerId === AlertConsumers.SIEM;
 
-  const isRecoveredActionGroup = selectedActionGroup?.id === ruleType?.recoveryActionGroup?.id;
+  const isRecoveredActionGroup =
+    !!selectedActionGroup?.id && selectedActionGroup.id === ruleType?.recoveryActionGroup?.id;
 
   const actionNotifyWhen = (
     <RuleActionsNotifyWhen

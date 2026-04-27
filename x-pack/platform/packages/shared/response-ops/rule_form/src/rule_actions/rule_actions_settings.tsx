@@ -161,7 +161,8 @@ export const RuleActionsSettings = (props: RuleActionsSettingsProps) => {
   });
 
   const isRecoveredActionGroup =
-    selectedActionGroup?.id === selectedRuleType.recoveryActionGroup?.id;
+    !!selectedActionGroup?.id &&
+    selectedActionGroup.id === selectedRuleType.recoveryActionGroup?.id;
 
   const actionError = actionsErrors[action.uuid!] || {};
 
