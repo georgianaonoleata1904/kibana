@@ -7,7 +7,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
+import { FILTERS } from '@kbn/es-query';
 import { AlertFilterControls } from '@kbn/alerts-ui-shared/src/alert_filter_controls';
+import { SPACE_IDS } from '@kbn/rule-data-utils';
 import { useFetchAlertsIndexNamesQuery } from '@kbn/alerts-ui-shared';
 import { useAlertsDataView } from '@kbn/alerts-ui-shared/src/common/hooks/use_alerts_data_view';
 import { Storage } from '@kbn/kibana-utils-plugin/public';
@@ -99,12 +101,28 @@ export function ObservabilityAlertSearchBar({
     [indexNames]
   );
 
+  const spaceFilter = useMemo<Filter[]>(() => {
+    if (!spaceId) return [];
+    return [
+      {
+        meta: {
+          type: FILTERS.PHRASE,
+          key: SPACE_IDS,
+          params: { query: spaceId },
+          disabled: false,
+          negate: false,
+        },
+        query: { match_phrase: { [SPACE_IDS]: spaceId } },
+      },
+    ];
+  }, [spaceId]);
+
   const aggregatedFilters = useMemo(() => {
     const _filters = timeFilter
-      ? [timeFilter, ...filters, ...defaultFilters]
-      : [...filters, ...defaultFilters];
+      ? [timeFilter, ...filters, ...defaultFilters, ...spaceFilter]
+      : [...filters, ...defaultFilters, ...spaceFilter];
     return _filters.length ? _filters : undefined;
-  }, [timeFilter, filters, defaultFilters]);
+  }, [timeFilter, filters, defaultFilters, spaceFilter]);
 
   const submitQuery = useCallback(() => {
     try {
