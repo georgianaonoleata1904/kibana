@@ -448,20 +448,22 @@ export const SentinelOneExecuteScriptParamsSchema = lazySchema(() =>
 );
 
 export const SentinelOneExecuteScriptResponseSchema = lazySchema(() =>
-  z.object({
-    errors: z.array(z.object({}).passthrough()).nullable().default(null),
-    data: z
-      .object({
-        pendingExecutionId: z.string().nullable().default(null),
-        affected: z.coerce.number().nullable().default(null),
-        parentTaskId: z.string().nullable().default(null),
-        pending: z.boolean().nullable().default(null),
-      })
-      .passthrough()
-      .nullable()
-      .default(null),
-  })
-).passthrough();
+  z
+    .object({
+      errors: z.array(z.object({}).passthrough()).nullable().default(null),
+      data: z
+        .object({
+          pendingExecutionId: z.string().nullable().default(null),
+          affected: z.coerce.number().nullable().default(null),
+          parentTaskId: z.string().nullable().default(null),
+          pending: z.boolean().nullable().default(null),
+        })
+        .passthrough()
+        .nullable()
+        .default(null),
+    })
+    .passthrough()
+);
 
 export const SentinelOneGetRemoteScriptResultsParamsSchema = lazySchema(() =>
   z
