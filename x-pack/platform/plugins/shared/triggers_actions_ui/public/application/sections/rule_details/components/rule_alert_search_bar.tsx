@@ -8,11 +8,10 @@
 import React from 'react';
 import type { BoolQuery } from '@kbn/es-query';
 import { EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
-import { ALERT_RULE_NAME } from '@kbn/rule-data-utils';
-import { DEFAULT_CONTROLS } from '@kbn/alerts-ui-shared/src/alert_filter_controls/constants';
 import { UrlSyncedAlertsSearchBar } from '../../alerts_search_bar/url_synced_alerts_search_bar';
 import {
   RULE_DETAILS_ALERTS_SEARCH_BAR_PARAMS_URL_STORAGE_KEY,
+  RULE_DETAILS_FILTER_CONTROLS,
   RULE_DETAILS_FILTER_CONTROLS_STORAGE_KEY,
 } from '../../alerts_search_bar/constants';
 import {
@@ -24,10 +23,6 @@ interface RuleAlertSearchBarProps {
   ruleTypeId: string;
   onEsQueryChange: (esQuery: { bool: BoolQuery }) => void;
 }
-
-export const RULE_DETAILS_FILTER_CONTROLS = DEFAULT_CONTROLS.filter(
-  (control) => control.field_name !== ALERT_RULE_NAME
-);
 
 export const RuleAlertSearchBar = ({ ruleTypeId, onEsQueryChange }: RuleAlertSearchBarProps) => {
   return (

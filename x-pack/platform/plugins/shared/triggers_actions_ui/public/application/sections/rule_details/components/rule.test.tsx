@@ -19,7 +19,7 @@ import { RuleComponent, alertToListItem } from './rule';
 import type { RuleSummary, AlertStatus, RuleType, RuleTypeModel } from '../../../../types';
 import type { AlertStatusValues } from '@kbn/alerting-plugin/common';
 import { setStateToKbnUrl } from '@kbn/kibana-utils-plugin/public';
-import { RULE_DETAILS_FILTER_CONTROLS } from './rule_alert_search_bar';
+import { RULE_DETAILS_FILTER_CONTROLS } from '../../alerts_search_bar/constants';
 import { mockRule, mockLogResponse } from './test_helpers';
 import { ruleTypeRegistryMock } from '../../../rule_type_registry.mock';
 import { useKibana } from '../../../../common/lib/kibana';

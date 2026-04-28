@@ -39,7 +39,8 @@ import {
   rulesStatusesTranslationsMapping,
 } from '../../rules_list/translations';
 import { RuleAlertActionsCell } from './rule_alert_actions_cell';
-import { RuleAlertSearchBar, RULE_DETAILS_FILTER_CONTROLS } from './rule_alert_search_bar';
+import { RuleAlertSearchBar } from './rule_alert_search_bar';
+import { RULE_DETAILS_FILTER_CONTROLS } from '../../alerts_search_bar/constants';
 import { AlertSummaryWidget } from '../../alert_summary_widget';
 
 const RuleEventLogList = lazy(() => import('./rule_event_log_list'));

@@ -87,7 +87,7 @@ export const UrlSyncedAlertsSearchBar = ({
   ruleTypeIds,
   showFilterControls = false,
   urlStorageKey = ALERTS_SEARCH_BAR_PARAMS_URL_STORAGE_KEY,
-  filterControlsStorageKey: filterControlsStorageKeyProp,
+  filterControlsStorageKey: filterControlsStorageKeyProp = 'alertsSearchBar',
   onEsQueryChange,
   onFilterSelected,
   defaultFilterControls,
@@ -179,10 +179,7 @@ export const UrlSyncedAlertsSearchBar = ({
   );
 
   const filterControlsStorageKey = useMemo(
-    () =>
-      [filterControlsStorageKeyProp ?? 'alertsSearchBar', spaceId, 'filterControls']
-        .filter(Boolean)
-        .join('.'),
+    () => [filterControlsStorageKeyProp, spaceId, 'filterControls'].filter(Boolean).join('.'),
     [filterControlsStorageKeyProp, spaceId]
   );
 
@@ -190,12 +187,6 @@ export const UrlSyncedAlertsSearchBar = ({
     new Storage(window.localStorage).remove(filterControlsStorageKey);
     window.location.reload();
   }, [filterControlsStorageKey]);
-
-  const sanitizedFilterControls = useMemo(() => {
-    if (!defaultFilterControls) return filterControls;
-    const allowedFields = new Set(defaultFilterControls.map((c) => c.field_name));
-    return filterControls?.filter((c) => allowedFields.has(c.field_name));
-  }, [defaultFilterControls, filterControls]);
 
   return (
     <>
@@ -221,7 +212,7 @@ export const UrlSyncedAlertsSearchBar = ({
               title: '.alerts-*',
             }}
             spaceId={spaceId}
-            controlsUrlState={sanitizedFilterControls}
+            controlsUrlState={filterControls}
             filters={controlFilters}
             onFiltersChange={onControlFiltersChange}
             storageKey={filterControlsStorageKey}
