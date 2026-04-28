@@ -20,10 +20,10 @@ import { isUndefined } from 'lodash';
 import type { ActionParamsProps } from '@kbn/triggers-actions-ui-plugin/public';
 import { JsonEditorWithMessageVariables } from '@kbn/triggers-actions-ui-plugin/public';
 import { TextFieldWithMessageVariables } from '@kbn/triggers-actions-ui-plugin/public';
+import { RecoveredActionGroup } from '@kbn/alerting-types';
 import type { PagerDutyActionParams } from '../types';
 import { LinksList } from './links_list';
 import { OPTIONAL_LABEL } from './translations';
-import { ACTION_GROUP_RECOVERED } from '../lib/servicenow/helpers';
 
 const PagerDutyParamsFields: React.FunctionComponent<ActionParamsProps<PagerDutyActionParams>> = ({
   actionParams,
@@ -127,7 +127,7 @@ const PagerDutyParamsFields: React.FunctionComponent<ActionParamsProps<PagerDuty
     Number(errors.timestamp.length) > 0 &&
     timestamp !== undefined;
 
-  const isRecoveredAction = selectedActionGroupId === ACTION_GROUP_RECOVERED;
+  const isRecoveredAction = selectedActionGroupId === RecoveredActionGroup.id;
   const filteredEventActionOptions = isRecoveredAction
     ? eventActionOptions.filter((option) => option.value === 'resolve')
     : eventActionOptions;
