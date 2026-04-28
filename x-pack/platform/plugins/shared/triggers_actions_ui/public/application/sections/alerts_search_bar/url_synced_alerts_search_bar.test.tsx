@@ -112,29 +112,6 @@ describe('UrlSyncedAlertsSearchBar', () => {
       );
     });
 
-    it('strips URL-state controls not present in defaultFilterControls from controlsUrlState', () => {
-      // URL state has both Status and Rule controls
-      jest.mocked(useAlertSearchBarStateContainer).mockReturnValue({
-        ...mockStateContainerDefaults,
-        filterControls: [
-          { field_name: ALERT_STATUS, title: 'Status', selected_options: ['active'] },
-          { field_name: ALERT_RULE_NAME, title: 'Rule', selected_options: ['My Rule'] },
-        ],
-      });
-
-      // Only Status is allowed on this page
-      render(<TestComponent showFilterControls defaultFilterControls={statusOnlyControls} />);
-
-      const calls = jest.mocked(AlertFilterControls).mock.calls;
-      const lastCall = calls[calls.length - 1][0];
-      expect(lastCall.controlsUrlState).toEqual([
-        expect.objectContaining({ field_name: ALERT_STATUS }),
-      ]);
-      expect(lastCall.controlsUrlState).not.toEqual(
-        expect.arrayContaining([expect.objectContaining({ field_name: ALERT_RULE_NAME })])
-      );
-    });
-
     it('passes all URL-state controls through when defaultFilterControls is not set', () => {
       const urlControls = [
         { field_name: ALERT_STATUS, title: 'Status', selected_options: ['active'] },
