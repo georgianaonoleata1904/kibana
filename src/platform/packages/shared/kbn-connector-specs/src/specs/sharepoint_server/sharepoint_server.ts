@@ -75,7 +75,7 @@ export const SharepointServer: ConnectorSpec = {
       isTool: true,
       description:
         'Get metadata about the SharePoint site (title, URL, description, locale). Use this as a starting point to confirm the site is reachable and to retrieve the site title before browsing lists or folders.',
-      input: lazySchema(() => z.object({}).optional()),
+      input: z.object({}).optional(),
       output: z.any(),
       handler: async (ctx) => {
         const { siteUrl } = ctx.config as { siteUrl: string };
@@ -91,7 +91,7 @@ export const SharepointServer: ConnectorSpec = {
       isTool: true,
       description:
         "List all lists and document libraries on the SharePoint site. Returns each list's Id, Title, ItemCount, Description, Created, and LastItemModifiedDate. Use the Title field as input to getListItems, and RootFolder.ServerRelativeUrl as the path input to getFolderContents.",
-      input: lazySchema(() => z.object({}).optional()),
+      input: z.object({}).optional(),
       output: ODataCollectionOutputSchema,
       handler: async (ctx) => {
         const { siteUrl } = ctx.config as { siteUrl: string };

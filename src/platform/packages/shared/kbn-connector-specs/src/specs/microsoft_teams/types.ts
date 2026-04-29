@@ -13,18 +13,16 @@ import { z, lazySchema } from '@kbn/zod/v4';
 // Action input schemas & inferred types
 // =============================================================================
 
-export const ListJoinedTeamsInputSchema = lazySchema(() =>
-  z
-    .object({
-      userId: z
-        .string()
-        .optional()
-        .describe(
-          'User ID for app-only auth via client credentials. Omit when using delegated auth (bearer token).'
-        ),
-    })
-    .optional()
-);
+export const ListJoinedTeamsInputSchema = z
+  .object({
+    userId: z
+      .string()
+      .optional()
+      .describe(
+        'User ID for app-only auth via client credentials. Omit when using delegated auth (bearer token).'
+      ),
+  })
+  .optional();
 export type ListJoinedTeamsInput = z.infer<typeof ListJoinedTeamsInputSchema>;
 
 export const ListChannelsInputSchema = lazySchema(() =>

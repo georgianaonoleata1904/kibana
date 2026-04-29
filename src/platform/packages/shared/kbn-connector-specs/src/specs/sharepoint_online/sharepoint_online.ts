@@ -121,18 +121,16 @@ export const SharepointOnline: ConnectorSpec = {
       isTool: true,
       description:
         'List all SharePoint sites the connector has access to. With app-only (client credentials) auth, returns all sites via /sites/getAllSites. With delegated (authorization code) auth, falls back to /sites?search= because getAllSites requires application permissions. Use this to discover site IDs needed by getSite, getSitePages, getSiteDrives, getSiteLists, and getSiteListItems.',
-      input: lazySchema(() =>
-        z
-          .object({
-            search: z
-              .string()
-              .optional()
-              .describe(
-                'Optional search keyword to filter sites by name. Only used with delegated auth (oauth_authorization_code) where /sites/getAllSites is unavailable. With app-only auth this field is ignored. Omit or pass "*" for a wildcard that returns all accessible sites.'
-              ),
-          })
-          .optional()
-      ),
+      input: z
+        .object({
+          search: z
+            .string()
+            .optional()
+            .describe(
+              'Optional search keyword to filter sites by name. Only used with delegated auth (oauth_authorization_code) where /sites/getAllSites is unavailable. With app-only auth this field is ignored. Omit or pass "*" for a wildcard that returns all accessible sites.'
+            ),
+        })
+        .optional(),
       output: GraphCollectionOutputSchema,
       handler: async (ctx, input) => {
         const typedInput = input as { search?: string } | undefined;
