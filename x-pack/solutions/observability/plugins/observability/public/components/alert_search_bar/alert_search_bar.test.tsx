@@ -244,6 +244,37 @@ describe('ObservabilityAlertSearchBar', () => {
     });
   });
 
+  it('should include space filter in es query when spaceId is available', async () => {
+    const mockedOnEsQueryChange = jest.fn();
+    const mockedFrom = '2022-11-15T09:38:13.604Z';
+    const mockedTo = '2022-11-15T09:53:13.604Z';
+
+    await act(async () => {
+      renderComponent({
+        onEsQueryChange: mockedOnEsQueryChange,
+        rangeFrom: mockedFrom,
+        rangeTo: mockedTo,
+        status: 'all',
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockedOnEsQueryChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bool: expect.objectContaining({
+            filter: expect.arrayContaining([
+              {
+                match_phrase: {
+                  'kibana.space_ids': 'space-id',
+                },
+              },
+            ]),
+          }),
+        })
+      );
+    });
+  });
+
   it('should show error in a toast', async () => {
     const error = new Error('something is wrong in esQueryChange');
     const mockedOnEsQueryChange = jest.fn().mockImplementation(() => {
