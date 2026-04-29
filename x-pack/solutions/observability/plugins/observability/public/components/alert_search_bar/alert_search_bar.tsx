@@ -133,7 +133,7 @@ export function ObservabilityAlertSearchBar({
             from: rangeFrom,
           },
           kuery,
-          filters: [...filters, ...(filterControls ?? []), ...defaultFilters],
+          filters: [...filters, ...(filterControls ?? []), ...defaultFilters, ...spaceFilter],
           config: getEsQueryConfig(uiSettings),
           indexPattern: dataView,
         })
@@ -158,6 +158,7 @@ export function ObservabilityAlertSearchBar({
     defaultFilters,
     filters,
     filterControls,
+    spaceFilter,
     uiSettings,
     toasts,
     onKueryChange,

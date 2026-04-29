@@ -59,6 +59,15 @@ describe('UrlSyncedAlertsSearchBar', () => {
   });
 
   describe('space filtering', () => {
+    afterEach(() => {
+      jest.mocked(useKibana).mockReturnValue({
+        services: {
+          ...createStartServicesMock(),
+          notifications: notificationServiceMock.createStartContract(),
+        },
+      } as unknown as ReturnType<typeof useKibana>);
+    });
+
     it('passes a space filter to AlertFilterControls when spaceId is available', async () => {
       jest.mocked(AlertFilterControls).mockImplementation(() => <div>AlertFilterControls</div>);
       jest.mocked(useKibana).mockReturnValue({
