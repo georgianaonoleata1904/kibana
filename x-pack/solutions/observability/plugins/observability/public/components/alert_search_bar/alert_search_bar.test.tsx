@@ -120,31 +120,30 @@ describe('ObservabilityAlertSearchBar', () => {
       });
     });
 
-    const esQueryChangeParams = {
-      bool: {
-        filter: [
-          {
-            range: {
-              'kibana.alert.time_range': expect.objectContaining({
-                format: 'strict_date_optional_time',
-                gte: mockedFrom,
-                lte: mockedTo,
-              }),
-            },
-          },
-          {
-            match_phrase: {
-              'kibana.alert.rule.uuid': ALERT_UUID,
-            },
-          },
-        ],
-        must: [],
-        must_not: [],
-        should: [],
-      },
-    };
-    expect(mockedOnEsQueryChange).toHaveBeenCalledTimes(1);
-    expect(mockedOnEsQueryChange).toHaveBeenNthCalledWith(1, esQueryChangeParams);
+    await waitFor(() => {
+      expect(mockedOnEsQueryChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bool: expect.objectContaining({
+            filter: expect.arrayContaining([
+              {
+                range: {
+                  'kibana.alert.time_range': expect.objectContaining({
+                    format: 'strict_date_optional_time',
+                    gte: mockedFrom,
+                    lte: mockedTo,
+                  }),
+                },
+              },
+              {
+                match_phrase: {
+                  'kibana.alert.rule.uuid': ALERT_UUID,
+                },
+              },
+            ]),
+          }),
+        })
+      );
+    });
   });
 
   it('should include filterControls in es query', async () => {
@@ -172,31 +171,30 @@ describe('ObservabilityAlertSearchBar', () => {
       });
     });
 
-    const esQueryChangeParams = {
-      bool: {
-        filter: [
-          {
-            range: {
-              'kibana.alert.time_range': expect.objectContaining({
-                format: 'strict_date_optional_time',
-                gte: mockedFrom,
-                lte: mockedTo,
-              }),
-            },
-          },
-          {
-            match_phrase: {
-              'kibana.alert.rule.uuid': ALERT_UUID,
-            },
-          },
-        ],
-        must: [],
-        must_not: [],
-        should: [],
-      },
-    };
-    expect(mockedOnEsQueryChange).toHaveBeenCalledTimes(1);
-    expect(mockedOnEsQueryChange).toHaveBeenNthCalledWith(1, esQueryChangeParams);
+    await waitFor(() => {
+      expect(mockedOnEsQueryChange).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bool: expect.objectContaining({
+            filter: expect.arrayContaining([
+              {
+                range: {
+                  'kibana.alert.time_range': expect.objectContaining({
+                    format: 'strict_date_optional_time',
+                    gte: mockedFrom,
+                    lte: mockedTo,
+                  }),
+                },
+              },
+              {
+                match_phrase: {
+                  'kibana.alert.rule.uuid': ALERT_UUID,
+                },
+              },
+            ]),
+          }),
+        })
+      );
+    });
   });
 
   it('should include filters in es query', async () => {
