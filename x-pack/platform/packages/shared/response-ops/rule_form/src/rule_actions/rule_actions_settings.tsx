@@ -205,39 +205,45 @@ export const RuleActionsSettings = (props: RuleActionsSettingsProps) => {
   return (
     <EuiFlexGroup direction="column" data-test-subj="ruleActionsSettings">
       <EuiFlexItem>
-        <EuiFlexGroup alignItems="flexEnd">
+        <EuiFlexGroup alignItems="flexStart">
           <EuiFlexItem>
             {showSelectActionGroup && (
-              <EuiSuperSelect
-                prepend={
-                  <EuiFormPrepend
-                    id={`addNewActionConnectorActionGroupLabel-${action.actionTypeId}`}
-                    inputId={`addNewActionConnectorActionGroup-${action.actionTypeId}`}
-                    label={ACTION_GROUP_RUN_WHEN}
-                  />
-                }
-                data-test-subj="ruleActionsSettingsSelectActionGroup"
-                fullWidth
-                id={`addNewActionConnectorActionGroup-${action.actionTypeId}`}
-                aria-labelledby={`addNewActionConnectorActionGroupLabel-${action.actionTypeId}`}
-                options={actionGroups.map(({ id: value, name }) => ({
-                  value,
-                  ['data-test-subj']: `addNewActionConnectorActionGroup-${value}`,
-                  inputDisplay: actionGroupDisplay({
-                    ruleType: selectedRuleType,
-                    actionGroupId: value,
-                    actionGroupName: name,
-                    actionTypeId: action.actionTypeId,
-                  }),
-                  disabled: isActionGroupDisabledForActionType(
-                    selectedRuleType,
+              <EuiFormRow
+                label={i18n.translate('responseOpsRuleForm.ruleActionsSetting.actionGroupLabel', {
+                  defaultMessage: 'Action group',
+                })}
+              >
+                <EuiSuperSelect
+                  prepend={
+                    <EuiFormPrepend
+                      id={`addNewActionConnectorActionGroupLabel-${action.actionTypeId}`}
+                      inputId={`addNewActionConnectorActionGroup-${action.actionTypeId}`}
+                      label={ACTION_GROUP_RUN_WHEN}
+                    />
+                  }
+                  data-test-subj="ruleActionsSettingsSelectActionGroup"
+                  fullWidth
+                  id={`addNewActionConnectorActionGroup-${action.actionTypeId}`}
+                  aria-labelledby={`addNewActionConnectorActionGroupLabel-${action.actionTypeId}`}
+                  options={actionGroups.map(({ id: value, name }) => ({
                     value,
-                    action.actionTypeId
-                  ),
-                }))}
-                valueOfSelected={selectedActionGroup.id}
-                onChange={onActionGroupChange}
-              />
+                    ['data-test-subj']: `addNewActionConnectorActionGroup-${value}`,
+                    inputDisplay: actionGroupDisplay({
+                      ruleType: selectedRuleType,
+                      actionGroupId: value,
+                      actionGroupName: name,
+                      actionTypeId: action.actionTypeId,
+                    }),
+                    disabled: isActionGroupDisabledForActionType(
+                      selectedRuleType,
+                      value,
+                      action.actionTypeId
+                    ),
+                  }))}
+                  valueOfSelected={selectedActionGroup.id}
+                  onChange={onActionGroupChange}
+                />
+              </EuiFormRow>
             )}
           </EuiFlexItem>
           <EuiFlexItem>
