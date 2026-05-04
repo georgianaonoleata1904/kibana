@@ -11,5 +11,5 @@ import { z } from '@kbn/zod/v4';
  * Shared path params schema for routes that accept a single rule ID.
  */
 export const ruleIdParamsSchema = z.object({
-  id: z.string().describe('The identifier for the rule.'),
+  id: z.string().min(1).max(150).describe('The identifier for the rule.'),
 });

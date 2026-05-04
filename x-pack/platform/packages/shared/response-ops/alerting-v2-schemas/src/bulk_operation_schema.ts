@@ -20,13 +20,14 @@ import { BULK_FILTER_MAX_RULES } from './constants';
 export const bulkOperationParamsSchema = z
   .object({
     ids: z
-      .array(z.string())
+      .array(z.string().min(1).max(150))
       .min(1)
       .max(100)
       .optional()
       .describe('Explicit list of rule IDs to operate on.'),
     filter: z
       .string()
+      .max(4096)
       .optional()
       .describe(
         `KQL filter string to match rules. At most ${BULK_FILTER_MAX_RULES} matching rules are processed per request.`

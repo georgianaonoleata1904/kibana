@@ -24,6 +24,8 @@ import { buildRouteValidationWithZod } from '../route_validation';
 const createActionPolicyParamsSchema = z.object({
   id: z
     .string()
+    .min(1)
+    .max(150)
     .optional()
     .describe('An optional custom identifier. If omitted, an ID is generated automatically.'),
 });

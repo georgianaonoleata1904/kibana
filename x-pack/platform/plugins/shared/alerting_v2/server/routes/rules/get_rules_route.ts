@@ -26,13 +26,14 @@ const getRulesQuerySchema = z.object({
     .max(1000)
     .optional()
     .describe('The number of rules to return per page.'),
-  filter: z.string().optional().describe('The filter to apply to the rules.'),
+  filter: z.string().max(2048).optional().describe('The filter to apply to the rules.'),
   sortField: findRulesSortFieldSchema.optional().describe('The field to sort rules by.'),
   sortOrder: z.enum(['asc', 'desc']).optional().describe('The direction to sort rules.'),
   search: z
     .string()
     .trim()
     .min(1)
+    .max(256)
     .optional()
     .describe('A text string to search across rule fields.'),
 });

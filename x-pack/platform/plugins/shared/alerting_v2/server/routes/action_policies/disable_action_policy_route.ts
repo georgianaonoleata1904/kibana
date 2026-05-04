@@ -18,7 +18,7 @@ import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
 const disableActionPolicyParamsSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
 });
 
 @injectable()

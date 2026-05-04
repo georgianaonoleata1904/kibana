@@ -42,12 +42,14 @@ const metadataSchema = z
     name: z.string().min(1).max(256).describe('Unique rule name/identifier.'),
     description: z
       .string()
+      .min(1)
       .max(1024)
       .optional()
       .describe('Optional human-readable description of the rule.'),
     owner: z.string().max(256).optional().describe('Owner of the rule.'),
     tags: z
-      .array(z.string().max(MAX_TAG_LENGTH))
+      .array(z.string().max(MAX_TAG_LENGTH).min(1))
+      .min(1)
       .max(100)
       .optional()
       .describe('Tags for categorization.'),
@@ -150,7 +152,7 @@ const stateTransitionSchema = z
 const groupingSchema = z
   .object({
     fields: z
-      .array(z.string().max(256))
+      .array(z.string().min(1).max(256))
       .max(16)
       .describe('Fields to group by (convention: use ES|QL GROUP BY fields).'),
   })
@@ -213,7 +215,7 @@ const createRuleDataBaseSchema = z
     state_transition: stateTransitionSchema,
     grouping: groupingSchema.optional(),
     no_data: noDataSchema.optional(),
-    artifacts: z.array(artifactSchema).optional(),
+    artifacts: z.array(artifactSchema).max(100).optional(),
   })
   .strip();
 
@@ -264,7 +266,7 @@ export const updateRuleDataSchema = z
     state_transition: stateTransitionSchema.nullable(),
     grouping: groupingSchema.optional().nullable(),
     no_data: noDataSchema.optional().nullable(),
-    artifacts: z.array(artifactSchema).optional().nullable(),
+    artifacts: z.array(artifactSchema).max(100).optional().nullable(),
     enabled: z.boolean().optional().describe('Whether the rule is enabled.'),
   })
   .strip();
@@ -276,12 +278,12 @@ export type UpdateRuleData = z.infer<typeof updateRuleDataSchema>;
  * Extends the base rule schema with server-generated fields.
  */
 export const ruleResponseSchema = createRuleDataBaseSchema.extend({
-  id: z.string().describe('Unique rule identifier.'),
+  id: z.string().min(1).max(150).describe('Unique rule identifier.'),
   enabled: z.boolean().describe('Whether the rule is enabled.'),
-  createdBy: z.string().nullable().describe('User who created the rule.'),
-  createdAt: z.string().describe('ISO timestamp when the rule was created.'),
-  updatedBy: z.string().nullable().describe('User who last updated the rule.'),
-  updatedAt: z.string().describe('ISO timestamp when the rule was last updated.'),
+  createdBy: z.string().max(1024).nullable().describe('User who created the rule.'),
+  createdAt: z.iso.datetime().describe('ISO timestamp when the rule was created.'),
+  updatedBy: z.string().max(1024).nullable().describe('User who last updated the rule.'),
+  updatedAt: z.iso.datetime().describe('ISO timestamp when the rule was last updated.'),
 });
 
 export type RuleResponse = z.infer<typeof ruleResponseSchema>;
@@ -316,7 +318,7 @@ export const bulkOperationResponseSchema = z
     errors: z
       .array(
         z.object({
-          id: z.string().describe('The identifier of the rule that failed.'),
+          id: z.string().min(1).max(150).describe('The identifier of the rule that failed.'),
           error: z.object({
             message: z.string().describe('The error message.'),
             statusCode: z.number().describe('The HTTP status code.'),

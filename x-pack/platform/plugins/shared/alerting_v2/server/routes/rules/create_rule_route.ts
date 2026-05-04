@@ -21,6 +21,8 @@ import { AlertingRouteContext } from '../alerting_route_context';
 const createRuleParamsSchema = z.object({
   id: z
     .string()
+    .min(1)
+    .max(150)
     .optional()
     .describe('An optional identifier for the rule. If omitted, an ID is generated automatically.'),
 });

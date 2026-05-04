@@ -18,8 +18,8 @@ import { AlertingRouteContext } from '../alerting_route_context';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 
 const suggestionsBodySchema = schema.object({
-  field: schema.string(),
-  query: schema.string(),
+  field: schema.string({ minLength: 1, maxLength: 256 }),
+  query: schema.string({ maxLength: 1024 }),
   filters: schema.maybe(schema.any()),
   fieldMeta: schema.maybe(schema.any()),
 });

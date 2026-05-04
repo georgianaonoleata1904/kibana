@@ -10,7 +10,7 @@ import { durationSchema } from './common';
 
 const workflowActionPolicyDestinationSchema = z.object({
   type: z.literal('workflow').describe('The destination type.'),
-  id: z.string().describe('The workflow connector identifier.'),
+  id: z.string().min(1).max(150).describe('The workflow connector identifier.'),
 });
 
 export const actionPolicyDestinationSchema = z
@@ -97,17 +97,17 @@ export const snoozeActionPolicyBodySchema = z.object({
 export type SnoozeActionPolicyBody = z.infer<typeof snoozeActionPolicyBodySchema>;
 
 const bulkEnableActionSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
   action: z.literal('enable').describe('The bulk action type.'),
 });
 
 const bulkDisableActionSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
   action: z.literal('disable').describe('The bulk action type.'),
 });
 
 const bulkSnoozeActionSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
   action: z.literal('snooze').describe('The bulk action type.'),
   snoozedUntil: z.iso
     .datetime()
@@ -115,17 +115,17 @@ const bulkSnoozeActionSchema = z.object({
 });
 
 const bulkUnsnoozeActionSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
   action: z.literal('unsnooze').describe('The bulk action type.'),
 });
 
 const bulkDeleteActionSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
   action: z.literal('delete').describe('The bulk action type.'),
 });
 
 const bulkUpdateApiKeyActionSchema = z.object({
-  id: z.string().describe('The action policy identifier.'),
+  id: z.string().min(1).max(150).describe('The action policy identifier.'),
   action: z.literal('update_api_key').describe('The bulk action type.'),
 });
 
@@ -146,6 +146,7 @@ export const bulkActionActionPoliciesBodySchema = z.object({
   actions: z
     .array(actionPolicyBulkActionSchema)
     .min(1, 'At least one action is required')
+    .max(100)
     .describe('The list of bulk actions to perform.'),
 });
 
@@ -153,14 +154,15 @@ export type BulkActionActionPoliciesBody = z.infer<typeof bulkActionActionPolici
 
 export const createActionPolicyDataSchema = z
   .object({
-    name: z.string().describe('The name of the action policy.'),
-    description: z.string().describe('A description of the action policy.'),
+    name: z.string().min(1).max(256).describe('The name of the action policy.'),
+    description: z.string().max(1024).describe('A description of the action policy.'),
     destinations: z
       .array(actionPolicyDestinationSchema)
       .min(1, 'At least one destination must be provided')
+      .max(20)
       .describe('The list of destinations. At least one is required.'),
-    matcher: z.string().optional().describe('A KQL query string to match alerts.'),
-    groupBy: z.array(z.string()).optional().describe('The fields used to group alerts.'),
+    matcher: z.string().max(4096).optional().describe('A KQL query string to match alerts.'),
+    groupBy: z.array(z.string().min(1).max(256)).max(16).optional().describe('The fields used to group alerts.'),
     tags: z
       .array(z.string().min(1).max(128))
       .max(20)
@@ -177,15 +179,16 @@ export type CreateActionPolicyData = z.infer<typeof createActionPolicyDataSchema
 
 export const updateActionPolicyDataSchema = z
   .object({
-    name: z.string().optional().describe('The name of the action policy.'),
-    description: z.string().optional().describe('A description of the action policy.'),
+    name: z.string().min(1).max(256).optional().describe('The name of the action policy.'),
+    description: z.string().max(1024).optional().describe('A description of the action policy.'),
     destinations: z
       .array(actionPolicyDestinationSchema)
       .min(1, 'At least one destination must be provided')
+      .max(20)
       .optional()
       .describe('The list of destinations. At least one is required.'),
-    matcher: z.string().optional().nullable().describe('A KQL query string to match alerts.'),
-    groupBy: z.array(z.string()).optional().nullable().describe('The fields used to group alerts.'),
+    matcher: z.string().max(4096).optional().nullable().describe('A KQL query string to match alerts.'),
+    groupBy: z.array(z.string().min(1).max(256)).max(16).optional().nullable().describe('The fields used to group alerts.'),
     tags: z
       .array(z.string().min(1).max(128))
       .max(20)
@@ -215,6 +218,8 @@ export type UpdateActionPolicyData = z.infer<typeof updateActionPolicyDataSchema
 export const updateActionPolicyBodySchema = updateActionPolicyDataSchema.extend({
   version: z
     .string()
+    .min(1)
+    .max(256)
     .describe('The current version of the action policy, used for optimistic concurrency control.'),
 });
 
