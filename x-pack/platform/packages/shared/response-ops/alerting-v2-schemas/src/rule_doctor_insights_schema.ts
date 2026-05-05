@@ -29,10 +29,7 @@ export const listInsightsQuerySchema = z.object({
     .optional()
     .describe('Filter insights by execution ID.'),
   rule_ids: z
-    .union([
-      z.string().min(1).max(ID_MAX_LENGTH),
-      z.array(z.string().min(1).max(ID_MAX_LENGTH)),
-    ])
+    .union([z.string().min(1).max(ID_MAX_LENGTH), z.array(z.string().min(1).max(ID_MAX_LENGTH))])
     .transform((v) => (Array.isArray(v) ? v : [v]).map((id) => id.trim()).filter(Boolean))
     .pipe(z.array(z.string().min(1).max(ID_MAX_LENGTH)).max(MAX_BULK_ITEMS))
     .optional()

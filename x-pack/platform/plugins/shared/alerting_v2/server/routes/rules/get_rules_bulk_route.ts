@@ -17,12 +17,7 @@ import { ALERTING_V2_RULE_API_PATH } from '../constants';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
 
-const ruleIdSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(ID_MAX_LENGTH)
-  .describe('A rule identifier.');
+const ruleIdSchema = z.string().trim().min(1).max(ID_MAX_LENGTH).describe('A rule identifier.');
 
 const getRulesBulkQuerySchema = z.object({
   ids: z.union([

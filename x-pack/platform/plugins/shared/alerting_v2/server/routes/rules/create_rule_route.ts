@@ -10,11 +10,7 @@ import { inject, injectable } from 'inversify';
 import { Request } from '@kbn/core-di-server';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import { z } from '@kbn/zod/v4';
-import {
-  createRuleDataSchema,
-  ID_MAX_LENGTH,
-  ruleResponseSchema,
-} from '@kbn/alerting-v2-schemas';
+import { createRuleDataSchema, ID_MAX_LENGTH, ruleResponseSchema } from '@kbn/alerting-v2-schemas';
 import type { CreateRuleData, RuleResponse } from '@kbn/alerting-v2-schemas';
 import { RulesClient } from '../../lib/rules_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';

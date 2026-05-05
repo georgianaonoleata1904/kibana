@@ -7,12 +7,7 @@
 
 import { z } from '@kbn/zod/v4';
 
-import {
-  BULK_FILTER_MAX_RULES,
-  ID_MAX_LENGTH,
-  MAX_BULK_ITEMS,
-  MAX_KQL_LENGTH,
-} from './constants';
+import { BULK_FILTER_MAX_RULES, ID_MAX_LENGTH, MAX_BULK_ITEMS, MAX_KQL_LENGTH } from './constants';
 
 /**
  * Schema for bulk operation request bodies.
