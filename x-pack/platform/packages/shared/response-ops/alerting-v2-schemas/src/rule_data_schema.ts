@@ -46,7 +46,6 @@ export const metadataSchema = z
     name: z.string().min(1).max(256).describe('Rule name (must be unique within the space).'),
     description: z
       .string()
-      .min(1)
       .max(1024)
       .optional()
       .describe('Human-readable description of the rule.'),
