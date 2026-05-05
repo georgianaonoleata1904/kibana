@@ -14,7 +14,12 @@ import {
 } from '@kbn/alerting-v2-constants';
 import { validateEsqlQuery, validateMinDuration } from './validation';
 import { durationSchema } from './common';
-import { MAX_CONSECUTIVE_BREACHES, MIN_SCHEDULE_INTERVAL } from './constants';
+import {
+  MAX_CONSECUTIVE_BREACHES,
+  MAX_FIELD_NAME_LENGTH,
+  MAX_GROUPING_FIELDS,
+  MIN_SCHEDULE_INTERVAL,
+} from './constants';
 
 /** Primitives */
 
@@ -162,8 +167,8 @@ export const stateTransitionSchema = z
 export const groupingSchema = z
   .object({
     fields: z
-      .array(z.string().min(1).max(256))
-      .max(16)
+      .array(z.string().min(1).max(MAX_FIELD_NAME_LENGTH))
+      .max(MAX_GROUPING_FIELDS)
       .describe(
         'Fields to group alerts by, e.g. ["host.name", "service.name"]. Should match ES|QL GROUP BY fields.'
       ),
@@ -292,11 +297,11 @@ export type UpdateRuleData = z.infer<typeof updateRuleDataSchema>;
  * Extends the base rule schema with server-generated fields.
  */
 export const ruleResponseSchema = createRuleDataBaseSchema.extend({
-  id: z.string().min(1).max(150).describe('Unique rule identifier.'),
+  id: z.string().describe('Unique rule identifier.'),
   enabled: z.boolean().describe('Whether the rule is enabled.'),
-  createdBy: z.string().max(1024).nullable().describe('User who created the rule.'),
+  createdBy: z.string().nullable().describe('User who created the rule.'),
   createdAt: z.iso.datetime().describe('ISO timestamp when the rule was created.'),
-  updatedBy: z.string().max(1024).nullable().describe('User who last updated the rule.'),
+  updatedBy: z.string().nullable().describe('User who last updated the rule.'),
   updatedAt: z.iso.datetime().describe('ISO timestamp when the rule was last updated.'),
 });
 
@@ -354,7 +359,7 @@ export const bulkOperationResponseSchema = z
     errors: z
       .array(
         z.object({
-          id: z.string().min(1).max(150).describe('The identifier of the rule that failed.'),
+          id: z.string().describe('The identifier of the rule that failed.'),
           error: z.object({
             message: z.string().describe('The error message.'),
             statusCode: z.number().describe('The HTTP status code.'),

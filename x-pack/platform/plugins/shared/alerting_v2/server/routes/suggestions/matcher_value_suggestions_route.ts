@@ -6,6 +6,7 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import { MAX_FIELD_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
 import type { KibanaRequest } from '@kbn/core/server';
 import type { RouteSecurity } from '@kbn/core-http-server';
 import type { TypeOf } from '@kbn/config-schema';
@@ -18,7 +19,7 @@ import { AlertingRouteContext } from '../alerting_route_context';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 
 const suggestionsBodySchema = schema.object({
-  field: schema.string({ minLength: 1, maxLength: 256 }),
+  field: schema.string({ minLength: 1, maxLength: MAX_FIELD_NAME_LENGTH }),
   query: schema.string({ maxLength: 1024 }),
   filters: schema.maybe(schema.any()),
   fieldMeta: schema.maybe(schema.any()),

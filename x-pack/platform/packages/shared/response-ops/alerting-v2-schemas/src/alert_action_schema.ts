@@ -6,6 +6,7 @@
  */
 
 import { z } from '@kbn/zod/v4';
+import { ID_MAX_LENGTH, MAX_BULK_ITEMS } from './constants';
 
 export enum ALERT_EPISODE_STATUS {
   INACTIVE = 'inactive',
@@ -35,7 +36,7 @@ const ackActionSchema = z.object({
   episode_id: z
     .string()
     .min(1)
-    .max(150)
+    .max(ID_MAX_LENGTH)
     .describe('The episode identifier for the alert to acknowledge.'),
 });
 
@@ -46,7 +47,7 @@ const unackActionSchema = z.object({
   episode_id: z
     .string()
     .min(1)
-    .max(150)
+    .max(ID_MAX_LENGTH)
     .describe('The episode identifier for the alert to unacknowledge.'),
 });
 
@@ -54,7 +55,7 @@ const assignActionSchema = z.object({
   action_type: z
     .literal(ALERT_EPISODE_ACTION_TYPE.ASSIGN)
     .describe('Assigns an alerting episode to a user, or clears the assignee when null.'),
-  episode_id: z.string().min(1).max(150).describe('The episode identifier to assign.'),
+  episode_id: z.string().min(1).max(ID_MAX_LENGTH).describe('The episode identifier to assign.'),
   assignee_uid: z
     .string()
     .max(256)
@@ -175,8 +176,8 @@ export type BulkCreateAlertActionItemBody = z.infer<typeof bulkCreateAlertAction
 export const bulkCreateAlertActionBodySchema = z
   .array(bulkCreateAlertActionItemBodySchema)
   .min(1, 'At least one action must be provided')
-  .max(100, 'Cannot process more than 100 actions in a single request')
+  .max(MAX_BULK_ITEMS, `Cannot process more than ${MAX_BULK_ITEMS} actions in a single request`)
   .describe(
-    'Request body for bulk create alert actions. Array of 1 to 100 actions, each with group_hash and action payload.'
+    `Request body for bulk create alert actions. Array of 1 to ${MAX_BULK_ITEMS} actions, each with group_hash and action payload.`
   );
 export type BulkCreateAlertActionBody = z.infer<typeof bulkCreateAlertActionBodySchema>;

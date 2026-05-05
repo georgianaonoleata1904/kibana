@@ -7,10 +7,17 @@
 
 import { z } from '@kbn/zod/v4';
 import { durationSchema } from './common';
+import {
+  ID_MAX_LENGTH,
+  MAX_BULK_ITEMS,
+  MAX_FIELD_NAME_LENGTH,
+  MAX_GROUPING_FIELDS,
+  MAX_KQL_LENGTH,
+} from './constants';
 
 const workflowActionPolicyDestinationSchema = z.object({
   type: z.literal('workflow').describe('The destination type.'),
-  id: z.string().min(1).max(150).describe('The workflow connector identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The workflow connector identifier.'),
 });
 
 export const actionPolicyDestinationSchema = z
@@ -97,17 +104,17 @@ export const snoozeActionPolicyBodySchema = z.object({
 export type SnoozeActionPolicyBody = z.infer<typeof snoozeActionPolicyBodySchema>;
 
 const bulkEnableActionSchema = z.object({
-  id: z.string().min(1).max(150).describe('The action policy identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The action policy identifier.'),
   action: z.literal('enable').describe('The bulk action type.'),
 });
 
 const bulkDisableActionSchema = z.object({
-  id: z.string().min(1).max(150).describe('The action policy identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The action policy identifier.'),
   action: z.literal('disable').describe('The bulk action type.'),
 });
 
 const bulkSnoozeActionSchema = z.object({
-  id: z.string().min(1).max(150).describe('The action policy identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The action policy identifier.'),
   action: z.literal('snooze').describe('The bulk action type.'),
   snoozedUntil: z.iso
     .datetime()
@@ -115,17 +122,17 @@ const bulkSnoozeActionSchema = z.object({
 });
 
 const bulkUnsnoozeActionSchema = z.object({
-  id: z.string().min(1).max(150).describe('The action policy identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The action policy identifier.'),
   action: z.literal('unsnooze').describe('The bulk action type.'),
 });
 
 const bulkDeleteActionSchema = z.object({
-  id: z.string().min(1).max(150).describe('The action policy identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The action policy identifier.'),
   action: z.literal('delete').describe('The bulk action type.'),
 });
 
 const bulkUpdateApiKeyActionSchema = z.object({
-  id: z.string().min(1).max(150).describe('The action policy identifier.'),
+  id: z.string().min(1).max(ID_MAX_LENGTH).describe('The action policy identifier.'),
   action: z.literal('update_api_key').describe('The bulk action type.'),
 });
 
@@ -146,7 +153,7 @@ export const bulkActionActionPoliciesBodySchema = z.object({
   actions: z
     .array(actionPolicyBulkActionSchema)
     .min(1, 'At least one action is required')
-    .max(100)
+    .max(MAX_BULK_ITEMS)
     .describe('The list of bulk actions to perform.'),
 });
 
@@ -161,10 +168,14 @@ export const createActionPolicyDataSchema = z
       .min(1, 'At least one destination must be provided')
       .max(20)
       .describe('The list of destinations. At least one is required.'),
-    matcher: z.string().max(4096).optional().describe('A KQL query string to match alerts.'),
+    matcher: z
+      .string()
+      .max(MAX_KQL_LENGTH)
+      .optional()
+      .describe('A KQL query string to match alerts.'),
     groupBy: z
-      .array(z.string().min(1).max(256))
-      .max(16)
+      .array(z.string().min(1).max(MAX_FIELD_NAME_LENGTH))
+      .max(MAX_GROUPING_FIELDS)
       .optional()
       .describe('The fields used to group alerts.'),
     tags: z
@@ -193,13 +204,13 @@ export const updateActionPolicyDataSchema = z
       .describe('The list of destinations. At least one is required.'),
     matcher: z
       .string()
-      .max(4096)
+      .max(MAX_KQL_LENGTH)
       .optional()
       .nullable()
       .describe('A KQL query string to match alerts.'),
     groupBy: z
-      .array(z.string().min(1).max(256))
-      .max(16)
+      .array(z.string().min(1).max(MAX_FIELD_NAME_LENGTH))
+      .max(MAX_GROUPING_FIELDS)
       .optional()
       .nullable()
       .describe('The fields used to group alerts.'),
