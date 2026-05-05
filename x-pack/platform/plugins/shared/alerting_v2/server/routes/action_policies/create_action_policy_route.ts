@@ -47,7 +47,7 @@ export class CreateActionPolicyRoute extends BaseAlertingRoute {
       params: buildRouteValidationWithZod(createActionPolicyParamsSchema),
     },
     response: {
-      200: {
+      201: {
         body: () => actionPolicyResponseSchema,
         description: 'Indicates a successful call.',
       },
@@ -79,6 +79,6 @@ export class CreateActionPolicyRoute extends BaseAlertingRoute {
       options: { id: this.request.params.id },
     });
 
-    return this.ctx.response.ok({ body: created });
+    return this.ctx.response.created({ body: created });
   }
 }

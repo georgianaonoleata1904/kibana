@@ -245,7 +245,7 @@ apiTest.describe('Episode lifecycle for alert rules', { tag: tags.stateful.class
         responseType: 'json',
       });
 
-      expect(createResponse.statusCode).toBe(200);
+      expect(createResponse.statusCode).toBe(201);
       const ruleId = createResponse.body.id;
       ruleIds.push(ruleId);
 
@@ -319,7 +319,7 @@ apiTest.describe('Episode lifecycle for alert rules', { tag: tags.stateful.class
         responseType: 'json',
       });
 
-      expect(createResponse.statusCode).toBe(200);
+      expect(createResponse.statusCode).toBe(201);
       const ruleId = createResponse.body.id;
       ruleIds.push(ruleId);
 
@@ -395,7 +395,7 @@ apiTest.describe('Episode lifecycle for alert rules', { tag: tags.stateful.class
         responseType: 'json',
       });
 
-      expect(createResponse.statusCode).toBe(200);
+      expect(createResponse.statusCode).toBe(201);
       const ruleId = createResponse.body.id;
       ruleIds.push(ruleId);
 
@@ -469,7 +469,7 @@ apiTest.describe('Episode lifecycle for alert rules', { tag: tags.stateful.class
         responseType: 'json',
       });
 
-      expect(createResponse.statusCode).toBe(200);
+      expect(createResponse.statusCode).toBe(201);
       const ruleId = createResponse.body.id;
       ruleIds.push(ruleId);
 

@@ -44,7 +44,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           throttle: { interval: '1m' },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.id).to.be.a('string');
       expect(response.body.version).to.be.a('string');
       expect(response.body.name).to.be('my-policy');
@@ -78,7 +78,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           throttle: { interval: '5m' },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.id).to.be(customId);
       expect(response.body.name).to.be('another-policy');
       expect(response.body.description).to.be('another-policy description');
@@ -106,7 +106,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           destinations: [{ type: 'workflow', id: 'workflow-1' }],
         });
 
-      expect(firstResponse.status).to.be(200);
+      expect(firstResponse.status).to.be(201);
 
       // Try to create another policy with the same id
       const secondResponse = await supertestWithoutAuth
@@ -184,7 +184,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           destinations: [{ type: 'workflow', id: 'minimal-workflow-id' }],
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.name).to.be('minimal-policy');
       expect(response.body.description).to.be('minimal-policy description');
       expect(response.body.destinations).to.eql([{ type: 'workflow', id: 'minimal-workflow-id' }]);
@@ -210,7 +210,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           throttle: { strategy: 'time_interval', interval: '5m' },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.groupingMode).to.be('per_field');
       expect(response.body.groupBy).to.eql(['host.name']);
       expect(response.body.throttle).to.eql({ strategy: 'time_interval', interval: '5m' });
@@ -229,7 +229,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           throttle: { strategy: 'on_status_change' },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.groupingMode).to.be('per_episode');
       expect(response.body.throttle).to.eql({ strategy: 'on_status_change' });
     });
@@ -247,7 +247,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           throttle: { strategy: 'every_time' },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.groupingMode).to.be('all');
       expect(response.body.throttle).to.eql({ strategy: 'every_time' });
     });

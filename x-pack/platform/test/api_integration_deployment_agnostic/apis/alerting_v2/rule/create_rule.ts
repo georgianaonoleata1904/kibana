@@ -45,7 +45,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           evaluation: { query: { base: 'FROM logs-* | LIMIT 10' } },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.id).to.be.a('string');
       expect(response.body.kind).to.be('alert');
       expect(response.body.metadata.name).to.be('test-alert-rule');
@@ -74,7 +74,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           evaluation: { query: { base: 'FROM metrics-* | LIMIT 5' } },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.id).to.be(customId);
       expect(response.body.metadata.name).to.be('custom-id-rule');
     });
@@ -94,7 +94,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           evaluation: { query: { base: 'FROM logs-* | LIMIT 10' } },
         });
 
-      expect(firstResponse.status).to.be(200);
+      expect(firstResponse.status).to.be(201);
 
       const secondResponse = await supertestWithoutAuth
         .post(`${RULE_API_PATH}/${existingId}`)
@@ -124,7 +124,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           evaluation: { query: { base: 'FROM logs-* | LIMIT 1' } },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.kind).to.be('signal');
       expect(response.body.metadata.name).to.be('test-signal-rule');
     });
@@ -148,7 +148,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           no_data: { behavior: 'recover', timeframe: '15m' },
         });
 
-      expect(response.status).to.be(200);
+      expect(response.status).to.be(201);
       expect(response.body.metadata).to.eql({
         name: 'full-rule',
         owner: 'team-a',

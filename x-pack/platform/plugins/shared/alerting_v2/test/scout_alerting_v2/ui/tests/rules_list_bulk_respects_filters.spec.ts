@@ -21,7 +21,7 @@ async function createRuleViaApi(kbnClient: KbnClient, name: string, ruleTags: st
       evaluation: { query: { base: 'FROM logs-* | LIMIT 1' } },
     },
   });
-  if (res.status !== 200) {
+  if (res.status !== 201) {
     throw new Error(`Failed to create rule "${name}": ${res.status} ${JSON.stringify(res.data)}`);
   }
   return res.data.id;

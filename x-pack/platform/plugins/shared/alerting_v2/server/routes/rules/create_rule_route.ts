@@ -43,7 +43,7 @@ export class CreateRuleRoute extends BaseAlertingRoute {
       params: buildRouteValidationWithZod(createRuleParamsSchema),
     },
     response: {
-      200: {
+      201: {
         body: () => ruleResponseSchema,
         description: 'Indicates a successful call.',
       },
@@ -74,6 +74,6 @@ export class CreateRuleRoute extends BaseAlertingRoute {
       options: { id: this.request.params.id },
     });
 
-    return this.ctx.response.ok({ body: created });
+    return this.ctx.response.created({ body: created });
   }
 }
