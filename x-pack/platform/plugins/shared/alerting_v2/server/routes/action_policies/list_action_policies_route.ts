@@ -29,15 +29,30 @@ const listActionPoliciesQuerySchema = z.object({
     .max(100)
     .optional()
     .describe('The number of action policies to return per page.'),
-  search: z.string().min(1).max(256).optional().describe('A text string to search across action policy fields.'),
+  search: z
+    .string()
+    .min(1)
+    .max(256)
+    .optional()
+    .describe('A text string to search across action policy fields.'),
   tags: z
     .union([z.string().min(1).max(128), z.array(z.string().min(1).max(128))])
     .transform((v) => (Array.isArray(v) ? v : [v]).map((t) => t.trim()).filter(Boolean))
     .pipe(z.array(z.string().min(1).max(128)).max(10))
     .optional()
     .describe('Filter by tags. Accepts a single string or an array.'),
-  destinationType: z.string().min(1).max(128).optional().describe('Filter by destination connector type.'),
-  createdBy: z.string().min(1).max(256).optional().describe('Filter by the user ID who created the action policy.'),
+  destinationType: z
+    .string()
+    .min(1)
+    .max(128)
+    .optional()
+    .describe('Filter by destination connector type.'),
+  createdBy: z
+    .string()
+    .min(1)
+    .max(256)
+    .optional()
+    .describe('Filter by the user ID who created the action policy.'),
   enabled: z
     .enum(['true', 'false'])
     .transform((v) => v === 'true')

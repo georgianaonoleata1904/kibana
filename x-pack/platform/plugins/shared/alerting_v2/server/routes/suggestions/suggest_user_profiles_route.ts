@@ -20,7 +20,7 @@ import { ALERTING_V2_INTERNAL_SUGGEST_USER_PROFILES_API_PATH } from '../constant
 const ROUTE_AUTH_PRIVILEGES = [ALERTING_V2_API_PRIVILEGES.alerts.read] as const;
 
 const suggestUserProfilesBodySchema = schema.object({
-  name: schema.string({ minLength: 1, maxLength: 256}),
+  name: schema.string({ minLength: 1, maxLength: 256 }),
   size: schema.maybe(schema.number({ min: 0, max: 100 })),
 });
 
