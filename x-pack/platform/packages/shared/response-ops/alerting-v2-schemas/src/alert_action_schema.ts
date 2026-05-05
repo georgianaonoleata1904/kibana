@@ -32,14 +32,22 @@ export type AlertEpisodeActionType =
 
 const ackActionSchema = z.object({
   action_type: z.literal(ALERT_EPISODE_ACTION_TYPE.ACK).describe('Acknowledges an alert.'),
-  episode_id: z.string().min(1).max(150).describe('The episode identifier for the alert to acknowledge.'),
+  episode_id: z
+    .string()
+    .min(1)
+    .max(150)
+    .describe('The episode identifier for the alert to acknowledge.'),
 });
 
 const unackActionSchema = z.object({
   action_type: z
     .literal(ALERT_EPISODE_ACTION_TYPE.UNACK)
     .describe('Removes acknowledgement from an alert.'),
-  episode_id: z.string().min(1).max(150).describe('The episode identifier for the alert to unacknowledge.'),
+  episode_id: z
+    .string()
+    .min(1)
+    .max(150)
+    .describe('The episode identifier for the alert to unacknowledge.'),
 });
 
 const assignActionSchema = z.object({
@@ -56,7 +64,11 @@ const assignActionSchema = z.object({
 
 const tagActionSchema = z.object({
   action_type: z.literal(ALERT_EPISODE_ACTION_TYPE.TAG).describe('Adds tags to an alert.'),
-  tags: z.array(z.string().min(1).max(128)).min(1).max(100).describe('List of tags to add to the alert.'),
+  tags: z
+    .array(z.string().min(1).max(128))
+    .min(1)
+    .max(100)
+    .describe('List of tags to add to the alert.'),
 });
 
 const snoozeActionSchema = z.object({
@@ -137,7 +149,11 @@ export type CreateAlertActionBody = z.infer<typeof createAlertActionBodySchema>;
 
 export const createAlertActionParamsSchema = z
   .object({
-    group_hash: z.string().min(1).max(256).describe('Hash identifying the alert group to apply the action to.'),
+    group_hash: z
+      .string()
+      .min(1)
+      .max(256)
+      .describe('Hash identifying the alert group to apply the action to.'),
   })
   .describe('Path parameters for the create alert action endpoint.');
 
@@ -146,7 +162,11 @@ export type CreateAlertActionParams = z.infer<typeof createAlertActionParamsSche
 export const bulkCreateAlertActionItemBodySchema = createAlertActionBodySchema.and(
   z
     .object({
-      group_hash: z.string().min(1).max(256).describe('Hash identifying the alert group to apply the action to.'),
+      group_hash: z
+        .string()
+        .min(1)
+        .max(256)
+        .describe('Hash identifying the alert group to apply the action to.'),
     })
     .describe('Alert action payload with group identifier for bulk requests.')
 );

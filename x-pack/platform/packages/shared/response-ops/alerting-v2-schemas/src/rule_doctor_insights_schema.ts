@@ -20,19 +20,24 @@ export const listInsightsQuerySchema = z.object({
     .default(20)
     .describe('The number of insights to return per page.'),
   status: insightStatusSchema.optional().describe('Filter insights by status.'),
-  type: z.string().optional().describe('Filter insights by type.'),
-  execution_id: z.string().optional().describe('Filter insights by execution ID.'),
-  rule_ids: z.string().optional().describe('Comma-separated list of rule IDs to filter by.'),
+  type: z.string().min(1).max(128).optional().describe('Filter insights by type.'),
+  execution_id: z.string().min(1).max(150).optional().describe('Filter insights by execution ID.'),
+  rule_ids: z
+    .union([z.string().min(1).max(150), z.array(z.string().min(1).max(150))])
+    .transform((v) => (Array.isArray(v) ? v : [v]).map((id) => id.trim()).filter(Boolean))
+    .pipe(z.array(z.string().min(1).max(150)).max(100))
+    .optional()
+    .describe('Filter by rule IDs. Accepts a single ID or an array of IDs.'),
 });
 export type ListInsightsQuery = z.infer<typeof listInsightsQuerySchema>;
 
 export const getInsightParamsSchema = z.object({
-  insight_id: z.string().describe('The identifier for the insight.'),
+  insight_id: z.string().min(1).max(150).describe('The identifier for the insight.'),
 });
 export type GetInsightParams = z.infer<typeof getInsightParamsSchema>;
 
 export const updateInsightStatusParamsSchema = z.object({
-  insight_id: z.string().describe('The identifier for the insight.'),
+  insight_id: z.string().min(1).max(150).describe('The identifier for the insight.'),
 });
 export type UpdateInsightStatusParams = z.infer<typeof updateInsightStatusParamsSchema>;
 
