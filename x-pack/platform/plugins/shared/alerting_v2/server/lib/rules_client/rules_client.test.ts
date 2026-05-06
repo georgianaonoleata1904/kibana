@@ -537,9 +537,9 @@ describe('RulesClient', () => {
         });
         ensureRuleExecutorTaskScheduledMock.mockRejectedValueOnce(new Error('schedule failed'));
 
-        await expect(
-          client.upsertRule({ id: 'rule-id-1', data: baseCreateData })
-        ).rejects.toThrow('schedule failed');
+        await expect(client.upsertRule({ id: 'rule-id-1', data: baseCreateData })).rejects.toThrow(
+          'schedule failed'
+        );
 
         expect(mockSavedObjectsClient.delete).toHaveBeenCalledWith(
           RULE_SAVED_OBJECT_TYPE,
@@ -658,9 +658,9 @@ describe('RulesClient', () => {
       const client = createClient();
       mockSavedObjectsClient.get.mockRejectedValueOnce(new Error('elasticsearch unavailable'));
 
-      await expect(
-        client.upsertRule({ id: 'rule-id-1', data: baseCreateData })
-      ).rejects.toThrow('elasticsearch unavailable');
+      await expect(client.upsertRule({ id: 'rule-id-1', data: baseCreateData })).rejects.toThrow(
+        'elasticsearch unavailable'
+      );
 
       expect(mockSavedObjectsClient.create).not.toHaveBeenCalled();
       expect(mockSavedObjectsClient.update).not.toHaveBeenCalled();

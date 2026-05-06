@@ -36,7 +36,8 @@ export class UpdateActionPolicyRoute extends BaseAlertingRoute {
   };
   static routeOptions = {
     summary: 'Partially update an action policy.',
-    description: 'Apply a partial update to an existing action policy. Fields not present in the body are left unchanged.',
+    description:
+      'Apply a partial update to an existing action policy. Fields not present in the body are left unchanged.',
   } as const;
   static validate = {
     request: {

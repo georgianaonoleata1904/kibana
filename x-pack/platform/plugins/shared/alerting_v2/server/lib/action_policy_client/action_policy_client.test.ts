@@ -1455,7 +1455,11 @@ describe('ActionPolicyClient', () => {
 
         const res = await client.upsertActionPolicy({
           id: 'policy-id-update-1',
-          data: { name: 'after', description: 'after description', destinations: baseUpsertData.destinations },
+          data: {
+            name: 'after',
+            description: 'after description',
+            destinations: baseUpsertData.destinations,
+          },
         });
 
         expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
