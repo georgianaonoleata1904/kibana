@@ -6,7 +6,11 @@
  */
 
 import Boom from '@hapi/boom';
-import type { ActionPolicyBulkAction, ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
+import type {
+  ActionPolicyBulkAction,
+  ActionPolicyResponse,
+  CreateActionPolicyData,
+} from '@kbn/alerting-v2-schemas';
 import {
   createActionPolicyDataSchema,
   updateActionPolicyDataSchema,
@@ -548,5 +552,119 @@ export class ActionPolicyClient {
 
   private async getUserProfile() {
     return this.userService.getCurrentUserProfile();
+  }
+
+  public async upsertActionPolicy({
+    id,
+    data,
+  }: {
+    id: string;
+    data: CreateActionPolicyData;
+  }): Promise<{ policy: ActionPolicyResponse; created: boolean }> {
+    const parsed = createActionPolicyDataSchema.safeParse(data);
+    if (!parsed.success) {
+      throw Boom.badRequest(
+        `Error validating upsert action policy data - ${stringifyZodError(parsed.error)}`
+      );
+    }
+
+    const userProfile = await this.getUserProfile();
+    const now = new Date().toISOString();
+    let existingPolicy: ActionPolicySavedObjectAttributes | null = null;
+    let existingVersion: string | undefined;
+
+    try {
+      const doc = await this.actionPolicySavedObjectService.get(id);
+      existingPolicy = doc.attributes;
+      existingVersion = doc.version;
+    } catch (e) {
+      if (!SavedObjectsErrorHelpers.isNotFoundError(e)) {
+        throw e;
+      }
+    }
+
+    if (existingPolicy == null) {
+      const apiKeyAttrs = await this.apiKeyService.create(`Action Policy: ${parsed.data.name}`);
+      const attributes = buildCreateActionPolicyAttributes({
+        data: parsed.data,
+        auth: apiKeyAttrs,
+        createdBy: userProfile.uid,
+        createdByUsername: userProfile.username,
+        createdAt: now,
+        updatedBy: userProfile.uid,
+        updatedByUsername: userProfile.username,
+        updatedAt: now,
+      });
+
+      try {
+        const { id: createdId, version } = await this.actionPolicySavedObjectService.create({
+          attrs: attributes,
+          id,
+        });
+        return {
+          policy: transformActionPolicySoAttributesToApiResponse({
+            id: createdId,
+            version,
+            attributes,
+          }),
+          created: true,
+        };
+      } catch (e) {
+        this.markApiKeysForInvalidation(attributes.auth?.apiKey, false);
+        if (SavedObjectsErrorHelpers.isConflictError(e)) {
+          throw Boom.conflict(`Action policy with id "${id}" already exists`);
+        }
+        throw e;
+      }
+    }
+
+    // PUT replaces every field accepted by createActionPolicyDataSchema. Audit
+    // metadata (createdBy/createdAt) and operational state (enabled, snoozedUntil)
+    // are not part of the create schema and are preserved here. The API key is
+    // rotated on every replace; the old key is invalidated only after the SO write
+    // succeeds.
+    const oldAuth = await this.getDecryptedAuth(id);
+    const apiKeyAttrs = await this.apiKeyService.create(`Action Policy: ${parsed.data.name}`);
+    const replacementAttrs: ActionPolicySavedObjectAttributes = {
+      ...buildCreateActionPolicyAttributes({
+        data: parsed.data,
+        auth: apiKeyAttrs,
+        createdBy: existingPolicy.createdBy,
+        createdByUsername: existingPolicy.createdByUsername,
+        createdAt: existingPolicy.createdAt,
+        updatedBy: userProfile.uid,
+        updatedByUsername: userProfile.username,
+        updatedAt: now,
+      }),
+      enabled: existingPolicy.enabled,
+      snoozedUntil: existingPolicy.snoozedUntil,
+    };
+
+    let updated: { id: string; version?: string };
+    try {
+      updated = await this.actionPolicySavedObjectService.update({
+        id,
+        attrs: replacementAttrs,
+        version: existingVersion,
+      });
+    } catch (e) {
+      this.markApiKeysForInvalidation(apiKeyAttrs.apiKey, false);
+      if (SavedObjectsErrorHelpers.isConflictError(e)) {
+        throw Boom.conflict(
+          `Action policy with id "${id}" has already been updated by another user`
+        );
+      }
+      throw e;
+    }
+    this.markApiKeysForInvalidation(oldAuth?.apiKey, oldAuth?.createdByUser);
+
+    return {
+      policy: transformActionPolicySoAttributesToApiResponse({
+        id,
+        version: updated.version,
+        attributes: replacementAttrs,
+      }),
+      created: false,
+    };
   }
 }

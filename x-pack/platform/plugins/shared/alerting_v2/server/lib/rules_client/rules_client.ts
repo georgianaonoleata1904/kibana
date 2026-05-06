@@ -33,6 +33,7 @@ import type {
   BulkOperationError,
   BulkOperationResponse,
   BulkRulesParams,
+  CreateRuleData,
   CreateRuleParams,
   FindRulesSortField,
   FindRulesParams,
@@ -688,5 +689,120 @@ export class RulesClient {
     }
 
     return { rules, errors, ...this.bulkFilterResponseFields(resolution) };
+  }
+
+  @withApm
+  public async upsertRule({
+    id,
+    data,
+  }: {
+    id: string;
+    data: CreateRuleData;
+  }): Promise<{ rule: RuleResponse; created: boolean }> {
+    const parsed = createRuleDataSchema.safeParse(data);
+    if (!parsed.success) {
+      throw Boom.badRequest(
+        `Error validating upsert rule data - ${stringifyZodError(parsed.error)}`
+      );
+    }
+
+    const { spaceId } = this.getSpaceContext();
+    const username = await this.userService.getCurrentUsername();
+    const nowIso = new Date().toISOString();
+
+    let existingAttrs: RuleSavedObjectAttributes | null = null;
+    let existingVersion: string | undefined;
+
+    try {
+      const doc = await this.rulesSavedObjectService.get(id);
+      existingAttrs = doc.attributes;
+      existingVersion = doc.version;
+    } catch (e) {
+      if (!SavedObjectsErrorHelpers.isNotFoundError(e)) {
+        throw e;
+      }
+    }
+
+    if (existingAttrs == null) {
+      const ruleAttributes = transformCreateRuleBodyToRuleSoAttributes(parsed.data, {
+        enabled: true,
+        createdBy: username,
+        createdAt: nowIso,
+        updatedBy: username,
+        updatedAt: nowIso,
+      });
+      let createdId: string;
+      try {
+        createdId = await this.rulesSavedObjectService.create({
+          attrs: ruleAttributes,
+          id,
+        });
+      } catch (e) {
+        if (SavedObjectsErrorHelpers.isConflictError(e)) {
+          // Race: someone created the rule between our get and create.
+          // Surface the conflict; clients can retry.
+          throw Boom.conflict(`Rule with id "${id}" already exists`);
+        }
+        throw e;
+      }
+      try {
+        await ensureRuleExecutorTaskScheduled({
+          services: { taskManager: this.taskManager },
+          input: {
+            ruleId: createdId,
+            spaceId,
+            schedule: { interval: ruleAttributes.schedule.every },
+            request: this.request as unknown as CoreKibanaRequest,
+          },
+        });
+      } catch (e) {
+        await this.rulesSavedObjectService.delete({ id: createdId }).catch(() => {});
+        throw e;
+      }
+      return {
+        rule: transformRuleSoAttributesToRuleApiResponse(createdId, ruleAttributes),
+        created: true,
+      };
+    }
+
+    // PUT replaces every field accepted by createRuleDataSchema. Audit metadata
+    // (createdBy/createdAt) and operational state (enabled) are not part of the
+    // create schema and are preserved here. To change `enabled`, use bulk_enable /
+    // bulk_disable.
+    const replacementAttrs = transformCreateRuleBodyToRuleSoAttributes(parsed.data, {
+      enabled: existingAttrs.enabled,
+      createdBy: existingAttrs.createdBy,
+      createdAt: existingAttrs.createdAt,
+      updatedBy: username,
+      updatedAt: nowIso,
+    });
+
+    await ensureRuleExecutorTaskScheduled({
+      services: { taskManager: this.taskManager },
+      input: {
+        ruleId: id,
+        spaceId,
+        schedule: { interval: replacementAttrs.schedule.every },
+        request: this.request as unknown as CoreKibanaRequest,
+      },
+    });
+
+    try {
+      await this.rulesSavedObjectService.update({
+        id,
+        attrs: replacementAttrs,
+        version: existingVersion,
+      });
+    } catch (e) {
+      if (SavedObjectsErrorHelpers.isConflictError(e)) {
+        throw Boom.conflict(`Rule with id "${id}" has already been updated by another user`);
+      }
+      throw e;
+    }
+
+    return {
+      rule: transformRuleSoAttributesToRuleApiResponse(id, replacementAttrs),
+      created: false,
+    };
   }
 }

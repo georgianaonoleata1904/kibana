@@ -59,58 +59,6 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.updatedAt).to.be.a('string');
     });
 
-    it('should create a rule with a custom id', async () => {
-      const customId = 'custom-rule-id';
-
-      const response = await supertestWithoutAuth
-        .post(`${RULE_API_PATH}/${customId}`)
-        .set(roleAuthc.apiKeyHeader)
-        .set(samlAuth.getInternalRequestHeader())
-        .send({
-          kind: 'alert',
-          metadata: { name: 'custom-id-rule' },
-          time_field: '@timestamp',
-          schedule: { every: '1m' },
-          evaluation: { query: { base: 'FROM metrics-* | LIMIT 5' } },
-        });
-
-      expect(response.status).to.be(201);
-      expect(response.body.id).to.be(customId);
-      expect(response.body.metadata.name).to.be('custom-id-rule');
-    });
-
-    it('should return 409 when creating a rule with an existing id', async () => {
-      const existingId = 'existing-rule-id';
-
-      const firstResponse = await supertestWithoutAuth
-        .post(`${RULE_API_PATH}/${existingId}`)
-        .set(roleAuthc.apiKeyHeader)
-        .set(samlAuth.getInternalRequestHeader())
-        .send({
-          kind: 'alert',
-          metadata: { name: 'rule-1' },
-          time_field: '@timestamp',
-          schedule: { every: '5m' },
-          evaluation: { query: { base: 'FROM logs-* | LIMIT 10' } },
-        });
-
-      expect(firstResponse.status).to.be(201);
-
-      const secondResponse = await supertestWithoutAuth
-        .post(`${RULE_API_PATH}/${existingId}`)
-        .set(roleAuthc.apiKeyHeader)
-        .set(samlAuth.getInternalRequestHeader())
-        .send({
-          kind: 'alert',
-          metadata: { name: 'rule-2' },
-          time_field: '@timestamp',
-          schedule: { every: '5m' },
-          evaluation: { query: { base: 'FROM logs-* | LIMIT 10' } },
-        });
-
-      expect(secondResponse.status).to.be(409);
-    });
-
     it('should create a signal rule', async () => {
       const response = await supertestWithoutAuth
         .post(RULE_API_PATH)
