@@ -5,7 +5,10 @@
  * 2.0.
  */
 
-import { findActionPoliciesResponseSchema } from '@kbn/alerting-v2-schemas';
+import {
+  actionPolicyDestinationTypeSchema,
+  findActionPoliciesResponseSchema,
+} from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
@@ -20,6 +23,8 @@ import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 const sortFieldSchema = z
   .enum(['name', 'createdAt', 'updatedAt', 'createdByUsername', 'updatedByUsername'])
   .describe('The available fields to sort action policies by.');
+
+const tagFilterItemSchema = z.string().min(1).max(128);
 
 const listActionPoliciesQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().describe('The page number to return.'),
@@ -36,15 +41,12 @@ const listActionPoliciesQuerySchema = z.object({
     .optional()
     .describe('A text string to search across action policy fields.'),
   tags: z
-    .union([z.string().min(1).max(128), z.array(z.string().min(1).max(128))])
+    .union([tagFilterItemSchema, z.array(tagFilterItemSchema)])
     .transform((v) => (Array.isArray(v) ? v : [v]).map((t) => t.trim()).filter(Boolean))
-    .pipe(z.array(z.string().min(1).max(128)).max(10))
+    .pipe(z.array(tagFilterItemSchema).max(10))
     .optional()
     .describe('Filter by tags. Accepts a single string or an array.'),
-  destinationType: z
-    .string()
-    .min(1)
-    .max(128)
+  destinationType: actionPolicyDestinationTypeSchema
     .optional()
     .describe('Filter by destination connector type.'),
   createdBy: z

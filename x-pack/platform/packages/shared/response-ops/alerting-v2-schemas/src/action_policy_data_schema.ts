@@ -6,17 +6,34 @@
  */
 
 import { z } from '@kbn/zod/v4';
-import { durationSchema } from './common';
+import { durationSchema, tagsSchema } from './common';
 import {
   ID_MAX_LENGTH,
   MAX_BULK_ITEMS,
+  MAX_DESCRIPTION_LENGTH,
   MAX_FIELD_NAME_LENGTH,
   MAX_GROUPING_FIELDS,
   MAX_KQL_LENGTH,
+  MAX_NAME_LENGTH,
 } from './constants';
 
+/** Maximum number of destinations per action policy. */
+const MAX_DESTINATIONS = 10;
+
+/**
+ * The set of supported action policy destination types. Single source of truth
+ * for the destination discriminator and any filter that targets destination type.
+ */
+export const actionPolicyDestinationTypeSchema = z
+  .enum(['workflow'])
+  .describe('Supported action policy destination types.');
+
+export type ActionPolicyDestinationType = z.infer<typeof actionPolicyDestinationTypeSchema>;
+
 const workflowActionPolicyDestinationSchema = z.object({
-  type: z.literal('workflow').describe('The destination type.'),
+  type: z
+    .literal(actionPolicyDestinationTypeSchema.enum.workflow)
+    .describe('The destination type.'),
   id: z.string().min(1).max(ID_MAX_LENGTH).describe('The workflow connector identifier.'),
 });
 
@@ -161,12 +178,15 @@ export type BulkActionActionPoliciesBody = z.infer<typeof bulkActionActionPolici
 
 export const createActionPolicyDataSchema = z
   .object({
-    name: z.string().min(1).max(256).describe('The name of the action policy.'),
-    description: z.string().max(1024).describe('A description of the action policy.'),
+    name: z.string().min(1).max(MAX_NAME_LENGTH).describe('The name of the action policy.'),
+    description: z
+      .string()
+      .max(MAX_DESCRIPTION_LENGTH)
+      .describe('A description of the action policy.'),
     destinations: z
       .array(actionPolicyDestinationSchema)
       .min(1, 'At least one destination must be provided')
-      .max(20)
+      .max(MAX_DESTINATIONS)
       .describe('The list of destinations. At least one is required.'),
     matcher: z
       .string()
@@ -178,11 +198,7 @@ export const createActionPolicyDataSchema = z
       .max(MAX_GROUPING_FIELDS)
       .optional()
       .describe('The fields used to group alerts.'),
-    tags: z
-      .array(z.string().min(1).max(128))
-      .max(20)
-      .optional()
-      .describe('Tags for categorizing the action policy.'),
+    tags: tagsSchema.optional().describe('Tags for categorizing the action policy.'),
     groupingMode: groupingModeSchema
       .optional()
       .describe('The grouping mode for alert notifications.'),
@@ -194,12 +210,21 @@ export type CreateActionPolicyData = z.infer<typeof createActionPolicyDataSchema
 
 export const updateActionPolicyDataSchema = z
   .object({
-    name: z.string().min(1).max(256).optional().describe('The name of the action policy.'),
-    description: z.string().max(1024).optional().describe('A description of the action policy.'),
+    name: z
+      .string()
+      .min(1)
+      .max(MAX_NAME_LENGTH)
+      .optional()
+      .describe('The name of the action policy.'),
+    description: z
+      .string()
+      .max(MAX_DESCRIPTION_LENGTH)
+      .optional()
+      .describe('A description of the action policy.'),
     destinations: z
       .array(actionPolicyDestinationSchema)
       .min(1, 'At least one destination must be provided')
-      .max(20)
+      .max(MAX_DESTINATIONS)
       .optional()
       .describe('The list of destinations. At least one is required.'),
     matcher: z
@@ -214,9 +239,7 @@ export const updateActionPolicyDataSchema = z
       .optional()
       .nullable()
       .describe('The fields used to group alerts.'),
-    tags: z
-      .array(z.string().min(1).max(128))
-      .max(20)
+    tags: tagsSchema
       .optional()
       .nullable()
       .describe('Tags for categorizing the action policy.'),

@@ -11,6 +11,8 @@ import { ID_MAX_LENGTH, MAX_BULK_ITEMS } from './constants';
 export const insightStatusSchema = z.enum(['open', 'dismissed', 'applied']);
 export type InsightStatus = z.infer<typeof insightStatusSchema>;
 
+const ruleIdSchema = z.string().min(1).max(ID_MAX_LENGTH);
+
 export const listInsightsQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().default(1).describe('The page number to return.'),
   perPage: z.coerce
@@ -29,9 +31,9 @@ export const listInsightsQuerySchema = z.object({
     .optional()
     .describe('Filter insights by execution ID.'),
   rule_ids: z
-    .union([z.string().min(1).max(ID_MAX_LENGTH), z.array(z.string().min(1).max(ID_MAX_LENGTH))])
+    .union([ruleIdSchema, z.array(ruleIdSchema)])
     .transform((v) => (Array.isArray(v) ? v : [v]).map((id) => id.trim()).filter(Boolean))
-    .pipe(z.array(z.string().min(1).max(ID_MAX_LENGTH)).max(MAX_BULK_ITEMS))
+    .pipe(z.array(ruleIdSchema).max(MAX_BULK_ITEMS))
     .optional()
     .describe('Filter by rule IDs. Accepts a single ID or an array of IDs.'),
 });

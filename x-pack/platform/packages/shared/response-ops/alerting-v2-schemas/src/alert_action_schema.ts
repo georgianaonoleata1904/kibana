@@ -6,6 +6,7 @@
  */
 
 import { z } from '@kbn/zod/v4';
+import { tagsSchema } from './common';
 import { ID_MAX_LENGTH, MAX_BULK_ITEMS } from './constants';
 
 export enum ALERT_EPISODE_STATUS {
@@ -65,11 +66,7 @@ const assignActionSchema = z.object({
 
 const tagActionSchema = z.object({
   action_type: z.literal(ALERT_EPISODE_ACTION_TYPE.TAG).describe('Adds tags to an alert.'),
-  tags: z
-    .array(z.string().min(1).max(128))
-    .min(1)
-    .max(100)
-    .describe('List of tags to add to the alert.'),
+  tags: tagsSchema.min(1).describe('List of tags to add to the alert.'),
 });
 
 const snoozeActionSchema = z.object({

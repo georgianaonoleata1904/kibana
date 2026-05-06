@@ -34,3 +34,9 @@ export const MAX_GROUPING_FIELDS = 16;
 
 /** Maximum number of items processed in a single bulk-action request body. */
 export const MAX_BULK_ITEMS = 100;
+
+/** Maximum length for human-readable name fields (rule name, action policy name). */
+export const MAX_NAME_LENGTH = 256;
+
+/** Maximum length for human-readable description fields (rule description, action policy description). */
+export const MAX_DESCRIPTION_LENGTH = 1024;

@@ -10,14 +10,15 @@ import {
   DEFAULT_ARTIFACT_VALUE_LIMIT,
   ARTIFACT_VALUE_LIMITS,
   MAX_ARTIFACT_VALUE_LIMIT,
-  MAX_TAG_LENGTH,
 } from '@kbn/alerting-v2-constants';
 import { validateEsqlQuery, validateMinDuration } from './validation';
-import { durationSchema } from './common';
+import { durationSchema, tagsSchema } from './common';
 import {
   MAX_CONSECUTIVE_BREACHES,
+  MAX_DESCRIPTION_LENGTH,
   MAX_FIELD_NAME_LENGTH,
   MAX_GROUPING_FIELDS,
+  MAX_NAME_LENGTH,
   MIN_SCHEDULE_INTERVAL,
 } from './constants';
 
@@ -48,17 +49,19 @@ export type RuleKind = z.infer<typeof ruleKindSchema>;
 
 export const metadataSchema = z
   .object({
-    name: z.string().min(1).max(256).describe('Rule name (must be unique within the space).'),
+    name: z
+      .string()
+      .min(1)
+      .max(MAX_NAME_LENGTH)
+      .describe('Rule name (must be unique within the space).'),
     description: z
       .string()
-      .max(1024)
+      .max(MAX_DESCRIPTION_LENGTH)
       .optional()
       .describe('Human-readable description of the rule.'),
     owner: z.string().max(256).optional().describe('Owner of the rule.'),
-    tags: z
-      .array(z.string().max(MAX_TAG_LENGTH).min(1))
+    tags: tagsSchema
       .min(1)
-      .max(100)
       .optional()
       .describe('Tags for categorization, e.g. ["production", "infra"].'),
   })
@@ -300,9 +303,9 @@ export const ruleResponseSchema = createRuleDataBaseSchema.extend({
   id: z.string().describe('Unique rule identifier.'),
   enabled: z.boolean().describe('Whether the rule is enabled.'),
   createdBy: z.string().nullable().describe('User who created the rule.'),
-  createdAt: z.iso.datetime().describe('ISO timestamp when the rule was created.'),
+  createdAt: z.string().describe('ISO timestamp when the rule was created.'),
   updatedBy: z.string().nullable().describe('User who last updated the rule.'),
-  updatedAt: z.iso.datetime().describe('ISO timestamp when the rule was last updated.'),
+  updatedAt: z.string().describe('ISO timestamp when the rule was last updated.'),
 });
 
 export type RuleResponse = z.infer<typeof ruleResponseSchema>;
