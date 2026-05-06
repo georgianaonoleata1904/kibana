@@ -239,10 +239,7 @@ export const updateActionPolicyDataSchema = z
       .optional()
       .nullable()
       .describe('The fields used to group alerts.'),
-    tags: tagsSchema
-      .optional()
-      .nullable()
-      .describe('Tags for categorizing the action policy.'),
+    tags: tagsSchema.optional().nullable().describe('Tags for categorizing the action policy.'),
     groupingMode: groupingModeSchema
       .optional()
       .nullable()
