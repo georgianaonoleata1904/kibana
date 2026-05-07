@@ -39,10 +39,9 @@ describe('useCreateAlertAction', () => {
       actionType: ALERT_EPISODE_ACTION_TYPE.ACK,
     });
 
-    expect(mockHttp.post).toHaveBeenCalledWith(
-      `${ALERTING_V2_ALERT_API_PATH}/group-hash-1/_ack`,
-      { body: JSON.stringify({}) }
-    );
+    expect(mockHttp.post).toHaveBeenCalledWith(`${ALERTING_V2_ALERT_API_PATH}/group-hash-1/_ack`, {
+      body: JSON.stringify({}),
+    });
   });
 
   it('stringifies a custom body when provided', async () => {
