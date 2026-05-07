@@ -40,7 +40,7 @@ describe('useCreateAlertAction', () => {
     });
 
     expect(mockHttp.post).toHaveBeenCalledWith(
-      `${ALERTING_V2_ALERT_API_PATH}/group-hash-1/action/_ack`,
+      `${ALERTING_V2_ALERT_API_PATH}/group-hash-1/_ack`,
       { body: JSON.stringify({}) }
     );
   });
@@ -60,7 +60,7 @@ describe('useCreateAlertAction', () => {
       body,
     });
 
-    expect(mockHttp.post).toHaveBeenCalledWith(`${ALERTING_V2_ALERT_API_PATH}/gh/action/_snooze`, {
+    expect(mockHttp.post).toHaveBeenCalledWith(`${ALERTING_V2_ALERT_API_PATH}/gh/_snooze`, {
       body: JSON.stringify(body),
     });
   });
