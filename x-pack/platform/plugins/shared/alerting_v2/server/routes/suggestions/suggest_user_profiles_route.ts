@@ -5,7 +5,6 @@
  * 2.0.
  */
 
-import type { TypeOf } from '@kbn/config-schema';
 import { z } from '@kbn/zod/v4';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import { PluginStart } from '@kbn/core-di';
