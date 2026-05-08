@@ -9,6 +9,7 @@ import Boom from '@hapi/boom';
 import {
   BULK_FILTER_MAX_RULES,
   createRuleDataSchema,
+  isStateTransitionAllowed,
   updateRuleDataSchema,
 } from '@kbn/alerting-v2-schemas';
 import { PluginStart } from '@kbn/core-di';
@@ -46,6 +47,7 @@ import {
   transformCreateRuleBodyToRuleSoAttributes,
   transformRuleSoAttributesToRuleApiResponse,
   buildUpdateRuleAttributes,
+  assertImmutableUnchanged,
 } from './utils';
 import { buildRuleSoFilter } from './build_rule_filter';
 import { buildSoSearch, RULE_SEARCH_FIELDS } from './build_so_search';
@@ -223,7 +225,12 @@ export class RulesClient {
 
     const { attrs: existingAttrs, version: existingVersion } = await this.getExistingRule(id);
 
-    if (existingAttrs.kind !== 'alert' && parsed.state_transition != null) {
+    if (
+      !isStateTransitionAllowed({
+        kind: existingAttrs.kind,
+        state_transition: parsed.state_transition,
+      })
+    ) {
       throw Boom.badRequest('stateTransition is only allowed for rules of kind "alert".');
     }
 
@@ -690,9 +697,7 @@ export class RulesClient {
 
     const { attrs: existingAttrs, version: existingVersion } = await this.getExistingRule(id);
 
-    if (parsed.kind !== existingAttrs.kind) {
-      throw Boom.conflict('Rule "kind" cannot be changed');
-    }
+    assertImmutableUnchanged(parsed, existingAttrs);
 
     const nextAttrs = transformCreateRuleBodyToRuleSoAttributes(parsed, {
       enabled: existingAttrs.enabled,

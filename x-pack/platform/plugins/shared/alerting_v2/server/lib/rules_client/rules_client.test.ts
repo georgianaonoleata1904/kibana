@@ -682,7 +682,7 @@ describe('RulesClient', () => {
           })
         ).rejects.toMatchObject({
           output: { statusCode: 409 },
-          message: 'Rule "kind" cannot be changed',
+          message: 'Some fields cannot be changed after creation: kind.',
         });
 
         expect(mockSavedObjectsClient.update).not.toHaveBeenCalled();
