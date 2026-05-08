@@ -5,7 +5,6 @@
  * 2.0.
  */
 
-import { MAX_FIELD_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
 import { z } from '@kbn/zod/v4';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import type { KibanaRequest } from '@kbn/core/server';
@@ -19,11 +18,8 @@ import { AlertingRouteContext } from '../alerting_route_context';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 
 const suggestionsBodySchema = z.object({
-  field: z.string().min(1).max(MAX_FIELD_NAME_LENGTH).describe('The field to suggest values for.'),
-  query: z
-    .string()
-    .max(MAX_FIELD_NAME_LENGTH)
-    .describe('Optional search query for filtering suggestions.'),
+  field: z.string().min(1).max(256).describe('The field to suggest values for.'),
+  query: z.string().max(1024).describe('Optional search query for filtering suggestions.'),
 });
 
 type SuggestionsBody = z.infer<typeof suggestionsBodySchema>;

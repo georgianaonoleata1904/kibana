@@ -66,7 +66,7 @@ const assignActionSchema = z.object({
 
 const tagActionSchema = z.object({
   action_type: z.literal(ALERT_EPISODE_ACTION_TYPE.TAG).describe('Adds tags to an alert.'),
-  tags: tagsSchema.min(1).describe('List of tags to add to the alert.'),
+  tags: tagsSchema.describe('List of tags to add to the alert.'),
 });
 
 const snoozeActionSchema = z.object({
