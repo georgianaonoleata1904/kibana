@@ -573,13 +573,16 @@ describe('RulesClient', () => {
           createdAt: '2024-06-01T00:00:00.000Z',
           metadata: { name: 'before' },
         };
-        mockSavedObjectsClient.get.mockResolvedValueOnce({
+        const existingDoc = {
           id: 'rule-id-1',
           attributes: existing,
           version: 'WzEsMV0=',
           type: RULE_SAVED_OBJECT_TYPE,
           references: [],
-        });
+        };
+        mockSavedObjectsClient.get
+          .mockResolvedValueOnce(existingDoc)
+          .mockResolvedValueOnce(existingDoc);
         mockSavedObjectsClient.update.mockResolvedValueOnce({
           id: 'rule-id-1',
           attributes: existing,
@@ -610,13 +613,16 @@ describe('RulesClient', () => {
 
       it('reschedules the task with the new interval', async () => {
         const client = createClient();
-        mockSavedObjectsClient.get.mockResolvedValueOnce({
+        const existingDoc = {
           id: 'rule-id-1',
           attributes: baseSoAttrs,
           version: 'WzEsMV0=',
           type: RULE_SAVED_OBJECT_TYPE,
           references: [],
-        });
+        };
+        mockSavedObjectsClient.get
+          .mockResolvedValueOnce(existingDoc)
+          .mockResolvedValueOnce(existingDoc);
 
         await client.upsertRule({
           id: 'rule-id-1',
@@ -635,13 +641,16 @@ describe('RulesClient', () => {
 
       it('throws 409 when the version is stale', async () => {
         const client = createClient();
-        mockSavedObjectsClient.get.mockResolvedValueOnce({
+        const existingDoc = {
           id: 'rule-id-1',
           attributes: baseSoAttrs,
           version: 'WzEsMV0=',
           type: RULE_SAVED_OBJECT_TYPE,
           references: [],
-        });
+        };
+        mockSavedObjectsClient.get
+          .mockResolvedValueOnce(existingDoc)
+          .mockResolvedValueOnce(existingDoc);
         mockSavedObjectsClient.update.mockRejectedValueOnce(
           SavedObjectsErrorHelpers.createConflictError(RULE_SAVED_OBJECT_TYPE, 'rule-id-1')
         );
@@ -651,6 +660,70 @@ describe('RulesClient', () => {
         ).rejects.toMatchObject({
           output: { statusCode: 409 },
         });
+      });
+
+      it('throws 409 when the request body changes the rule kind', async () => {
+        const client = createClient();
+        const existingDoc = {
+          id: 'rule-id-1',
+          attributes: baseSoAttrs,
+          version: 'WzEsMV0=',
+          type: RULE_SAVED_OBJECT_TYPE,
+          references: [],
+        };
+        mockSavedObjectsClient.get
+          .mockResolvedValueOnce(existingDoc)
+          .mockResolvedValueOnce(existingDoc);
+
+        await expect(
+          client.upsertRule({
+            id: 'rule-id-1',
+            data: { ...baseCreateData, kind: 'signal' },
+          })
+        ).rejects.toMatchObject({
+          output: { statusCode: 409 },
+          message: 'Rule "kind" cannot be changed',
+        });
+
+        expect(mockSavedObjectsClient.update).not.toHaveBeenCalled();
+      });
+
+      it('clears optional fields that are omitted from the request body', async () => {
+        const client = createClient();
+        const existing: RuleSavedObjectAttributes = {
+          ...baseSoAttrs,
+          metadata: { name: 'rule-1', tags: ['tag-a', 'tag-b'] },
+          grouping: { fields: ['host.name'] },
+        };
+        const existingDoc = {
+          id: 'rule-id-1',
+          attributes: existing,
+          version: 'WzEsMV0=',
+          type: RULE_SAVED_OBJECT_TYPE,
+          references: [],
+        };
+        mockSavedObjectsClient.get
+          .mockResolvedValueOnce(existingDoc)
+          .mockResolvedValueOnce(existingDoc);
+        mockSavedObjectsClient.update.mockResolvedValueOnce({
+          id: 'rule-id-1',
+          attributes: existing,
+          type: RULE_SAVED_OBJECT_TYPE,
+          references: [],
+        });
+
+        // baseCreateData omits both metadata.tags and grouping
+        await client.upsertRule({ id: 'rule-id-1', data: baseCreateData });
+
+        expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
+          RULE_SAVED_OBJECT_TYPE,
+          'rule-id-1',
+          expect.objectContaining({
+            metadata: { name: 'rule-1' },
+            grouping: undefined,
+          }),
+          expect.objectContaining({ mergeAttributes: false })
+        );
       });
     });
 

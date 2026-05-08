@@ -18,6 +18,7 @@ import { SavedObjectsErrorHelpers } from '@kbn/core-saved-objects-server';
 import type { KibanaRequest as CoreKibanaRequest } from '@kbn/core/server';
 import { getSpaceIdFromPath } from '@kbn/spaces-utils';
 import type { TaskManagerStartContract } from '@kbn/task-manager-plugin/server';
+import type { z } from '@kbn/zod/v4';
 import { stringifyZodError } from '@kbn/zod-helpers/v4';
 import { inject, injectable } from 'inversify';
 
@@ -95,21 +96,82 @@ export class RulesClient {
     return { spaceId };
   }
 
+  private parseRuleData<T>(
+    schema: z.ZodType<T>,
+    data: unknown,
+    context: 'create' | 'update' | 'upsert'
+  ): T {
+    const parsed = schema.safeParse(data);
+    if (!parsed.success) {
+      throw Boom.badRequest(
+        `Error validating ${context} rule data - ${stringifyZodError(parsed.error)}`
+      );
+    }
+    return parsed.data;
+  }
+
+  private async getExistingRule(
+    id: string
+  ): Promise<{ attrs: RuleSavedObjectAttributes; version: string | undefined }> {
+    try {
+      const doc = await this.rulesSavedObjectService.get(id);
+      return { attrs: doc.attributes, version: doc.version };
+    } catch (e) {
+      if (SavedObjectsErrorHelpers.isNotFoundError(e)) {
+        throw Boom.notFound(`Rule with id "${id}" not found`);
+      }
+      throw e;
+    }
+  }
+
+  private async scheduleRuleExecutorTask({
+    ruleId,
+    spaceId,
+    scheduleEvery,
+  }: {
+    ruleId: string;
+    spaceId: string;
+    scheduleEvery: string;
+  }): Promise<void> {
+    await ensureRuleExecutorTaskScheduled({
+      services: { taskManager: this.taskManager },
+      input: {
+        ruleId,
+        spaceId,
+        schedule: { interval: scheduleEvery },
+        request: this.request as unknown as CoreKibanaRequest,
+      },
+    });
+  }
+
+  private async writeRuleAttrs({
+    id,
+    attrs,
+    version,
+  }: {
+    id: string;
+    attrs: RuleSavedObjectAttributes;
+    version?: string;
+  }): Promise<void> {
+    try {
+      await this.rulesSavedObjectService.update({ id, attrs, version });
+    } catch (e) {
+      if (SavedObjectsErrorHelpers.isConflictError(e)) {
+        throw Boom.conflict(`Rule with id "${id}" has already been updated by another user`);
+      }
+      throw e;
+    }
+  }
+
   @withApm
   public async createRule(params: CreateRuleParams): Promise<RuleResponse> {
     const { spaceId } = this.getSpaceContext();
-
-    const parsed = createRuleDataSchema.safeParse(params.data);
-    if (!parsed.success) {
-      throw Boom.badRequest(
-        `Error validating create rule data - ${stringifyZodError(parsed.error)}`
-      );
-    }
+    const parsed = this.parseRuleData(createRuleDataSchema, params.data, 'create');
 
     const username = await this.userService.getCurrentUsername();
     const nowIso = new Date().toISOString();
 
-    const ruleAttributes = transformCreateRuleBodyToRuleSoAttributes(parsed.data, {
+    const ruleAttributes = transformCreateRuleBodyToRuleSoAttributes(parsed, {
       enabled: true,
       createdBy: username,
       createdAt: nowIso,
@@ -132,14 +194,10 @@ export class RulesClient {
     }
 
     try {
-      await ensureRuleExecutorTaskScheduled({
-        services: { taskManager: this.taskManager },
-        input: {
-          ruleId: id,
-          spaceId,
-          schedule: { interval: ruleAttributes.schedule.every },
-          request: this.request as unknown as CoreKibanaRequest,
-        },
+      await this.scheduleRuleExecutorTask({
+        ruleId: id,
+        spaceId,
+        scheduleEvery: ruleAttributes.schedule.every,
       });
     } catch (e) {
       await this.rulesSavedObjectService.delete({ id }).catch(() => {});
@@ -158,77 +216,37 @@ export class RulesClient {
     data: UpdateRuleData;
   }): Promise<RuleResponse> {
     const { spaceId } = this.getSpaceContext();
-
-    const parsed = updateRuleDataSchema.safeParse(data);
-    if (!parsed.success) {
-      throw Boom.badRequest(
-        `Error validating update rule data - ${stringifyZodError(parsed.error)}`
-      );
-    }
+    const parsed = this.parseRuleData(updateRuleDataSchema, data, 'update');
 
     const username = await this.userService.getCurrentUsername();
     const nowIso = new Date().toISOString();
 
-    let existingAttrs: RuleSavedObjectAttributes;
-    let existingVersion: string | undefined;
-    try {
-      const doc = await this.rulesSavedObjectService.get(id);
-      existingAttrs = doc.attributes;
-      existingVersion = doc.version;
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isNotFoundError(e)) {
-        throw Boom.notFound(`Rule with id "${id}" not found`);
-      }
-      throw e;
-    }
+    const { attrs: existingAttrs, version: existingVersion } = await this.getExistingRule(id);
 
-    if (existingAttrs.kind !== 'alert' && parsed.data.state_transition != null) {
+    if (existingAttrs.kind !== 'alert' && parsed.state_transition != null) {
       throw Boom.badRequest('stateTransition is only allowed for rules of kind "alert".');
     }
 
-    const nextAttrs = buildUpdateRuleAttributes(existingAttrs, parsed.data, {
+    const nextAttrs = buildUpdateRuleAttributes(existingAttrs, parsed, {
       updatedBy: username,
       updatedAt: nowIso,
     });
 
-    // Ensure the task schedule is up-to-date.
-    await ensureRuleExecutorTaskScheduled({
-      services: { taskManager: this.taskManager },
-      input: {
-        ruleId: id,
-        spaceId,
-        schedule: { interval: nextAttrs.schedule.every },
-        request: this.request as unknown as CoreKibanaRequest,
-      },
+    await this.scheduleRuleExecutorTask({
+      ruleId: id,
+      spaceId,
+      scheduleEvery: nextAttrs.schedule.every,
     });
 
-    try {
-      await this.rulesSavedObjectService.update({
-        id,
-        attrs: nextAttrs,
-        version: existingVersion,
-      });
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isConflictError(e)) {
-        throw Boom.conflict(`Rule with id "${id}" has already been updated by another user`);
-      }
-      throw e;
-    }
+    await this.writeRuleAttrs({ id, attrs: nextAttrs, version: existingVersion });
 
     return transformRuleSoAttributesToRuleApiResponse(id, nextAttrs);
   }
 
   @withApm
   public async getRule({ id }: { id: string }): Promise<RuleResponse> {
-    try {
-      const doc = await this.rulesSavedObjectService.get(id);
-      return transformRuleSoAttributesToRuleApiResponse(id, doc.attributes);
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isNotFoundError(e)) {
-        throw Boom.notFound(`Rule with id "${id}" not found`);
-      }
-      throw e;
-    }
+    const { attrs } = await this.getExistingRule(id);
+    return transformRuleSoAttributesToRuleApiResponse(id, attrs);
   }
 
   @withApm
@@ -245,16 +263,24 @@ export class RulesClient {
   }
 
   @withApm
+  public async ruleExists({ id }: { id: string }): Promise<boolean> {
+    try {
+      await this.getExistingRule(id);
+      return true;
+    } catch (e) {
+      if (Boom.isBoom(e) && e.output.statusCode === 404) {
+        return false;
+      }
+      throw e;
+    }
+  }
+
+  @withApm
   public async deleteRule({ id }: { id: string }): Promise<void> {
     const { spaceId } = this.getSpaceContext();
 
-    try {
-      await this.rulesSavedObjectService.get(id);
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isNotFoundError(e)) {
-        throw Boom.notFound(`Rule with id "${id}" not found`);
-      }
-      throw e;
+    if (!(await this.ruleExists({ id }))) {
+      throw Boom.notFound(`Rule with id "${id}" not found`);
     }
 
     const taskId = getRuleExecutorTaskId({ ruleId: id, spaceId });
@@ -270,18 +296,7 @@ export class RulesClient {
     const username = await this.userService.getCurrentUsername();
     const nowIso = new Date().toISOString();
 
-    let existingAttrs: RuleSavedObjectAttributes;
-    let existingVersion: string | undefined;
-    try {
-      const doc = await this.rulesSavedObjectService.get(id);
-      existingAttrs = doc.attributes;
-      existingVersion = doc.version;
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isNotFoundError(e)) {
-        throw Boom.notFound(`Rule with id "${id}" not found`);
-      }
-      throw e;
-    }
+    const { attrs: existingAttrs, version: existingVersion } = await this.getExistingRule(id);
 
     const nextAttrs: RuleSavedObjectAttributes = {
       ...existingAttrs,
@@ -290,29 +305,13 @@ export class RulesClient {
       updatedAt: nowIso,
     };
 
-    // Ensure the task schedule is up-to-date.
-    await ensureRuleExecutorTaskScheduled({
-      services: { taskManager: this.taskManager },
-      input: {
-        ruleId: id,
-        spaceId,
-        schedule: { interval: nextAttrs.schedule.every },
-        request: this.request as unknown as CoreKibanaRequest,
-      },
+    await this.scheduleRuleExecutorTask({
+      ruleId: id,
+      spaceId,
+      scheduleEvery: nextAttrs.schedule.every,
     });
 
-    try {
-      await this.rulesSavedObjectService.update({
-        id,
-        attrs: nextAttrs,
-        version: existingVersion,
-      });
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isConflictError(e)) {
-        throw Boom.conflict(`Rule with id "${id}" has already been updated by another user`);
-      }
-      throw e;
-    }
+    await this.writeRuleAttrs({ id, attrs: nextAttrs, version: existingVersion });
 
     return transformRuleSoAttributesToRuleApiResponse(id, nextAttrs);
   }
@@ -324,18 +323,7 @@ export class RulesClient {
     const username = await this.userService.getCurrentUsername();
     const nowIso = new Date().toISOString();
 
-    let existingAttrs: RuleSavedObjectAttributes;
-    let existingVersion: string | undefined;
-    try {
-      const doc = await this.rulesSavedObjectService.get(id);
-      existingAttrs = doc.attributes;
-      existingVersion = doc.version;
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isNotFoundError(e)) {
-        throw Boom.notFound(`Rule with id "${id}" not found`);
-      }
-      throw e;
-    }
+    const { attrs: existingAttrs, version: existingVersion } = await this.getExistingRule(id);
 
     const nextAttrs: RuleSavedObjectAttributes = {
       ...existingAttrs,
@@ -344,22 +332,10 @@ export class RulesClient {
       updatedAt: nowIso,
     };
 
-    // When disabling, remove the task.
     const taskId = getRuleExecutorTaskId({ ruleId: id, spaceId });
     await this.taskManager.removeIfExists(taskId);
 
-    try {
-      await this.rulesSavedObjectService.update({
-        id,
-        attrs: nextAttrs,
-        version: existingVersion,
-      });
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isConflictError(e)) {
-        throw Boom.conflict(`Rule with id "${id}" has already been updated by another user`);
-      }
-      throw e;
-    }
+    await this.writeRuleAttrs({ id, attrs: nextAttrs, version: existingVersion });
 
     return transformRuleSoAttributesToRuleApiResponse(id, nextAttrs);
   }
@@ -699,77 +675,26 @@ export class RulesClient {
     id: string;
     data: CreateRuleData;
   }): Promise<{ rule: RuleResponse; created: boolean }> {
-    const parsed = createRuleDataSchema.safeParse(data);
-    if (!parsed.success) {
-      throw Boom.badRequest(
-        `Error validating upsert rule data - ${stringifyZodError(parsed.error)}`
-      );
+    const parsed = this.parseRuleData(createRuleDataSchema, data, 'upsert');
+
+    const exists = await this.ruleExists({ id });
+
+    if (!exists) {
+      const rule = await this.createRule({ data, options: { id } });
+      return { rule, created: true };
     }
 
     const { spaceId } = this.getSpaceContext();
     const username = await this.userService.getCurrentUsername();
     const nowIso = new Date().toISOString();
 
-    let existingAttrs: RuleSavedObjectAttributes | null = null;
-    let existingVersion: string | undefined;
+    const { attrs: existingAttrs, version: existingVersion } = await this.getExistingRule(id);
 
-    try {
-      const doc = await this.rulesSavedObjectService.get(id);
-      existingAttrs = doc.attributes;
-      existingVersion = doc.version;
-    } catch (e) {
-      if (!SavedObjectsErrorHelpers.isNotFoundError(e)) {
-        throw e;
-      }
+    if (parsed.kind !== existingAttrs.kind) {
+      throw Boom.conflict('Rule "kind" cannot be changed');
     }
 
-    if (existingAttrs == null) {
-      const ruleAttributes = transformCreateRuleBodyToRuleSoAttributes(parsed.data, {
-        enabled: true,
-        createdBy: username,
-        createdAt: nowIso,
-        updatedBy: username,
-        updatedAt: nowIso,
-      });
-      let createdId: string;
-      try {
-        createdId = await this.rulesSavedObjectService.create({
-          attrs: ruleAttributes,
-          id,
-        });
-      } catch (e) {
-        if (SavedObjectsErrorHelpers.isConflictError(e)) {
-          // Race: someone created the rule between our get and create.
-          // Surface the conflict; clients can retry.
-          throw Boom.conflict(`Rule with id "${id}" already exists`);
-        }
-        throw e;
-      }
-      try {
-        await ensureRuleExecutorTaskScheduled({
-          services: { taskManager: this.taskManager },
-          input: {
-            ruleId: createdId,
-            spaceId,
-            schedule: { interval: ruleAttributes.schedule.every },
-            request: this.request as unknown as CoreKibanaRequest,
-          },
-        });
-      } catch (e) {
-        await this.rulesSavedObjectService.delete({ id: createdId }).catch(() => {});
-        throw e;
-      }
-      return {
-        rule: transformRuleSoAttributesToRuleApiResponse(createdId, ruleAttributes),
-        created: true,
-      };
-    }
-
-    // PUT replaces every field accepted by createRuleDataSchema. Audit metadata
-    // (createdBy/createdAt) and operational state (enabled) are not part of the
-    // create schema and are preserved here. To change `enabled`, use bulk_enable /
-    // bulk_disable.
-    const replacementAttrs = transformCreateRuleBodyToRuleSoAttributes(parsed.data, {
+    const nextAttrs = transformCreateRuleBodyToRuleSoAttributes(parsed, {
       enabled: existingAttrs.enabled,
       createdBy: existingAttrs.createdBy,
       createdAt: existingAttrs.createdAt,
@@ -777,31 +702,16 @@ export class RulesClient {
       updatedAt: nowIso,
     });
 
-    await ensureRuleExecutorTaskScheduled({
-      services: { taskManager: this.taskManager },
-      input: {
-        ruleId: id,
-        spaceId,
-        schedule: { interval: replacementAttrs.schedule.every },
-        request: this.request as unknown as CoreKibanaRequest,
-      },
+    await this.scheduleRuleExecutorTask({
+      ruleId: id,
+      spaceId,
+      scheduleEvery: nextAttrs.schedule.every,
     });
 
-    try {
-      await this.rulesSavedObjectService.update({
-        id,
-        attrs: replacementAttrs,
-        version: existingVersion,
-      });
-    } catch (e) {
-      if (SavedObjectsErrorHelpers.isConflictError(e)) {
-        throw Boom.conflict(`Rule with id "${id}" has already been updated by another user`);
-      }
-      throw e;
-    }
+    await this.writeRuleAttrs({ id, attrs: nextAttrs, version: existingVersion });
 
     return {
-      rule: transformRuleSoAttributesToRuleApiResponse(id, replacementAttrs),
+      rule: transformRuleSoAttributesToRuleApiResponse(id, nextAttrs),
       created: false,
     };
   }
