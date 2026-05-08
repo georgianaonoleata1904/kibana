@@ -26,10 +26,12 @@ import {
 } from '@elastic/eui';
 import type { ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { CoreStart, useService } from '@kbn/core-di-browser';
+import type { UserProfileService } from '@kbn/core-user-profile-browser';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
+import { useQuery } from '@kbn/react-query';
 import moment from 'moment';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ActionPolicyActionsMenu } from '../action_policy_actions_menu';
 import { ActionPolicyStateBadge } from '../action_policy_state_badge';
 import { isSnoozed } from '../is_snoozed';
@@ -68,8 +70,40 @@ export const ActionPolicyDetailsFlyout = ({
   isStateLoading = false,
 }: Props) => {
   const settings = useService(CoreStart('settings'));
+  const userProfile = useService(CoreStart('userProfile')) as UserProfileService;
   const dateTimeFormat = settings.client.get<string>('dateFormat');
   const formatDate = (value: string) => moment(value).format(dateTimeFormat);
+
+  const metadataUids = useMemo(() => {
+    const uids = new Set<string>();
+    if (policy.createdBy) uids.add(policy.createdBy);
+    if (policy.updatedBy) uids.add(policy.updatedBy);
+    return uids;
+  }, [policy.createdBy, policy.updatedBy]);
+
+  const metadataUidsKey = useMemo(() => Array.from(metadataUids).sort(), [metadataUids]);
+
+  const { data: metadataProfiles } = useQuery({
+    queryKey: ['alertingV2ActionPolicyMetadataProfiles', metadataUidsKey],
+    queryFn: () => userProfile.bulkGet({ uids: metadataUids }),
+    enabled: metadataUids.size > 0,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const metadataProfileByUid = useMemo(() => {
+    const map = new Map<string, { full_name?: string; username: string }>();
+    for (const profile of metadataProfiles ?? []) {
+      map.set(profile.uid, profile.user);
+    }
+    return map;
+  }, [metadataProfiles]);
+
+  const resolveDisplayName = (uid: string | null) => {
+    if (!uid) return EMPTY_VALUE;
+    const user = metadataProfileByUid.get(uid);
+    return user?.full_name ?? user?.username ?? uid;
+  };
 
   const snoozedActive = isSnoozed(policy.snoozedUntil);
 
@@ -182,7 +216,7 @@ export const ActionPolicyDetailsFlyout = ({
       title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.createdBy', {
         defaultMessage: 'Created by',
       }),
-      description: policy.createdByUsername ?? EMPTY_VALUE,
+      description: resolveDisplayName(policy.createdBy),
     },
     {
       title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.createdAt', {
@@ -194,7 +228,7 @@ export const ActionPolicyDetailsFlyout = ({
       title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.updatedBy', {
         defaultMessage: 'Updated by',
       }),
-      description: policy.updatedByUsername ?? EMPTY_VALUE,
+      description: resolveDisplayName(policy.updatedBy),
     },
     {
       title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.updatedAt', {

@@ -86,7 +86,7 @@ export class ActionPolicyClient {
       );
     }
 
-    const userProfile = await this.getUserProfile();
+    const userProfileUid = await this.userService.getCurrentUserProfileUid();
     const now = new Date().toISOString();
 
     const apiKeyAttrs = await this.apiKeyService.create(`Action Policy: ${params.data.name}`);
@@ -94,11 +94,9 @@ export class ActionPolicyClient {
     const attributes = buildCreateActionPolicyAttributes({
       data: parsed.data,
       auth: apiKeyAttrs,
-      createdBy: userProfile.uid,
-      createdByUsername: userProfile.username,
+      createdBy: userProfileUid,
       createdAt: now,
-      updatedBy: userProfile.uid,
-      updatedByUsername: userProfile.username,
+      updatedBy: userProfileUid,
       updatedAt: now,
     });
 
@@ -169,7 +167,7 @@ export class ActionPolicyClient {
       );
     }
 
-    const userProfile = await this.getUserProfile();
+    const userProfileUid = await this.userService.getCurrentUserProfileUid();
     const now = new Date().toISOString();
 
     let existingPolicy: ActionPolicySavedObjectAttributes;
@@ -192,8 +190,7 @@ export class ActionPolicyClient {
       existing: existingPolicy,
       update: parsed.data,
       auth: apiKeyAttrs,
-      updatedBy: userProfile.uid,
-      updatedByUsername: userProfile.username,
+      updatedBy: userProfileUid,
       updatedAt: now,
     });
 
@@ -287,7 +284,7 @@ export class ActionPolicyClient {
     }
 
     const oldAuth = await this.getDecryptedAuth(id);
-    const userProfile = await this.getUserProfile();
+    const userProfileUid = await this.userService.getCurrentUserProfileUid();
     const now = new Date().toISOString();
     const apiKeyAttrs = await this.apiKeyService.create(`Action Policy: ${existingPolicy.name}`);
 
@@ -296,8 +293,7 @@ export class ActionPolicyClient {
         id,
         attrs: {
           auth: apiKeyAttrs,
-          updatedBy: userProfile.uid,
-          updatedByUsername: userProfile.username,
+          updatedBy: userProfileUid,
           updatedAt: now,
         },
       });
@@ -327,15 +323,14 @@ export class ActionPolicyClient {
     let processed = 0;
 
     if (updateActions.length > 0) {
-      const userProfile = await this.getUserProfile();
+      const userProfileUid = await this.userService.getCurrentUserProfileUid();
       const now = new Date().toISOString();
 
       const objects = updateActions.map((action) => ({
         id: action.id,
         attrs: {
           ...resolveActionAttrs(action),
-          updatedBy: userProfile.uid,
-          updatedByUsername: userProfile.username,
+          updatedBy: userProfileUid,
           updatedAt: now,
         },
       }));
@@ -422,9 +417,7 @@ export class ActionPolicyClient {
     const sortFieldMap: Record<string, string> = {
       name: 'name.keyword',
       createdAt: 'createdAt',
-      createdByUsername: 'createdByUsername',
       updatedAt: 'updatedAt',
-      updatedByUsername: 'updatedByUsername',
     };
 
     return sortFieldMap[sortField];
@@ -518,7 +511,7 @@ export class ActionPolicyClient {
       validateDateString(stateUpdate.snoozedUntil);
     }
 
-    const userProfile = await this.getUserProfile();
+    const userProfileUid = await this.userService.getCurrentUserProfileUid();
     const now = new Date().toISOString();
 
     try {
@@ -526,8 +519,7 @@ export class ActionPolicyClient {
         id,
         attrs: {
           ...stateUpdate,
-          updatedBy: userProfile.uid,
-          updatedByUsername: userProfile.username,
+          updatedBy: userProfileUid,
           updatedAt: now,
         },
       });
@@ -544,9 +536,5 @@ export class ActionPolicyClient {
     }
 
     return this.getActionPolicy({ id });
-  }
-
-  private async getUserProfile() {
-    return this.userService.getCurrentUserProfile();
   }
 }

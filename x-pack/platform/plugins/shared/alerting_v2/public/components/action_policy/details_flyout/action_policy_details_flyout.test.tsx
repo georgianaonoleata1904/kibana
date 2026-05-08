@@ -64,10 +64,8 @@ const createPolicy = (overrides: Partial<ActionPolicyResponse> = {}): ActionPoli
   snoozedUntil: null,
   auth: { owner: 'elastic', createdByUser: true },
   createdBy: 'elastic_uid',
-  createdByUsername: 'elastic',
   createdAt: '2026-03-01T10:00:00.000Z',
   updatedBy: 'elastic_uid',
-  updatedByUsername: 'elastic',
   updatedAt: '2026-03-02T11:00:00.000Z',
   ...overrides,
 });

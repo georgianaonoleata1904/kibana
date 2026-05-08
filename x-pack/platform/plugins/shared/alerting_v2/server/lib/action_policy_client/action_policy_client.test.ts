@@ -119,9 +119,7 @@ describe('ActionPolicyClient', () => {
             createdByUser: false,
           },
           createdBy: 'elastic_profile_uid',
-          createdByUsername: 'elastic',
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           createdAt: '2025-01-01T00:00:00.000Z',
           updatedAt: '2025-01-01T00:00:00.000Z',
         }),
@@ -146,9 +144,7 @@ describe('ActionPolicyClient', () => {
             createdByUser: false,
           },
           createdBy: 'elastic_profile_uid',
-          createdByUsername: 'elastic',
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           createdAt: '2025-01-01T00:00:00.000Z',
           updatedAt: '2025-01-01T00:00:00.000Z',
         })
@@ -189,9 +185,7 @@ describe('ActionPolicyClient', () => {
             createdByUser: false,
           },
           createdBy: 'elastic_profile_uid',
-          createdByUsername: 'elastic',
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
         }),
         expect.objectContaining({
           overwrite: false,
@@ -203,8 +197,6 @@ describe('ActionPolicyClient', () => {
       expect(res.name).toBe('my-policy');
       expect(res.description).toBe('my-policy description');
       expect(res.destinations).toEqual([{ type: 'workflow', id: 'my-workflow' }]);
-      expect(res.createdByUsername).toBe('elastic');
-      expect(res.updatedByUsername).toBe('elastic');
       expect(res.auth).not.toHaveProperty('apiKey');
     });
 
@@ -334,10 +326,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -360,8 +350,6 @@ describe('ActionPolicyClient', () => {
       expect(res.throttle).toBeNull();
       expect(res.snoozedUntil).toBeNull();
       expect(res.auth).toEqual({ owner: 'test-user', createdByUser: false });
-      expect(res.createdByUsername).toBe('elastic');
-      expect(res.updatedByUsername).toBe('elastic');
       expect(res.auth).not.toHaveProperty('apiKey');
     });
 
@@ -392,10 +380,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       const secondAttributes: ActionPolicySavedObjectAttributes = {
@@ -409,10 +395,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.bulkGet.mockResolvedValueOnce({
@@ -440,12 +424,8 @@ describe('ActionPolicyClient', () => {
 
       expect(res).toHaveLength(2);
       expect(res[0].auth).toEqual({ owner: 'user-2', createdByUser: false });
-      expect(res[0].createdByUsername).toBe('elastic');
-      expect(res[0].updatedByUsername).toBe('elastic');
       expect(res[0].auth).not.toHaveProperty('apiKey');
       expect(res[1].auth).toEqual({ owner: 'user-1', createdByUser: false });
-      expect(res[1].createdByUsername).toBe('elastic');
-      expect(res[1].updatedByUsername).toBe('elastic');
       expect(res[1].auth).not.toHaveProperty('apiKey');
     });
 
@@ -467,10 +447,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       const thirdAttributes: ActionPolicySavedObjectAttributes = {
@@ -484,10 +462,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.bulkGet.mockResolvedValueOnce({
@@ -526,12 +502,8 @@ describe('ActionPolicyClient', () => {
 
       expect(res).toHaveLength(2);
       expect(res[0].id).toBe('policy-id-get-found-1');
-      expect(res[0].createdByUsername).toBe('elastic');
-      expect(res[0].updatedByUsername).toBe('elastic');
       expect(res[0].auth).not.toHaveProperty('apiKey');
       expect(res[1].id).toBe('policy-id-get-found-3');
-      expect(res[1].createdByUsername).toBe('elastic');
-      expect(res[1].updatedByUsername).toBe('elastic');
       expect(res[1].auth).not.toHaveProperty('apiKey');
     });
 
@@ -547,10 +519,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.bulkGet.mockResolvedValueOnce({
@@ -583,8 +553,6 @@ describe('ActionPolicyClient', () => {
       expect(res).toHaveLength(1);
       expect(res[0].id).toBe('policy-id-valid');
       expect(res[0].auth).toEqual({ owner: 'valid-user', createdByUser: false });
-      expect(res[0].createdByUsername).toBe('elastic');
-      expect(res[0].updatedByUsername).toBe('elastic');
       expect(res[0].auth).not.toHaveProperty('apiKey');
     });
   });
@@ -623,10 +591,8 @@ describe('ActionPolicyClient', () => {
         createdByUser: false,
       },
       createdBy: 'elastic_profile_uid',
-      createdByUsername: 'elastic',
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedBy: 'elastic_profile_uid',
-      updatedByUsername: 'elastic',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
 
@@ -643,8 +609,6 @@ describe('ActionPolicyClient', () => {
       expect(res.items[0].throttle).toBeNull();
       expect(res.items[0].snoozedUntil).toBeNull();
       expect(res.items[0].auth).toEqual({ owner: 'find-user', createdByUser: false });
-      expect(res.items[0].createdByUsername).toBe('elastic');
-      expect(res.items[0].updatedByUsername).toBe('elastic');
       expect(res.items[0].auth).not.toHaveProperty('apiKey');
     });
 
@@ -831,15 +795,11 @@ describe('ActionPolicyClient', () => {
       expect(res.items[0].id).toBe('policy-find-1');
       expect(res.items[0].name).toBe('find-policy');
       expect(res.items[0].auth).toEqual({ owner: 'find-user', createdByUser: false });
-      expect(res.items[0].createdByUsername).toBe('elastic');
-      expect(res.items[0].updatedByUsername).toBe('elastic');
       expect(res.items[0].auth).not.toHaveProperty('apiKey');
 
       expect(res.items[1].id).toBe('policy-find-2');
       expect(res.items[1].name).toBe('find-policy-2');
       expect(res.items[1].auth).toEqual({ owner: 'another-user', createdByUser: true });
-      expect(res.items[1].createdByUsername).toBe('elastic');
-      expect(res.items[1].updatedByUsername).toBe('elastic');
       expect(res.items[1].auth).not.toHaveProperty('apiKey');
     });
   });
@@ -860,10 +820,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -903,7 +861,6 @@ describe('ActionPolicyClient', () => {
           groupBy: null,
           tags: null,
           throttle: null,
-          updatedByUsername: 'elastic',
         }),
         { version: 'WzEsMV0=' }
       );
@@ -925,10 +882,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -969,10 +924,8 @@ describe('ActionPolicyClient', () => {
             createdByUser: false,
           },
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
           createdBy: 'creator_profile_uid',
-          createdByUsername: 'creator',
           createdAt: '2024-12-01T00:00:00.000Z',
         }),
         { version: 'WzEsMV0=' }
@@ -989,8 +942,6 @@ describe('ActionPolicyClient', () => {
             owner: 'test-user',
             createdByUser: false,
           },
-          createdByUsername: 'creator',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         })
       );
@@ -1013,10 +964,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1062,10 +1011,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1110,10 +1057,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: true,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1163,10 +1108,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1211,10 +1154,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1296,10 +1237,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1342,10 +1281,8 @@ describe('ActionPolicyClient', () => {
         createdByUser: false,
       },
       createdBy: 'creator_profile_uid',
-      createdByUsername: 'creator',
       createdAt: '2024-12-01T00:00:00.000Z',
       updatedBy: 'updater_profile_uid',
-      updatedByUsername: 'updater',
       updatedAt: '2024-12-01T00:00:00.000Z',
     };
 
@@ -1372,7 +1309,6 @@ describe('ActionPolicyClient', () => {
             createdByUser: false,
           },
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         }),
         undefined
@@ -1481,10 +1417,8 @@ describe('ActionPolicyClient', () => {
         createdByUser: false,
       },
       createdBy: 'elastic_profile_uid',
-      createdByUsername: 'elastic',
       createdAt: '2024-12-01T00:00:00.000Z',
       updatedBy: 'elastic_profile_uid',
-      updatedByUsername: 'elastic',
       updatedAt: '2025-01-01T00:00:00.000Z',
     };
 
@@ -1512,7 +1446,6 @@ describe('ActionPolicyClient', () => {
         {
           enabled: true,
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
         undefined
@@ -1587,10 +1520,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.update.mockResolvedValueOnce({
@@ -1616,7 +1547,6 @@ describe('ActionPolicyClient', () => {
         {
           enabled: false,
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
         undefined
@@ -1656,10 +1586,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.update.mockResolvedValueOnce({
@@ -1688,7 +1616,6 @@ describe('ActionPolicyClient', () => {
         {
           snoozedUntil: '2025-06-01T12:00:00.000Z',
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
         undefined
@@ -1798,7 +1725,6 @@ describe('ActionPolicyClient', () => {
           attributes: {
             enabled: true,
             updatedBy: 'elastic_profile_uid',
-            updatedByUsername: 'elastic',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },
         },
@@ -1808,7 +1734,6 @@ describe('ActionPolicyClient', () => {
           attributes: {
             enabled: false,
             updatedBy: 'elastic_profile_uid',
-            updatedByUsername: 'elastic',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },
         },
@@ -1818,7 +1743,6 @@ describe('ActionPolicyClient', () => {
           attributes: {
             snoozedUntil: '2025-06-01T12:00:00.000Z',
             updatedBy: 'elastic_profile_uid',
-            updatedByUsername: 'elastic',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },
         },
@@ -1828,7 +1752,6 @@ describe('ActionPolicyClient', () => {
           attributes: {
             snoozedUntil: null,
             updatedBy: 'elastic_profile_uid',
-            updatedByUsername: 'elastic',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },
         },
@@ -1904,7 +1827,6 @@ describe('ActionPolicyClient', () => {
           attributes: {
             enabled: true,
             updatedBy: 'elastic_profile_uid',
-            updatedByUsername: 'elastic',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },
         },
@@ -2158,10 +2080,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -2217,10 +2137,8 @@ describe('ActionPolicyClient', () => {
           destinations: [],
           auth: { apiKey: 'user-created-key', owner: 'test-user', createdByUser: true },
           createdBy: 'elastic_profile_uid',
-          createdByUsername: 'elastic',
           createdAt: '2025-01-01T00:00:00.000Z',
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
       });
@@ -2246,10 +2164,8 @@ describe('ActionPolicyClient', () => {
           destinations: [],
           auth: { owner: 'test-user', createdByUser: false },
           createdBy: 'elastic_profile_uid',
-          createdByUsername: 'elastic',
           createdAt: '2025-01-01T00:00:00.000Z',
           updatedBy: 'elastic_profile_uid',
-          updatedByUsername: 'elastic',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
       });

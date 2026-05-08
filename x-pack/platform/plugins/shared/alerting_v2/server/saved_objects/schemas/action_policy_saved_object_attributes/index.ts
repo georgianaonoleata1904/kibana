@@ -6,10 +6,11 @@
  */
 
 import type { TypeOf } from '@kbn/config-schema';
-import { actionPolicySavedObjectAttributesSchema } from './v1';
+import { actionPolicySavedObjectAttributesSchema as actionPolicySavedObjectAttributesSchemaV1 } from './v1';
+import { actionPolicySavedObjectAttributesSchema as actionPolicySavedObjectAttributesSchemaV2 } from './v2';
 
 export type ActionPolicySavedObjectAttributes = TypeOf<
-  typeof actionPolicySavedObjectAttributesSchema
+  typeof actionPolicySavedObjectAttributesSchemaV2
 >;
 
-export { actionPolicySavedObjectAttributesSchema as actionPolicySavedObjectAttributesSchemaV1 };
+export { actionPolicySavedObjectAttributesSchemaV1, actionPolicySavedObjectAttributesSchemaV2 };

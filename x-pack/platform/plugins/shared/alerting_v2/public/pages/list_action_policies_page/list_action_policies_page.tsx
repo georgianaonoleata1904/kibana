@@ -13,6 +13,7 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiLink,
+  EuiLoadingSpinner,
   EuiPageHeader,
   EuiSpacer,
   EuiText,
@@ -27,10 +28,12 @@ import type {
   CreateActionPolicyData,
 } from '@kbn/alerting-v2-schemas';
 import { CoreStart, useService } from '@kbn/core-di-browser';
+import type { UserProfileService } from '@kbn/core-user-profile-browser';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
+import { useQuery } from '@kbn/react-query';
 import moment from 'moment';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActionPolicyDestinationsSummary } from '../../components/action_policy/action_policy_destinations_summary';
 import { ActionPolicySnoozePopover } from '../../components/action_policy/action_policy_snooze_popover';
 import { ActionPolicyStateBadge } from '../../components/action_policy/action_policy_state_badge';
@@ -69,7 +72,7 @@ export const ListActionPoliciesPage = () => {
   const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
   const [search, setSearch] = useState('');
   const [enabled, setEnabled] = useState('');
-  const [sortField, setSortField] = useState<'name' | 'updatedAt' | 'updatedByUsername'>('name');
+  const [sortField, setSortField] = useState<'name' | 'updatedAt'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [policyToDelete, setPolicyToDelete] = useState<ActionPolicyResponse | null>(null);
@@ -80,6 +83,7 @@ export const ListActionPoliciesPage = () => {
   const { navigateToUrl } = useService(CoreStart('application'));
   const { basePath } = useService(CoreStart('http'));
   const settings = useService(CoreStart('settings'));
+  const userProfile = useService(CoreStart('userProfile')) as UserProfileService;
   const dateTimeFormat = settings.client.get<string>('dateFormat');
 
   const { mutate: createActionPolicy } = useCreateActionPolicy();
@@ -166,6 +170,34 @@ export const ListActionPoliciesPage = () => {
   const total = data?.total ?? 0;
   const policyToView = policyToViewId ? items.find((p) => p.id === policyToViewId) ?? null : null;
 
+  const updatedByUids = useMemo(() => {
+    const uids = new Set<string>();
+    for (const policy of items) {
+      if (policy.updatedBy) {
+        uids.add(policy.updatedBy);
+      }
+    }
+    return uids;
+  }, [items]);
+
+  const updatedByUidsKey = useMemo(() => Array.from(updatedByUids).sort(), [updatedByUids]);
+
+  const { data: updatedByProfiles, isLoading: isLoadingUpdatedByProfiles } = useQuery({
+    queryKey: ['alertingV2ActionPoliciesUpdatedByProfiles', updatedByUidsKey],
+    queryFn: () => userProfile.bulkGet({ uids: updatedByUids }),
+    enabled: updatedByUids.size > 0,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const updatedByProfileByUid = useMemo(() => {
+    const map = new Map<string, { full_name?: string; username: string }>();
+    for (const profile of updatedByProfiles ?? []) {
+      map.set(profile.uid, profile.user);
+    }
+    return map;
+  }, [updatedByProfiles]);
+
   const onTableChange = ({
     page: tablePage,
     sort,
@@ -176,7 +208,7 @@ export const ListActionPoliciesPage = () => {
     }
 
     if (sort) {
-      setSortField(sort.field as 'name' | 'updatedAt' | 'updatedByUsername');
+      setSortField(sort.field as 'name' | 'updatedAt');
       setSortDirection(sort.direction);
     }
   };
@@ -300,8 +332,7 @@ export const ListActionPoliciesPage = () => {
       render: (updatedAt: string) => moment(updatedAt).format(dateTimeFormat),
     },
     {
-      field: 'updatedByUsername',
-      sortable: true,
+      field: 'updatedBy',
       width: '200px',
       name: (
         <FormattedMessage
@@ -309,6 +340,16 @@ export const ListActionPoliciesPage = () => {
           defaultMessage="Updated by"
         />
       ),
+      render: (updatedBy: string | null) => {
+        if (!updatedBy) {
+          return null;
+        }
+        if (isLoadingUpdatedByProfiles && !updatedByProfileByUid.has(updatedBy)) {
+          return <EuiLoadingSpinner size="s" />;
+        }
+        const user = updatedByProfileByUid.get(updatedBy);
+        return user?.full_name ?? user?.username ?? updatedBy;
+      },
     },
     {
       field: 'enabled',

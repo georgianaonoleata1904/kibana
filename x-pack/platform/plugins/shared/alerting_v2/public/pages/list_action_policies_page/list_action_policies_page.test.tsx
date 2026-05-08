@@ -169,10 +169,8 @@ const createPolicy = (overrides: Partial<ActionPolicyResponse> = {}): ActionPoli
     createdByUser: false,
   },
   createdBy: 'elastic_profile_uid',
-  createdByUsername: 'elastic',
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedBy: 'elastic_profile_uid',
-  updatedByUsername: 'elastic',
   updatedAt: '2026-01-02T03:04:05.000Z',
   ...overrides,
 });
