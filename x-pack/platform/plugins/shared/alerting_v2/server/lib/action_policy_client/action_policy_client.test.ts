@@ -1435,13 +1435,19 @@ describe('ActionPolicyClient', () => {
       };
 
       beforeEach(() => {
-        mockSavedObjectsClient.get.mockResolvedValueOnce({
+        // upsertActionPolicy reads the existing policy twice — once for the
+        // existence check and again to load the immutable/audit context — so
+        // both `get` calls must resolve to the same SO.
+        const existingDoc = {
           id: 'policy-id-update-1',
           type: ACTION_POLICY_SAVED_OBJECT_TYPE,
           references: [],
           version: 'WzEsMV0=',
           attributes: existingAttributes,
-        });
+        };
+        mockSavedObjectsClient.get
+          .mockResolvedValueOnce(existingDoc)
+          .mockResolvedValueOnce(existingDoc);
       });
 
       it('replaces create-schema fields, preserves audit + operational state, rotates the API key', async () => {
