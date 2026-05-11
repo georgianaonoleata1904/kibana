@@ -7,5 +7,8 @@
  * License v3.0 only", or the "Server Side Public License, v 1".
  */
 
-require('@kbn/setup-node-env');
-require('@kbn/gen-ai-functional-testing/src/discover_eis_models');
+import { createPlaywrightConfig } from '@kbn/scout';
+
+export default createPlaywrightConfig({
+  testDir: './tests',
+});
