@@ -7,24 +7,58 @@
 
 import { EuiDescriptionList, EuiSpacer, EuiTitle } from '@elastic/eui';
 import { CoreStart, useService } from '@kbn/core-di-browser';
+import type { UserProfileService } from '@kbn/core-user-profile-browser';
 import { i18n } from '@kbn/i18n';
+import { useQuery } from '@kbn/react-query';
 import moment from 'moment';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useRule } from '../rule_context';
 import { EMPTY_VALUE } from '../utils';
 
 export const RuleMetadata: React.FunctionComponent = () => {
   const rule = useRule();
   const uiSettings = useService(CoreStart('uiSettings'));
+  const userProfile = useService(CoreStart('userProfile')) as UserProfileService;
   const dateFormat = uiSettings.get('dateFormat');
   const formatDate = (value: string) => moment(value).format(dateFormat);
+
+  const metadataUids = useMemo(() => {
+    const uids = new Set<string>();
+    if (rule.createdBy) uids.add(rule.createdBy);
+    if (rule.updatedBy) uids.add(rule.updatedBy);
+    return uids;
+  }, [rule.createdBy, rule.updatedBy]);
+
+  const metadataUidsKey = useMemo(() => Array.from(metadataUids).sort(), [metadataUids]);
+
+  const { data: metadataProfiles } = useQuery({
+    queryKey: ['alertingV2RuleMetadataProfiles', metadataUidsKey],
+    queryFn: () => userProfile.bulkGet({ uids: metadataUids }),
+    enabled: metadataUids.size > 0,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const metadataProfileByUid = useMemo(() => {
+    const map = new Map<string, { full_name?: string; username: string }>();
+    for (const profile of metadataProfiles ?? []) {
+      map.set(profile.uid, profile.user);
+    }
+    return map;
+  }, [metadataProfiles]);
+
+  const resolveDisplayName = (uid: string | null | undefined) => {
+    if (!uid) return EMPTY_VALUE;
+    const user = metadataProfileByUid.get(uid);
+    return user?.full_name ?? user?.username ?? uid;
+  };
 
   const metadataItems = [
     {
       title: i18n.translate('xpack.alertingV2.ruleDetails.createdBy', {
         defaultMessage: 'Created by',
       }),
-      description: rule.createdBy ?? EMPTY_VALUE,
+      description: resolveDisplayName(rule.createdBy),
     },
     {
       title: i18n.translate('xpack.alertingV2.ruleDetails.createdDate', {
@@ -42,7 +76,7 @@ export const RuleMetadata: React.FunctionComponent = () => {
       title: i18n.translate('xpack.alertingV2.ruleDetails.updatedBy', {
         defaultMessage: 'Updated by',
       }),
-      description: rule.updatedBy ?? EMPTY_VALUE,
+      description: resolveDisplayName(rule.updatedBy),
     },
   ];
 

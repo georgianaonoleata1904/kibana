@@ -166,7 +166,7 @@ export const ListActionPoliciesPage = () => {
     setPage(0);
   }, []);
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data?.items]);
   const total = data?.total ?? 0;
   const policyToView = policyToViewId ? items.find((p) => p.id === policyToViewId) ?? null : null;
 

@@ -42,8 +42,14 @@ export const actionPolicyMappings: SavedObjectsTypeMappingDefinition = {
       },
     },
     createdBy: { type: 'keyword' },
+    // `createdByUsername` is no longer populated by writes (see action policy model version 2).
+    // The mapping is preserved to satisfy the SO mapping-removal guardrail and to keep older
+    // documents readable until they are migrated forward by the `data_removal` change.
+    createdByUsername: { type: 'keyword' },
     createdAt: { type: 'date' },
     updatedBy: { type: 'keyword' },
+    // `updatedByUsername` is no longer populated by writes (see action policy model version 2).
+    updatedByUsername: { type: 'keyword' },
     updatedAt: { type: 'date' },
   },
 };
