@@ -214,9 +214,7 @@ describe('ActionPolicyDetailsFlyout', () => {
     });
 
     it('falls back to the username when a profile has no full name', async () => {
-      mockBulkGet.mockResolvedValueOnce([
-        { uid: ELASTIC_UID, user: { username: 'elastic' } },
-      ]);
+      mockBulkGet.mockResolvedValueOnce([{ uid: ELASTIC_UID, user: { username: 'elastic' } }]);
       renderFlyout();
 
       expect(await screen.findAllByText('elastic')).not.toHaveLength(0);
