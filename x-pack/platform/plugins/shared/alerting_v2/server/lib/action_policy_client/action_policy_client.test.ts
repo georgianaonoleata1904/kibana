@@ -1366,10 +1366,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'previous_creator_uid',
-        createdByUsername: 'previous_creator',
         createdAt: '2024-06-01T00:00:00.000Z',
         updatedBy: 'previous_updater_uid',
-        updatedByUsername: 'previous_updater',
         updatedAt: '2024-06-01T00:00:00.000Z',
       };
 
@@ -1420,11 +1418,9 @@ describe('ActionPolicyClient', () => {
             snoozedUntil: '2099-01-01T00:00:00.000Z',
             // Audit metadata is preserved on the create side.
             createdBy: 'previous_creator_uid',
-            createdByUsername: 'previous_creator',
             createdAt: '2024-06-01T00:00:00.000Z',
             // Audit metadata advances on the update side.
             updatedBy: 'elastic_profile_uid',
-            updatedByUsername: 'elastic',
             updatedAt: '2025-01-01T00:00:00.000Z',
             // API key is the freshly minted one.
             auth: {
