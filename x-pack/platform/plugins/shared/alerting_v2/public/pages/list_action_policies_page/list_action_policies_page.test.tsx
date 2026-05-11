@@ -25,6 +25,7 @@ const mockSnoozeActionPolicy = jest.fn();
 const mockUnsnoozeActionPolicy = jest.fn();
 const mockSettingsClientGet = jest.fn();
 const mockUseFetchWorkflow = jest.fn();
+const mockBulkGet = jest.fn();
 
 jest.mock('../../application/breadcrumb_context', () => ({
   useSetBreadcrumbs: () => jest.fn(),
@@ -47,6 +48,9 @@ jest.mock('@kbn/core-di-browser', () => ({
           get: mockSettingsClientGet,
         },
       };
+    }
+    if (token === 'userProfile') {
+      return { bulkGet: mockBulkGet };
     }
 
     return {};
@@ -190,6 +194,7 @@ describe('ListActionPoliciesPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    mockBulkGet.mockResolvedValue([]);
     mockSettingsClientGet.mockReturnValue('[mock formatted date]');
     mockGetUrlForApp.mockImplementation((_appId: string, { path }: { path: string }) => {
       return `/app/workflows${path}`;
