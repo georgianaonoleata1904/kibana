@@ -14,7 +14,7 @@ import {
   NO_ACCESS_ROLE,
   READ_ROLE,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 const getRuleNames = (items: Array<{ metadata: { name: string } }>) =>
   items.map((rule) => rule.metadata.name);

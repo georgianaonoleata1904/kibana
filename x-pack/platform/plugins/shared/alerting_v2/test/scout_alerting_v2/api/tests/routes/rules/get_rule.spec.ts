@@ -15,7 +15,7 @@ import {
   NO_ACCESS_ROLE,
   READ_ROLE,
   ruleUrl,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
   let readerCredentials: RoleApiCredentials;

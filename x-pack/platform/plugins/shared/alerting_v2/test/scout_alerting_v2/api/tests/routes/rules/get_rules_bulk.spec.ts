@@ -15,7 +15,7 @@ import {
   NO_ACCESS_ROLE,
   READ_ROLE,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 const BULK_URL = `${testData.RULE_API_PATH}/_bulk`;
 

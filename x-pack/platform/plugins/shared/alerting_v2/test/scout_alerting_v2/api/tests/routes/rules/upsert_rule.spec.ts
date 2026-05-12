@@ -16,7 +16,7 @@ import {
   READ_ROLE,
   ruleUrl,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
   let writerCredentials: RoleApiCredentials;
@@ -58,13 +58,21 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
 
   apiTest(
     'upsert: should return 200 and replace the rule when the id exists',
-    async ({ apiClient, apiServices }) => {
+    async ({ apiClient }) => {
       const id = 'rule-to-replace';
       const initialBody = buildCreateRuleData({
         metadata: { name: 'initial-name', description: 'initial', tags: ['cpu'] },
       });
-      // Seed an existing rule with the target id via the upsert service helper.
-      const { rule: created } = await apiServices.alertingV2.rules.upsert(id, initialBody);
+      // Seed an existing rule by issuing the same PUT we're testing — keeps
+      // the endpoint under test exercised end-to-end.
+      const createResponse = await apiClient.put(ruleUrl(id), {
+        headers: writerHeaders,
+        body: initialBody,
+        responseType: 'json',
+      });
+      expect(createResponse).toHaveStatusCode(201);
+      const created = createResponse.body;
+
       const replacementBody = buildCreateRuleData({
         metadata: { name: 'replaced-name', description: 'replaced', tags: ['memory'] },
       });
@@ -89,13 +97,50 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
   );
 
   apiTest(
+    'upsert: should preserve enabled=false on replace',
+    async ({ apiClient, apiServices }) => {
+      const id = 'rule-disabled-then-replaced';
+      // Seed an enabled rule via the endpoint under test, then flip it off
+      // through a sibling endpoint so the replace below starts from
+      // `enabled: false`.
+      const createResponse = await apiClient.put(ruleUrl(id), {
+        headers: writerHeaders,
+        body: buildCreateRuleData({ metadata: { name: 'to-be-disabled' } }),
+        responseType: 'json',
+      });
+      expect(createResponse).toHaveStatusCode(201);
+
+      await apiServices.alertingV2.rules.bulkDisable({ ids: [id] });
+      const stored = await apiServices.alertingV2.rules.get(id);
+      expect(stored.enabled).toBe(false);
+
+      const response = await apiClient.put(ruleUrl(id), {
+        headers: writerHeaders,
+        body: buildCreateRuleData({ metadata: { name: 'replaced-while-disabled' } }),
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.enabled).toBe(false);
+
+      const reFetched = await apiServices.alertingV2.rules.get(id);
+      expect(reFetched.enabled).toBe(false);
+    }
+  );
+
+  apiTest(
     'upsert: should return 409 when attempting to change an immutable field (kind)',
     async ({ apiClient, apiServices }) => {
       const id = 'rule-immutable-kind';
-      const { rule: created } = await apiServices.alertingV2.rules.upsert(
-        id,
-        buildCreateRuleData({ kind: 'alert', metadata: { name: 'alert-rule' } })
-      );
+      // Seed via the endpoint under test so the conflict path is reached
+      // against a rule that was itself created through PUT.
+      const createResponse = await apiClient.put(ruleUrl(id), {
+        headers: writerHeaders,
+        body: buildCreateRuleData({ kind: 'alert', metadata: { name: 'alert-rule' } }),
+        responseType: 'json',
+      });
+      expect(createResponse).toHaveStatusCode(201);
+      const created = createResponse.body;
+
       const response = await apiClient.put(ruleUrl(id), {
         headers: writerHeaders,
         body: buildCreateRuleData({ kind: 'signal', metadata: { name: 'alert-rule' } }),

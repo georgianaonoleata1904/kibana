@@ -15,7 +15,6 @@ import type {
   FindRulesParams,
   FindRulesResponse,
   RuleResponse,
-  UpdateRuleData,
 } from '@kbn/alerting-v2-schemas';
 import { COMMON_HEADERS, POLL_INTERVAL_MS, POLL_TIMEOUT_MS, RULE_API_PATH } from '../constants';
 
@@ -24,18 +23,9 @@ export interface WaitForEnabledStateParams {
   enabled: boolean;
 }
 
-export interface UpsertResult {
-  rule: RuleResponse;
-  created: boolean;
-}
-
 export interface RulesApiService {
   create: (data: CreateRuleData, options?: { id?: string }) => Promise<RuleResponse>;
-  update: (id: string, data: UpdateRuleData) => Promise<RuleResponse>;
-  upsert: (id: string, data: CreateRuleData) => Promise<UpsertResult>;
   get: (id: string) => Promise<RuleResponse>;
-  bulkGet: (ids: string[]) => Promise<FindRulesResponse>;
-  getTags: () => Promise<string[]>;
   find: (query?: FindRulesParams) => Promise<FindRulesResponse>;
   delete: (id: string) => Promise<void>;
   bulkDelete: (params: BulkOperationParams) => Promise<BulkOperationResponse>;
@@ -92,50 +82,7 @@ export const getRulesApiService = ({
         return response.data;
       }),
 
-    update: (id, data) =>
-      measurePerformanceAsync(log, 'rules.update', async () => {
-        const path = `${RULE_API_PATH}/${encodeURIComponent(id)}`;
-        const response = await kbnClient.request<RuleResponse>({
-          method: 'PATCH',
-          path,
-          headers: COMMON_HEADERS,
-          body: data,
-        });
-        return response.data;
-      }),
-
-    upsert: (id, data) =>
-      measurePerformanceAsync(log, 'rules.upsert', async () => {
-        const path = `${RULE_API_PATH}/${encodeURIComponent(id)}`;
-        const response = await kbnClient.request<RuleResponse>({
-          method: 'PUT',
-          path,
-          headers: COMMON_HEADERS,
-          body: data,
-        });
-        return { rule: response.data, created: response.status === 201 };
-      }),
-
     get,
-
-    bulkGet: (ids) =>
-      measurePerformanceAsync(log, 'rules.bulkGet', async () => {
-        const response = await kbnClient.request<FindRulesResponse>({
-          method: 'GET',
-          path: `${RULE_API_PATH}/_bulk`,
-          query: { ids },
-        });
-        return response.data;
-      }),
-
-    getTags: () =>
-      measurePerformanceAsync(log, 'rules.getTags', async () => {
-        const response = await kbnClient.request<{ tags: string[] }>({
-          method: 'GET',
-          path: `${RULE_API_PATH}/_tags`,
-        });
-        return response.data.tags;
-      }),
 
     find: (query = {}) =>
       measurePerformanceAsync(log, 'rules.find', async () => {

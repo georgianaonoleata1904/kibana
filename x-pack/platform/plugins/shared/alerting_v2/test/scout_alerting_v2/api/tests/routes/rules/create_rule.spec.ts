@@ -15,7 +15,7 @@ import {
   NO_ACCESS_ROLE,
   READ_ROLE,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
   let writerCredentials: RoleApiCredentials;
@@ -181,6 +181,103 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
     }
   );
+
+  apiTest(
+    'create: returns 201 with the signal kind round-tripped to the response',
+    async ({ apiClient, apiServices }) => {
+      const body = buildCreateRuleData({
+        kind: 'signal',
+        metadata: { name: 'created-signal-rule' },
+      });
+      const response = await apiClient.post(testData.RULE_API_PATH, {
+        headers: writerHeaders,
+        body,
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(201);
+      expect(response.body.kind).toBe('signal');
+      expect(response.body.metadata.name).toBe('created-signal-rule');
+
+      const persisted = await apiServices.alertingV2.rules.get(response.body.id);
+      expect(persisted.kind).toBe('signal');
+    }
+  );
+
+  apiTest(
+    'create: returns 201 and round-trips every optional field',
+    async ({ apiClient, apiServices }) => {
+      const body = buildCreateRuleData({
+        metadata: {
+          name: 'full-rule',
+          description: 'fully populated rule',
+          owner: 'team-a',
+          tags: ['critical', 'prod'],
+        },
+        schedule: { every: '5m', lookback: '10m' },
+        evaluation: {
+          query: { base: 'FROM logs-* | LIMIT 10 | WHERE status == "error"' },
+        },
+        recovery_policy: { type: 'no_breach' },
+        state_transition: { pending_count: 3 },
+        grouping: { fields: ['host.name'] },
+        no_data: { behavior: 'recover', timeframe: '15m' },
+      });
+      const response = await apiClient.post(testData.RULE_API_PATH, {
+        headers: writerHeaders,
+        body,
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(201);
+      expect(response.body.metadata).toStrictEqual(body.metadata);
+      expect(response.body.schedule).toStrictEqual(body.schedule);
+      expect(response.body.evaluation).toStrictEqual(body.evaluation);
+      expect(response.body.recovery_policy).toStrictEqual(body.recovery_policy);
+      expect(response.body.state_transition).toStrictEqual(body.state_transition);
+      expect(response.body.grouping).toStrictEqual(body.grouping);
+      expect(response.body.no_data).toStrictEqual(body.no_data);
+
+      const persisted = await apiServices.alertingV2.rules.get(response.body.id);
+      expect(persisted.recovery_policy).toStrictEqual(body.recovery_policy);
+      expect(persisted.grouping).toStrictEqual(body.grouping);
+    }
+  );
+
+  apiTest('validation: rejects body with missing kind', async ({ apiClient }) => {
+    const { kind: _kind, ...rest } = buildCreateRuleData({ metadata: { name: 'no-kind' } });
+    const response = await apiClient.post(testData.RULE_API_PATH, {
+      headers: writerHeaders,
+      body: rest,
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('validation: rejects body with missing schedule', async ({ apiClient }) => {
+    const { schedule: _schedule, ...rest } = buildCreateRuleData({
+      metadata: { name: 'no-schedule' },
+    });
+    const response = await apiClient.post(testData.RULE_API_PATH, {
+      headers: writerHeaders,
+      body: rest,
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('validation: rejects body with missing evaluation', async ({ apiClient }) => {
+    const { evaluation: _evaluation, ...rest } = buildCreateRuleData({
+      metadata: { name: 'no-evaluation' },
+    });
+    const response = await apiClient.post(testData.RULE_API_PATH, {
+      headers: writerHeaders,
+      body: rest,
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
 
   apiTest(
     'authorization: returns 201 for a user with full alerting_v2 privileges',

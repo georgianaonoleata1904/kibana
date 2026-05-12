@@ -11,10 +11,11 @@ import {
   ALL_ROLE,
   apiTest,
   buildCreateRuleData,
+  expectNoBulkTruncationMetadata,
   NO_ACCESS_ROLE,
   READ_ROLE,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 const BULK_DELETE_URL = `${testData.RULE_API_PATH}/_bulk_delete`;
 
@@ -56,6 +57,7 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     // rules are not echoed back.
     expect(response.body.rules).toStrictEqual([]);
     expect(response.body.errors).toStrictEqual([]);
+    expectNoBulkTruncationMetadata(response.body);
     // Verify the side effect: only rule-c is left.
     const remaining = await apiServices.alertingV2.rules.find({ perPage: 100 });
     expect(remaining.items.map((rule) => rule.id)).toStrictEqual([ruleC.id]);
@@ -130,6 +132,40 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       expect(remaining.items.map((r) => r.id)).not.toContain(rule.id);
     }
   );
+
+  apiTest(
+    'delete: should return 200 with empty results when filter matches nothing',
+    async ({ apiClient, apiServices }) => {
+      await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({ metadata: { name: 'survivor' } })
+      );
+
+      const response = await apiClient.post(BULK_DELETE_URL, {
+        headers: writerHeaders,
+        body: { filter: 'metadata.name: nonexistent-rule-xyz' },
+        responseType: 'json',
+      });
+
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.rules).toStrictEqual([]);
+      expect(response.body.errors).toStrictEqual([]);
+      expectNoBulkTruncationMetadata(response.body);
+
+      // The survivor must still be present.
+      const remaining = await apiServices.alertingV2.rules.find({ perPage: 100 });
+      expect(remaining.total).toBe(1);
+    }
+  );
+
+  apiTest('validation: should reject an empty ids array', async ({ apiClient }) => {
+    const response = await apiClient.post(BULK_DELETE_URL, {
+      headers: writerHeaders,
+      body: { ids: [] },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
 
   apiTest('validation: should reject body without any selector', async ({ apiClient }) => {
     const response = await apiClient.post(BULK_DELETE_URL, {

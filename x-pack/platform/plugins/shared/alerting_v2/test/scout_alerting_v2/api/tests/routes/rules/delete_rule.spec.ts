@@ -16,7 +16,7 @@ import {
   READ_ROLE,
   ruleUrl,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
   let writerCredentials: RoleApiCredentials;

@@ -15,7 +15,7 @@ import {
   READ_ROLE,
   ruleUrl,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
   let writerCredentials: RoleApiCredentials;
@@ -77,6 +77,77 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
     expect(response).toHaveStatusCode(200);
     expect(response.body.enabled).toBe(false);
   });
+
+  apiTest(
+    'update: should update schedule.lookback while preserving schedule.every',
+    async ({ apiClient, apiServices }) => {
+      const created = await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({
+          metadata: { name: 'rule-with-schedule' },
+          schedule: { every: '5m', lookback: '10m' },
+        })
+      );
+
+      const response = await apiClient.patch(ruleUrl(created.id), {
+        headers: writerHeaders,
+        body: { schedule: { lookback: '15m' } },
+        responseType: 'json',
+      });
+
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.schedule).toStrictEqual({ every: '5m', lookback: '15m' });
+    }
+  );
+
+  apiTest(
+    'update: should update only the evaluation query while preserving metadata and schedule',
+    async ({ apiClient, apiServices }) => {
+      const created = await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({
+          metadata: { name: 'rule-eval-update', tags: ['cpu'] },
+          schedule: { every: '5m', lookback: '10m' },
+        })
+      );
+
+      const response = await apiClient.patch(ruleUrl(created.id), {
+        headers: writerHeaders,
+        body: { evaluation: { query: { base: 'FROM new-index-* | LIMIT 100' } } },
+        responseType: 'json',
+      });
+
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.evaluation).toStrictEqual({
+        query: { base: 'FROM new-index-* | LIMIT 100' },
+      });
+      expect(response.body.metadata).toStrictEqual(created.metadata);
+      expect(response.body.schedule).toStrictEqual(created.schedule);
+    }
+  );
+
+  apiTest(
+    'update: should clear an optional field when set to null',
+    async ({ apiClient, apiServices }) => {
+      const created = await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({
+          metadata: { name: 'rule-with-grouping' },
+          grouping: { fields: ['host.name'] },
+        })
+      );
+      expect(created.grouping).toStrictEqual({ fields: ['host.name'] });
+
+      const response = await apiClient.patch(ruleUrl(created.id), {
+        headers: writerHeaders,
+        body: { grouping: null },
+        responseType: 'json',
+      });
+
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.grouping).toBeUndefined();
+
+      const persisted = await apiServices.alertingV2.rules.get(created.id);
+      expect(persisted.grouping).toBeUndefined();
+    }
+  );
 
   apiTest('status: should return 404 when the rule does not exist', async ({ apiClient }) => {
     const response = await apiClient.patch(ruleUrl('does-not-exist'), {

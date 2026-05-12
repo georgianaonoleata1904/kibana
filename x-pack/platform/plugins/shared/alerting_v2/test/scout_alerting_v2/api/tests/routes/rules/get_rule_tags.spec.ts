@@ -14,7 +14,7 @@ import {
   NO_ACCESS_ROLE,
   READ_ROLE,
   testData,
-} from '../../fixtures';
+} from '../../../fixtures';
 
 const TAGS_URL = `${testData.RULE_API_PATH}/_tags`;
 
@@ -71,6 +71,32 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
       expect(response.body).toStrictEqual({
         tags: ['cpu', 'development', 'memory', 'production'],
       });
+    }
+  );
+
+  apiTest(
+    'tags: should not include falsy entries for rules with no tags',
+    async ({ apiClient, apiServices }) => {
+      // Mix a rule with tags and a rule without `metadata.tags` set at all.
+      // The aggregation should ignore the latter rather than emit
+      // `undefined`, `null`, or empty strings.
+      await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({ metadata: { name: 'tagged-rule', tags: ['cpu'] } })
+      );
+      await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({ metadata: { name: 'untagged-rule' } })
+      );
+
+      const response = await apiClient.get(TAGS_URL, {
+        headers: readerHeaders,
+        responseType: 'json',
+      });
+
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.tags).toContain('cpu');
+      expect(response.body.tags).not.toContain(undefined);
+      expect(response.body.tags).not.toContain(null);
+      expect(response.body.tags).not.toContain('');
     }
   );
 
