@@ -506,9 +506,9 @@ describe('RulesClient', () => {
           expect.objectContaining({
             metadata: expect.objectContaining({ name: 'rule-1' }),
             enabled: true,
-            createdBy: 'elastic',
+            createdBy: 'elastic_profile_uid',
             createdAt: '2025-01-01T00:00:00.000Z',
-            updatedBy: 'elastic',
+            updatedBy: 'elastic_profile_uid',
             updatedAt: '2025-01-01T00:00:00.000Z',
           }),
           { id: 'rule-id-1', overwrite: false }
@@ -603,7 +603,7 @@ describe('RulesClient', () => {
             enabled: false,
             createdBy: 'previous-creator',
             createdAt: '2024-06-01T00:00:00.000Z',
-            updatedBy: 'elastic',
+            updatedBy: 'elastic_profile_uid',
             updatedAt: '2025-01-01T00:00:00.000Z',
           }),
           { version: 'WzEsMV0=', mergeAttributes: false }
