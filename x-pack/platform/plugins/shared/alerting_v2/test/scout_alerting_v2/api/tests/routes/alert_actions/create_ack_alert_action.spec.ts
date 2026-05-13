@@ -1,0 +1,182 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License
+ * 2.0; you may not use this file except in compliance with the Elastic License
+ * 2.0.
+ */
+
+import { expect } from '@kbn/scout/api';
+import type { RoleApiCredentials } from '@kbn/scout';
+import { ALL_ROLE, apiTest, NO_ACCESS_ROLE, READ_ROLE, testData } from '../../../fixtures';
+
+const ALERT_API_PATH = '/api/alerting/v2/alerts';
+
+const ackUrl = (groupHash: string) => `${ALERT_API_PATH}/${encodeURIComponent(groupHash)}/_ack`;
+
+/*
+ * Authorization tests below use `requestAuth.getApiKeyForCustomRole`, which
+ * is not yet supported on Elastic Cloud Hosted (custom roles fall back to
+ * `viewer`). Restrict the suite to local stateful (classic) until ECH lands.
+ */
+
+apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic' }, () => {
+  let writerCredentials: RoleApiCredentials;
+  let writerHeaders: Record<string, string>;
+
+  apiTest.beforeAll(async ({ requestAuth }) => {
+    writerCredentials = await requestAuth.getApiKeyForCustomRole(ALL_ROLE);
+    writerHeaders = { ...testData.COMMON_HEADERS, ...writerCredentials.apiKeyHeader };
+  });
+
+  apiTest.beforeEach(async ({ apiServices }) => {
+    await apiServices.alertingV2.alertActions.cleanUp();
+  });
+
+  apiTest.afterAll(async ({ apiServices }) => {
+    await apiServices.alertingV2.alertActions.cleanUp();
+  });
+
+  apiTest('ack: writes an ack action and returns 204', async ({ apiClient, apiServices }) => {
+    const ruleId = 'ack-happy-rule';
+    const groupHash = 'ack-happy-group';
+    const episodeId = 'ack-happy-episode';
+    await apiServices.alertingV2.alertActions.seedEvents([
+      {
+        rule: { id: ruleId, version: 1 },
+        group_hash: groupHash,
+        episode: { id: episodeId, status: 'active' },
+      },
+    ]);
+    const response = await apiClient.post(ackUrl(groupHash), {
+      headers: writerHeaders,
+      body: { episode_id: episodeId },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(204);
+    const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toMatchObject({
+      action_type: 'ack',
+      group_hash: groupHash,
+      episode_id: episodeId,
+      rule_id: ruleId,
+      space_id: 'default',
+    });
+  });
+
+  apiTest('schema: rejects body missing episode_id with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(ackUrl('any-group'), {
+      headers: writerHeaders,
+      body: {},
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('schema: rejects empty episode_id with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(ackUrl('any-group'), {
+      headers: writerHeaders,
+      body: { episode_id: '' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('schema: rejects episode_id over 150 chars with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(ackUrl('any-group'), {
+      headers: writerHeaders,
+      body: { episode_id: 'a'.repeat(151) },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('schema: rejects unknown body fields (strict mode) with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(ackUrl('any-group'), {
+      headers: writerHeaders,
+      body: { episode_id: 'some-episode', extra: 'nope' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('returns 404 when group_hash matches no events', async ({ apiClient }) => {
+    const response = await apiClient.post(ackUrl('unknown-group'), {
+      headers: writerHeaders,
+      body: { episode_id: 'unknown-episode' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(404);
+  });
+
+  apiTest(
+    'returns 404 when episode_id matches no events for the group',
+    async ({ apiClient, apiServices }) => {
+      const ruleId = 'ack-404-rule';
+      const groupHash = 'ack-404-group';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: 'real-episode', status: 'active' },
+        },
+      ]);
+      const response = await apiClient.post(ackUrl(groupHash), {
+        headers: writerHeaders,
+        body: { episode_id: 'unknown-episode' },
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(404);
+    }
+  );
+
+  apiTest(
+    'authorization: returns 403 for a user with read-only alerting_v2 privileges',
+    async ({ apiClient, apiServices, requestAuth }) => {
+      const ruleId = 'ack-authz-read-rule';
+      const groupHash = 'ack-authz-read-group';
+      const episodeId = 'ack-authz-read-episode';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: episodeId, status: 'active' },
+        },
+      ]);
+      const readerCredentials = await requestAuth.getApiKeyForCustomRole(READ_ROLE);
+      const response = await apiClient.post(ackUrl(groupHash), {
+        headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
+        body: { episode_id: episodeId },
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(403);
+    }
+  );
+
+  apiTest(
+    'authorization: returns 403 for a user without alerting_v2 privileges',
+    async ({ apiClient, apiServices, requestAuth }) => {
+      const ruleId = 'ack-authz-none-rule';
+      const groupHash = 'ack-authz-none-group';
+      const episodeId = 'ack-authz-none-episode';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: episodeId, status: 'active' },
+        },
+      ]);
+      const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
+      const response = await apiClient.post(ackUrl(groupHash), {
+        headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
+        body: { episode_id: episodeId },
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(403);
+    }
+  );
+});

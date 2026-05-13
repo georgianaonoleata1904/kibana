@@ -1,0 +1,178 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the Elastic License
+ * 2.0; you may not use this file except in compliance with the Elastic License
+ * 2.0.
+ */
+
+import { expect } from '@kbn/scout/api';
+import type { RoleApiCredentials } from '@kbn/scout';
+import { ALL_ROLE, apiTest, NO_ACCESS_ROLE, READ_ROLE, testData } from '../../../fixtures';
+
+const ALERT_API_PATH = '/api/alerting/v2/alerts';
+
+const snoozeUrl = (groupHash: string) =>
+  `${ALERT_API_PATH}/${encodeURIComponent(groupHash)}/_snooze`;
+
+apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-classic' }, () => {
+  let writerCredentials: RoleApiCredentials;
+  let writerHeaders: Record<string, string>;
+
+  apiTest.beforeAll(async ({ requestAuth }) => {
+    writerCredentials = await requestAuth.getApiKeyForCustomRole(ALL_ROLE);
+    writerHeaders = { ...testData.COMMON_HEADERS, ...writerCredentials.apiKeyHeader };
+  });
+
+  apiTest.beforeEach(async ({ apiServices }) => {
+    await apiServices.alertingV2.alertActions.cleanUp();
+  });
+
+  apiTest.afterAll(async ({ apiServices }) => {
+    await apiServices.alertingV2.alertActions.cleanUp();
+  });
+
+  apiTest(
+    'snooze: writes a snooze action with expiry and returns 204',
+    async ({ apiClient, apiServices }) => {
+      const ruleId = 'snooze-happy-rule';
+      const groupHash = 'snooze-happy-group';
+      const expiry = '2099-01-01T00:00:00.000Z';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: 'snooze-happy-episode', status: 'active' },
+        },
+      ]);
+      const response = await apiClient.post(snoozeUrl(groupHash), {
+        headers: writerHeaders,
+        body: { expiry },
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(204);
+      const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
+      expect(actions).toHaveLength(1);
+      expect(actions[0]).toMatchObject({
+        action_type: 'snooze',
+        group_hash: groupHash,
+        rule_id: ruleId,
+        space_id: 'default',
+        expiry,
+      });
+    }
+  );
+
+  apiTest(
+    'snooze: writes a snooze action without expiry and returns 204',
+    async ({ apiClient, apiServices }) => {
+      const ruleId = 'snooze-no-expiry-rule';
+      const groupHash = 'snooze-no-expiry-group';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: 'snooze-no-expiry-episode', status: 'active' },
+        },
+      ]);
+      const response = await apiClient.post(snoozeUrl(groupHash), {
+        headers: writerHeaders,
+        body: {},
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(204);
+      const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
+      expect(actions).toHaveLength(1);
+      expect(actions[0]).toMatchObject({
+        action_type: 'snooze',
+        group_hash: groupHash,
+        rule_id: ruleId,
+      });
+      expect(actions[0].expiry).toBeUndefined();
+    }
+  );
+
+  apiTest('schema: rejects expiry that is not ISO 8601 with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(snoozeUrl('any-group'), {
+      headers: writerHeaders,
+      body: { expiry: 'not-a-date' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('schema: rejects expiry without the time component with 400', async ({ apiClient }) => {
+    // `z.iso.datetime()` requires a full ISO 8601 datetime; a date-only value
+    // like `2099-01-01` should be rejected.
+    const response = await apiClient.post(snoozeUrl('any-group'), {
+      headers: writerHeaders,
+      body: { expiry: '2099-01-01' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('schema: rejects unknown body fields (strict mode) with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(snoozeUrl('any-group'), {
+      headers: writerHeaders,
+      body: { extra: 'nope' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('returns 404 when group_hash matches no events', async ({ apiClient }) => {
+    const response = await apiClient.post(snoozeUrl('unknown-group'), {
+      headers: writerHeaders,
+      body: {},
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(404);
+  });
+
+  apiTest(
+    'authorization: returns 403 for a user with read-only alerting_v2 privileges',
+    async ({ apiClient, apiServices, requestAuth }) => {
+      const ruleId = 'snooze-authz-read-rule';
+      const groupHash = 'snooze-authz-read-group';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: 'snooze-authz-read-episode', status: 'active' },
+        },
+      ]);
+      const readerCredentials = await requestAuth.getApiKeyForCustomRole(READ_ROLE);
+      const response = await apiClient.post(snoozeUrl(groupHash), {
+        headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
+        body: {},
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(403);
+    }
+  );
+
+  apiTest(
+    'authorization: returns 403 for a user without alerting_v2 privileges',
+    async ({ apiClient, apiServices, requestAuth }) => {
+      const ruleId = 'snooze-authz-none-rule';
+      const groupHash = 'snooze-authz-none-group';
+      await apiServices.alertingV2.alertActions.seedEvents([
+        {
+          rule: { id: ruleId, version: 1 },
+          group_hash: groupHash,
+          episode: { id: 'snooze-authz-none-episode', status: 'active' },
+        },
+      ]);
+      const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
+      const response = await apiClient.post(snoozeUrl(groupHash), {
+        headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
+        body: {},
+        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(403);
+    }
+  );
+});
