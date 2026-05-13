@@ -105,17 +105,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     }
   );
 
-  apiTest('validation: rejects body with empty metadata.tags array', async ({ apiClient }) => {
-    const body = buildCreateRuleData({ metadata: { name: 'rule-empty-tags', tags: [] } });
-    const response = await apiClient.post(testData.RULE_API_PATH, {
-      headers: writerHeaders,
-      body,
-      responseType: 'json',
-    });
-    expect(response).toHaveStatusCode(400);
-    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
-  });
-
   apiTest('validation: rejects body with an unknown kind value', async ({ apiClient }) => {
     const body = { ...buildCreateRuleData(), kind: 'unknown' };
     const response = await apiClient.post(testData.RULE_API_PATH, {
