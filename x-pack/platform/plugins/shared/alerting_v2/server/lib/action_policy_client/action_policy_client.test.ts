@@ -482,10 +482,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'elastic_profile_uid',
-        createdByUsername: 'elastic',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: 'elastic_profile_uid',
-        updatedByUsername: 'elastic',
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -511,10 +509,8 @@ describe('ActionPolicyClient', () => {
         destinations: [{ type: 'workflow' as const, id: 'w' }],
         auth: { apiKey: 'k', owner: 'u', createdByUser: false },
         createdBy: null,
-        createdByUsername: null,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: null,
-        updatedByUsername: null,
         updatedAt: '2025-01-01T00:00:00.000Z',
       } as ActionPolicySavedObjectAttributes;
 
@@ -1058,10 +1054,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1113,10 +1107,8 @@ describe('ActionPolicyClient', () => {
           createdByUser: false,
         },
         createdBy: 'creator_profile_uid',
-        createdByUsername: 'creator',
         createdAt: '2024-12-01T00:00:00.000Z',
         updatedBy: 'updater_profile_uid',
-        updatedByUsername: 'updater',
         updatedAt: '2024-12-01T00:00:00.000Z',
       };
       mockSavedObjectsClient.get.mockResolvedValueOnce({
@@ -1567,10 +1559,8 @@ describe('ActionPolicyClient', () => {
         destinations: [{ type: 'workflow', id: 'w' }],
         auth: { apiKey: 'old-key', owner: 'u', createdByUser: false },
         createdBy: null,
-        createdByUsername: null,
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedBy: null,
-        updatedByUsername: null,
         updatedAt: '2025-01-01T00:00:00.000Z',
       };
 
