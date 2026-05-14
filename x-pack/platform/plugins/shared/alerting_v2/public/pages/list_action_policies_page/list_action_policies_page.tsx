@@ -40,6 +40,7 @@ import { ActionPolicyDetailsFlyout } from '../../components/action_policy/detail
 import { paths } from '../../constants';
 import { useBreadcrumbs } from '../../hooks/use_breadcrumbs';
 import { useBulkActionActionPolicies } from '../../hooks/use_bulk_action_action_policies';
+import type { UserProfileMap } from '../../hooks/use_bulk_get_user_profiles';
 import { useBulkGetUserProfiles } from '../../hooks/use_bulk_get_user_profiles';
 import { useCreateActionPolicy } from '../../hooks/use_create_action_policy';
 import { useDeleteActionPolicy } from '../../hooks/use_delete_action_policy';
@@ -171,15 +172,13 @@ export const ListActionPoliciesPage = () => {
   const policyToView = policyToViewId ? items.find((p) => p.id === policyToViewId) ?? null : null;
 
   const updatedByUids = useMemo(
-    () =>
-      items
-        .map((policy) => policy.updatedBy)
-        .filter((uid): uid is string => Boolean(uid)),
+    () => items.map((policy) => policy.updatedBy).filter((uid): uid is string => Boolean(uid)),
     [items]
   );
 
-  const { data: updatedByProfileByUid, isLoading: isLoadingUpdatedByProfiles } =
-    useBulkGetUserProfiles({ uids: updatedByUids });
+  const updatedByProfilesQuery = useBulkGetUserProfiles({ uids: updatedByUids });
+  const updatedByProfileByUid: UserProfileMap | undefined = updatedByProfilesQuery.data;
+  const isLoadingUpdatedByProfiles = updatedByProfilesQuery.isLoading;
 
   const onTableChange = ({
     page: tablePage,
