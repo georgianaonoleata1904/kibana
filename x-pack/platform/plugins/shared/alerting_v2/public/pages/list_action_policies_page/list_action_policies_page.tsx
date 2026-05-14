@@ -171,10 +171,7 @@ export const ListActionPoliciesPage = () => {
   const policyToView = policyToViewId ? items.find((p) => p.id === policyToViewId) ?? null : null;
 
   const updatedByUids = useMemo(
-    () =>
-      items
-        .map((policy) => policy.updatedBy)
-        .filter((uid): uid is string => Boolean(uid)),
+    () => items.map((policy) => policy.updatedBy).filter((uid): uid is string => Boolean(uid)),
     [items]
   );
 
