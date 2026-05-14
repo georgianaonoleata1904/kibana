@@ -18,6 +18,7 @@ import {
   EuiFlyoutBody,
   EuiFlyoutFooter,
   EuiHorizontalRule,
+  EuiLink,
   EuiPanel,
   EuiSpacer,
   EuiText,
@@ -32,6 +33,7 @@ import { FormattedMessage } from '@kbn/i18n-react';
 import { useQuery } from '@kbn/react-query';
 import moment from 'moment';
 import React, { useMemo } from 'react';
+import { paths } from '../../../constants';
 import { ActionPolicyActionsMenu } from '../action_policy_actions_menu';
 import { ActionPolicyStateBadge } from '../action_policy_state_badge';
 import { isSnoozed } from '../is_snoozed';
@@ -71,6 +73,7 @@ export const ActionPolicyDetailsFlyout = ({
 }: Props) => {
   const settings = useService(CoreStart('settings'));
   const userProfile = useService(CoreStart('userProfile')) as UserProfileService;
+  const { basePath } = useService(CoreStart('http'));
   const dateTimeFormat = settings.client.get<string>('dateFormat');
   const formatDate = (value: string) => moment(value).format(dateTimeFormat);
 
@@ -106,6 +109,10 @@ export const ActionPolicyDetailsFlyout = ({
   };
 
   const snoozedActive = isSnoozed(policy.snoozedUntil);
+  const ruleDetailsHref =
+    policy.type === 'single_rule' && policy.ruleId
+      ? basePath.prepend(paths.ruleDetails(policy.ruleId))
+      : undefined;
 
   const handleEdit = () => {
     onClose();
@@ -113,17 +120,14 @@ export const ActionPolicyDetailsFlyout = ({
   };
 
   const handleClone = (p: ActionPolicyResponse) => {
-    onClose();
     onClone(p);
   };
 
   const handleDelete = (p: ActionPolicyResponse) => {
-    onClose();
     onDelete(p);
   };
 
   const handleUpdateApiKey = (id: string) => {
-    onClose();
     onUpdateApiKey(id);
   };
 
@@ -133,6 +137,26 @@ export const ActionPolicyDetailsFlyout = ({
         defaultMessage: 'Description',
       }),
       description: policy.description ? policy.description : EMPTY_VALUE,
+    },
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.scope', {
+        defaultMessage: 'Scope',
+      }),
+      description:
+        policy.type === 'single_rule' && policy.ruleId ? (
+          <EuiLink href={ruleDetailsHref} data-test-subj="actionPolicyDetailsFlyoutLinkedRuleLink">
+            <FormattedMessage
+              id="xpack.alertingV2.actionPolicy.detailsFlyout.scope.linkedRule"
+              defaultMessage="Linked to rule {ruleId}"
+              values={{ ruleId: <EuiCode>{policy.ruleId}</EuiCode> }}
+            />
+          </EuiLink>
+        ) : (
+          <FormattedMessage
+            id="xpack.alertingV2.actionPolicy.detailsFlyout.scope.global"
+            defaultMessage="Global. Matches alerts from any rule in this space"
+          />
+        ),
     },
     {
       title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.tags', {
@@ -306,6 +330,23 @@ export const ActionPolicyDetailsFlyout = ({
           <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false} wrap>
             <EuiFlexItem grow={false}>
               <ActionPolicyStateBadge policy={policy} isLoading={false} />
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              {policy.type === 'single_rule' ? (
+                <EuiBadge color="hollow" iconType="link">
+                  <FormattedMessage
+                    id="xpack.alertingV2.actionPolicy.detailsFlyout.singleRuleBadge"
+                    defaultMessage="Single rule"
+                  />
+                </EuiBadge>
+              ) : (
+                <EuiBadge color="hollow">
+                  <FormattedMessage
+                    id="xpack.alertingV2.actionPolicy.detailsFlyout.globalBadge"
+                    defaultMessage="Global"
+                  />
+                </EuiBadge>
+              )}
             </EuiFlexItem>
             {snoozedActive && policy.snoozedUntil && (
               <EuiFlexItem grow={false}>
