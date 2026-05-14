@@ -24,3 +24,4 @@ export {
 export { ALERT_EVENTS_DATA_STREAM } from '../../../server/resources/datastreams/alert_events';
 export { ALERT_ACTIONS_DATA_STREAM } from '../../../server/resources/datastreams/alert_actions';
 export { RULE_DOCTOR_INSIGHTS_INDEX } from '../../../server/resources/indices/rule_doctor_insights';
+export { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../server/saved_objects';

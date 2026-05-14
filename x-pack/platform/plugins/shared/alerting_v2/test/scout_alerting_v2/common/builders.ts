@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import type { CreateRuleData } from '@kbn/alerting-v2-schemas';
+import type { CreateActionPolicyDataInput, CreateRuleData } from '@kbn/alerting-v2-schemas';
 import { LOOKBACK_WINDOW, SCHEDULE_INTERVAL } from './constants';
 
 /**
@@ -33,9 +33,29 @@ const DEFAULTS: CreateRuleData = {
   state_transition: { pending_count: 0, recovering_count: 0 },
 };
 
+/**
+ * Defaults used by `buildCreateActionPolicyData`. `type` is intentionally
+ * omitted so specs exercise the schema's `default('global')` branch; specs
+ * that need a single-rule policy override `type` and supply `ruleId`.
+ */
+const ACTION_POLICY_DEFAULTS: CreateActionPolicyDataInput = {
+  name: 'scout-action-policy',
+  description: 'Scout action policy',
+  destinations: [{ type: 'workflow', id: 'scout-workflow-id' }],
+};
+
 export type BuildCreateRuleDataInput = Partial<CreateRuleData>;
 
 export const buildCreateRuleData = (input: BuildCreateRuleDataInput = {}): CreateRuleData => ({
   ...DEFAULTS,
+  ...input,
+});
+
+export type BuildCreateActionPolicyDataInput = Partial<CreateActionPolicyDataInput>;
+
+export const buildCreateActionPolicyData = (
+  input: BuildCreateActionPolicyDataInput = {}
+): CreateActionPolicyDataInput => ({
+  ...ACTION_POLICY_DEFAULTS,
   ...input,
 });
