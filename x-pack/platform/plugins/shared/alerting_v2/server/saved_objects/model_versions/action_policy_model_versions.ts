@@ -6,10 +6,7 @@
  */
 
 import type { SavedObjectsModelVersionMap } from '@kbn/core-saved-objects-server';
-import {
-  actionPolicySavedObjectAttributesSchemaV1,
-  actionPolicySavedObjectAttributesSchemaV2,
-} from '../schemas/action_policy_saved_object_attributes';
+import { actionPolicySavedObjectAttributesSchemaV1 } from '../schemas/action_policy_saved_object_attributes';
 
 export const actionPolicyModelVersions: SavedObjectsModelVersionMap = {
   '1': {
@@ -20,21 +17,6 @@ export const actionPolicyModelVersions: SavedObjectsModelVersionMap = {
         { unknowns: 'ignore' }
       ),
       create: actionPolicySavedObjectAttributesSchemaV1,
-    },
-  },
-  '2': {
-    changes: [
-      {
-        type: 'data_removal',
-        removedAttributePaths: ['createdByUsername', 'updatedByUsername'],
-      },
-    ],
-    schemas: {
-      forwardCompatibility: actionPolicySavedObjectAttributesSchemaV2.extends(
-        {},
-        { unknowns: 'ignore' }
-      ),
-      create: actionPolicySavedObjectAttributesSchemaV2,
     },
   },
 };

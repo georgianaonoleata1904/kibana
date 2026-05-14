@@ -28,10 +28,8 @@ import type {
   CreateActionPolicyData,
 } from '@kbn/alerting-v2-schemas';
 import { CoreStart, useService } from '@kbn/core-di-browser';
-import type { UserProfileService } from '@kbn/core-user-profile-browser';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
-import { useQuery } from '@kbn/react-query';
 import moment from 'moment';
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActionPolicyDestinationsSummary } from '../../components/action_policy/action_policy_destinations_summary';
@@ -42,6 +40,7 @@ import { ActionPolicyDetailsFlyout } from '../../components/action_policy/detail
 import { paths } from '../../constants';
 import { useBreadcrumbs } from '../../hooks/use_breadcrumbs';
 import { useBulkActionActionPolicies } from '../../hooks/use_bulk_action_action_policies';
+import { useBulkGetUserProfiles } from '../../hooks/use_bulk_get_user_profiles';
 import { useCreateActionPolicy } from '../../hooks/use_create_action_policy';
 import { useDeleteActionPolicy } from '../../hooks/use_delete_action_policy';
 import { useDisableActionPolicy } from '../../hooks/use_disable_action_policy';
@@ -50,6 +49,7 @@ import { useFetchActionPolicies } from '../../hooks/use_fetch_action_policies';
 import { useSnoozeActionPolicy } from '../../hooks/use_snooze_action_policy';
 import { useUnsnoozeActionPolicy } from '../../hooks/use_unsnooze_action_policy';
 import { useUpdateActionPolicyApiKey } from '../../hooks/use_update_action_policy_api_key';
+import { resolveDisplayName } from '../../utils/resolve_display_name';
 import { ActionPoliciesBulkActions } from './components/action_policies_bulk_actions';
 import { ActionPoliciesSearchBar } from './components/action_policies_search_bar';
 import { ActionPolicyActionsCell } from './components/action_policy_actions_cell';
@@ -83,7 +83,6 @@ export const ListActionPoliciesPage = () => {
   const { navigateToUrl } = useService(CoreStart('application'));
   const { basePath } = useService(CoreStart('http'));
   const settings = useService(CoreStart('settings'));
-  const userProfile = useService(CoreStart('userProfile')) as UserProfileService;
   const dateTimeFormat = settings.client.get<string>('dateFormat');
 
   const { mutate: createActionPolicy } = useCreateActionPolicy();
@@ -171,33 +170,16 @@ export const ListActionPoliciesPage = () => {
   const total = data?.total ?? 0;
   const policyToView = policyToViewId ? items.find((p) => p.id === policyToViewId) ?? null : null;
 
-  const updatedByUids = useMemo(() => {
-    const uids = new Set<string>();
-    for (const policy of items) {
-      if (policy.updatedBy) {
-        uids.add(policy.updatedBy);
-      }
-    }
-    return uids;
-  }, [items]);
+  const updatedByUids = useMemo(
+    () =>
+      items
+        .map((policy) => policy.updatedBy)
+        .filter((uid): uid is string => Boolean(uid)),
+    [items]
+  );
 
-  const updatedByUidsKey = useMemo(() => Array.from(updatedByUids).sort(), [updatedByUids]);
-
-  const { data: updatedByProfiles, isLoading: isLoadingUpdatedByProfiles } = useQuery({
-    queryKey: ['alertingV2ActionPoliciesUpdatedByProfiles', updatedByUidsKey],
-    queryFn: () => userProfile.bulkGet({ uids: updatedByUids }),
-    enabled: updatedByUids.size > 0,
-    staleTime: 60_000,
-    retry: 1,
-  });
-
-  const updatedByProfileByUid = useMemo(() => {
-    const map = new Map<string, { full_name?: string; username: string }>();
-    for (const profile of updatedByProfiles ?? []) {
-      map.set(profile.uid, profile.user);
-    }
-    return map;
-  }, [updatedByProfiles]);
+  const { data: updatedByProfileByUid, isLoading: isLoadingUpdatedByProfiles } =
+    useBulkGetUserProfiles({ uids: updatedByUids });
 
   const onTableChange = ({
     page: tablePage,
@@ -345,11 +327,10 @@ export const ListActionPoliciesPage = () => {
         if (!updatedBy) {
           return null;
         }
-        if (isLoadingUpdatedByProfiles && !updatedByProfileByUid.has(updatedBy)) {
+        if (isLoadingUpdatedByProfiles && !updatedByProfileByUid?.has(updatedBy)) {
           return <EuiLoadingSpinner size="s" />;
         }
-        const user = updatedByProfileByUid.get(updatedBy);
-        return user?.full_name ?? user?.username ?? updatedBy;
+        return resolveDisplayName(updatedBy, updatedByProfileByUid, updatedBy);
       },
     },
     {
