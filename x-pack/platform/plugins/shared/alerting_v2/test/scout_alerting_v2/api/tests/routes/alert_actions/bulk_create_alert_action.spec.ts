@@ -47,7 +47,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
       const response = await apiClient.post(BULK_ACTION_PATH, {
         headers: writerHeaders,
         body: [{ group_hash: groupHash, action_type: 'ack', episode_id: episodeId }],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -98,7 +97,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
           { group_hash: groupHashActivate, action_type: 'activate', reason: 'needs attention' },
           { group_hash: groupHashAck, action_type: 'ack', episode_id: ackEpisodeId },
         ],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -148,7 +146,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
             episode_id: 'bulk-partial-unknown-episode',
           },
         ],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -179,7 +176,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
           },
           { group_hash: 'bulk-allinvalid-2', action_type: 'snooze' },
         ],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -194,7 +190,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     const response = await apiClient.post(BULK_ACTION_PATH, {
       headers: writerHeaders,
       body: [],
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -211,7 +206,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     const response = await apiClient.post(BULK_ACTION_PATH, {
       headers: writerHeaders,
       body: items,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -222,7 +216,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     const response = await apiClient.post(BULK_ACTION_PATH, {
       headers: writerHeaders,
       body: [{ action_type: 'ack', episode_id: 'some-episode' }],
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -233,7 +226,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     const response = await apiClient.post(BULK_ACTION_PATH, {
       headers: writerHeaders,
       body: [{ group_hash: 'any-group', action_type: 'not-a-real-type' }],
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -248,7 +240,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
       const response = await apiClient.post(BULK_ACTION_PATH, {
         headers: writerHeaders,
         body: [{ group_hash: 'any-group', action_type: 'tag', tags: 'not-an-array' }],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(400);
@@ -260,7 +251,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     const response = await apiClient.post(BULK_ACTION_PATH, {
       headers: writerHeaders,
       body: [{ group_hash: '', action_type: 'ack', episode_id: 'some-episode' }],
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -273,7 +263,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
       const response = await apiClient.post(BULK_ACTION_PATH, {
         headers: writerHeaders,
         body: [{ group_hash: 'a'.repeat(257), action_type: 'ack', episode_id: 'some-episode' }],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(400);
@@ -285,7 +274,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     const response = await apiClient.post(BULK_ACTION_PATH, {
       headers: writerHeaders,
       body: { group_hash: 'any-group', action_type: 'ack', episode_id: 'some-episode' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -312,7 +300,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
       const response = await apiClient.post(BULK_ACTION_PATH, {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: [{ group_hash: groupHash, action_type: 'ack', episode_id: episodeId }],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);
@@ -339,7 +326,6 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
       const response = await apiClient.post(BULK_ACTION_PATH, {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: [{ group_hash: groupHash, action_type: 'ack', episode_id: episodeId }],
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);

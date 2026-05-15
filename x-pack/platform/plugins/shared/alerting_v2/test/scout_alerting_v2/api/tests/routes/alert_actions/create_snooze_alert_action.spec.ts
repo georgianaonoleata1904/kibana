@@ -47,7 +47,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(snoozeUrl(groupHash), {
         headers: writerHeaders,
         body: { expiry },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
       const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -77,7 +76,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(snoozeUrl(groupHash), {
         headers: writerHeaders,
         body: {},
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
       const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -95,7 +93,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(snoozeUrl('any-group'), {
       headers: writerHeaders,
       body: { expiry: 'not-a-date' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -107,7 +104,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(snoozeUrl('any-group'), {
       headers: writerHeaders,
       body: { expiry: '2099-01-01' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -117,7 +113,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(snoozeUrl('any-group'), {
       headers: writerHeaders,
       body: { extra: 'nope' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -127,7 +122,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(snoozeUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -137,7 +131,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(snoozeUrl('unknown-group'), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
   });
@@ -158,7 +151,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(snoozeUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: {},
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
@@ -180,7 +172,6 @@ apiTest.describe('Create snooze alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(snoozeUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: {},
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

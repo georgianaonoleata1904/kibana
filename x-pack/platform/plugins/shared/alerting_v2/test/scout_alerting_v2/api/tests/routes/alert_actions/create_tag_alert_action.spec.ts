@@ -44,7 +44,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl(groupHash), {
       headers: writerHeaders,
       body: { tags },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(204);
     const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -76,7 +75,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
       const response = await apiClient.post(tagUrl(groupHash), {
         headers: writerHeaders,
         body: { tags: [] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
       const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -93,7 +91,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('any-group'), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -103,7 +100,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('any-group'), {
       headers: writerHeaders,
       body: { tags: Array.from({ length: 21 }, (_v, i) => `tag-${i}`) },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -113,7 +109,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('any-group'), {
       headers: writerHeaders,
       body: { tags: ['valid', ''] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -123,7 +118,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('any-group'), {
       headers: writerHeaders,
       body: { tags: ['a'.repeat(129)] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -133,7 +127,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('any-group'), {
       headers: writerHeaders,
       body: { tags: ['valid', 42] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -143,7 +136,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('any-group'), {
       headers: writerHeaders,
       body: { tags: ['valid'], extra: 'nope' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -153,7 +145,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: { tags: ['production'] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -163,7 +154,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(tagUrl('unknown-group'), {
       headers: writerHeaders,
       body: { tags: ['production'] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
   });
@@ -184,7 +174,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
       const response = await apiClient.post(tagUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { tags: ['production'] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
@@ -206,7 +195,6 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
       const response = await apiClient.post(tagUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { tags: ['production'] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

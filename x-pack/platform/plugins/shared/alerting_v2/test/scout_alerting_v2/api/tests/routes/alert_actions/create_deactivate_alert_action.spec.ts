@@ -49,7 +49,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
       const response = await apiClient.post(deactivateUrl(groupHash), {
         headers: writerHeaders,
         body: { reason },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(204);
@@ -70,7 +69,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
     const response = await apiClient.post(deactivateUrl('any-group'), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -81,7 +79,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
     const response = await apiClient.post(deactivateUrl('any-group'), {
       headers: writerHeaders,
       body: { reason: '' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -92,7 +89,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
     const response = await apiClient.post(deactivateUrl('any-group'), {
       headers: writerHeaders,
       body: { reason: 'a'.repeat(1025) },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -103,7 +99,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
     const response = await apiClient.post(deactivateUrl('any-group'), {
       headers: writerHeaders,
       body: { reason: 'valid', extra: 'nope' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -114,7 +109,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
     const response = await apiClient.post(deactivateUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: { reason: 'valid reason' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -125,7 +119,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
     const response = await apiClient.post(deactivateUrl('unknown-group'), {
       headers: writerHeaders,
       body: { reason: 'valid reason' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(404);
@@ -150,7 +143,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
       const response = await apiClient.post(deactivateUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { reason: 'valid reason' },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);
@@ -176,7 +168,6 @@ apiTest.describe('Create deactivate alert action API', { tag: '@local-stateful-c
       const response = await apiClient.post(deactivateUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { reason: 'valid reason' },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);

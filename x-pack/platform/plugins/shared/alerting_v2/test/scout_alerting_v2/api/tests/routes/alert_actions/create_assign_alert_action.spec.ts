@@ -48,7 +48,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(assignUrl(groupHash), {
         headers: writerHeaders,
         body: { episode_id: episodeId, assignee_uid: assigneeUid },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
       const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -80,7 +79,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(assignUrl(groupHash), {
         headers: writerHeaders,
         body: { episode_id: episodeId, assignee_uid: null },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
       const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -99,7 +97,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('any-group'), {
       headers: writerHeaders,
       body: { assignee_uid: 'u_someone' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -109,7 +106,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: 'some-episode' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -119,7 +115,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: '', assignee_uid: 'u_someone' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -129,7 +124,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: 'a'.repeat(151), assignee_uid: 'u_someone' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -140,7 +134,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: 'some-episode', assignee_uid: 'a'.repeat(257) },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -152,7 +145,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(assignUrl('any-group'), {
         headers: writerHeaders,
         body: { episode_id: 'some-episode', assignee_uid: 42 },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -163,7 +155,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: 'some-episode', assignee_uid: 'u_someone', extra: 'nope' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -173,7 +164,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: { episode_id: 'some-episode', assignee_uid: 'u_someone' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -183,7 +173,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
     const response = await apiClient.post(assignUrl('unknown-group'), {
       headers: writerHeaders,
       body: { episode_id: 'unknown-episode', assignee_uid: 'u_someone' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
   });
@@ -203,7 +192,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(assignUrl(groupHash), {
         headers: writerHeaders,
         body: { episode_id: 'unknown-episode', assignee_uid: 'u_someone' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(404);
     }
@@ -226,7 +214,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(assignUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { episode_id: episodeId, assignee_uid: 'u_someone' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
@@ -249,7 +236,6 @@ apiTest.describe('Create assign alert action API', { tag: '@local-stateful-class
       const response = await apiClient.post(assignUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { episode_id: episodeId, assignee_uid: 'u_someone' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

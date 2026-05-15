@@ -47,7 +47,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
       const response = await apiClient.post(activateUrl(groupHash), {
         headers: writerHeaders,
         body: { reason },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
       const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -66,7 +65,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(activateUrl('any-group'), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -76,7 +74,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(activateUrl('any-group'), {
       headers: writerHeaders,
       body: { reason: '' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -86,7 +83,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(activateUrl('any-group'), {
       headers: writerHeaders,
       body: { reason: 'a'.repeat(1025) },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -96,7 +92,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(activateUrl('any-group'), {
       headers: writerHeaders,
       body: { reason: 'valid', extra: 'nope' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -106,7 +101,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(activateUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: { reason: 'valid reason' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -116,7 +110,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(activateUrl('unknown-group'), {
       headers: writerHeaders,
       body: { reason: 'valid reason' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
   });
@@ -137,7 +130,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
       const response = await apiClient.post(activateUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { reason: 'valid reason' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
@@ -159,7 +151,6 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
       const response = await apiClient.post(activateUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { reason: 'valid reason' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

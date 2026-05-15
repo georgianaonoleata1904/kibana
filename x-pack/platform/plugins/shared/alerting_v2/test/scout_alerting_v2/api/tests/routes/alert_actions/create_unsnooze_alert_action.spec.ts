@@ -48,7 +48,6 @@ apiTest.describe('Create unsnooze alert action API', { tag: '@local-stateful-cla
       const response = await apiClient.post(unsnoozeUrl(groupHash), {
         headers: writerHeaders,
         body: {},
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(204);
@@ -68,7 +67,6 @@ apiTest.describe('Create unsnooze alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(unsnoozeUrl('any-group'), {
       headers: writerHeaders,
       body: { extra: 'nope' },
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -79,7 +77,6 @@ apiTest.describe('Create unsnooze alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(unsnoozeUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -90,7 +87,6 @@ apiTest.describe('Create unsnooze alert action API', { tag: '@local-stateful-cla
     const response = await apiClient.post(unsnoozeUrl('unknown-group'), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(404);
@@ -115,7 +111,6 @@ apiTest.describe('Create unsnooze alert action API', { tag: '@local-stateful-cla
       const response = await apiClient.post(unsnoozeUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: {},
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);
@@ -141,7 +136,6 @@ apiTest.describe('Create unsnooze alert action API', { tag: '@local-stateful-cla
       const response = await apiClient.post(unsnoozeUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: {},
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);

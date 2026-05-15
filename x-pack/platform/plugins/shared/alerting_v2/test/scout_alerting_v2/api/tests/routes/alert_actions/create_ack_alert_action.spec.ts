@@ -50,7 +50,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl(groupHash), {
       headers: writerHeaders,
       body: { episode_id: episodeId },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(204);
     const actions = await apiServices.alertingV2.alertActions.findActions([ruleId]);
@@ -68,7 +67,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl('any-group'), {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -78,7 +76,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: '' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -88,7 +85,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: 'a'.repeat(151) },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -98,7 +94,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl('any-group'), {
       headers: writerHeaders,
       body: { episode_id: 'some-episode', extra: 'nope' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -108,7 +103,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl('a'.repeat(257)), {
       headers: writerHeaders,
       body: { episode_id: 'some-episode' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -118,7 +112,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
     const response = await apiClient.post(ackUrl('unknown-group'), {
       headers: writerHeaders,
       body: { episode_id: 'unknown-episode' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
   });
@@ -138,7 +131,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
       const response = await apiClient.post(ackUrl(groupHash), {
         headers: writerHeaders,
         body: { episode_id: 'unknown-episode' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(404);
     }
@@ -161,7 +153,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
       const response = await apiClient.post(ackUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { episode_id: episodeId },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
@@ -184,7 +175,6 @@ apiTest.describe('Create ack alert action API', { tag: '@local-stateful-classic'
       const response = await apiClient.post(ackUrl(groupHash), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { episode_id: episodeId },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
