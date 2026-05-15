@@ -63,13 +63,12 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
 
   apiTest(
     'upsert: should return 200 and replace the rule when the id exists',
-    async ({ apiClient, apiServices }) => {
+    async ({ apiClient }) => {
       const id = 'rule-to-replace';
       const initialBody = buildCreateRuleData({
         metadata: { name: 'initial-name', description: 'initial', tags: ['cpu'] },
       });
-      Seed an existing rule by issuing the same PUT we're testing — keeps
-      the endpoint under test exercised end-to-end.
+
       const createResponse = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: initialBody,
