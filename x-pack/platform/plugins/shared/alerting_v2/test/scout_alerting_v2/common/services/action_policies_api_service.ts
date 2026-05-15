@@ -22,6 +22,7 @@ export interface ActionPoliciesApiService {
     options?: { id?: string }
   ) => Promise<ActionPolicyResponse>;
   get: (id: string) => Promise<ActionPolicyResponse>;
+  enable: (id: string) => Promise<ActionPolicyResponse>;
   disable: (id: string) => Promise<ActionPolicyResponse>;
   snooze: (id: string, snoozedUntil: string) => Promise<ActionPolicyResponse>;
   cleanUp: () => Promise<void>;
@@ -60,6 +61,15 @@ export const getActionPoliciesApiService = ({
       }),
 
     get,
+    enable: (id) =>
+      measurePerformanceAsync(log, 'actionPolicies.enable', async () => {
+        const response = await kbnClient.request<ActionPolicyResponse>({
+          method: 'POST',
+          path: `${ACTION_POLICY_API_PATH}/${encodeURIComponent(id)}/_enable`,
+          headers: COMMON_HEADERS,
+        });
+        return response.data;
+      }),
     disable: (id) =>
       measurePerformanceAsync(log, 'actionPolicies.disable', async () => {
         const response = await kbnClient.request<ActionPolicyResponse>({

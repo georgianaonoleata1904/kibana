@@ -19,3 +19,7 @@ export { getRuleEventsApiService } from './rule_events_api_service';
 
 export type { TaskExecutionsApiService } from './task_executions_api_service';
 export { getTaskExecutionsApiService } from './task_executions_api_service';
+
+export type { ActionPoliciesApiService } from './action_policies_api_service';
+export { getActionPoliciesApiService } from './action_policies_api_service';
+

@@ -9,10 +9,12 @@ import { apiTest as baseApiTest } from '@kbn/scout';
 import type { ApiServicesFixture, EsClient, KbnClient, ScoutLogger } from '@kbn/scout';
 import { ALERT_ACTIONS_DATA_STREAM } from '../../common/constants';
 import {
+  getActionPoliciesApiService,
   getDataStreamApiService,
   getInsightsApiService,
   getRulesApiService,
   getTaskExecutionsApiService,
+  type ActionPoliciesApiService,
   type DataStreamApiService,
   type InsightsApiService,
   type RulesApiService,
@@ -30,6 +32,7 @@ export interface AlertingApiServices {
   insights: InsightsApiService;
   sourceIndex: SourceIndexApiService;
   taskExecutions: TaskExecutionsApiService;
+  actionPolicies: ActionPoliciesApiService;
 }
 
 export interface AlertingApiServicesFixture extends ApiServicesFixture {
@@ -60,6 +63,7 @@ export const buildAlertingApiServices = ({
   insights: getInsightsApiService({ esClient, log }),
   sourceIndex: getSourceIndexApiService({ esClient, log }),
   taskExecutions: getTaskExecutionsApiService({ esClient, log }),
+  actionPolicies: getActionPoliciesApiService({ kbnClient, log }),
 });
 
 export const apiTest = baseApiTest.extend<{}, { apiServices: AlertingApiServicesFixture }>({
@@ -79,5 +83,5 @@ export const apiTest = baseApiTest.extend<{}, { apiServices: AlertingApiServices
 });
 
 export { ALL_ROLE, NO_ACCESS_ROLE, READ_ROLE } from '../../common/roles';
-export { buildCreateRuleData } from '../../common/builders';
+export { buildCreateRuleData, buildCreateActionPolicyData } from '../../common/builders';
 export * as testData from '../../common/constants';
