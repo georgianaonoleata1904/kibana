@@ -272,9 +272,7 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     async ({ apiClient }) => {
       const response = await apiClient.post(BULK_ACTION_PATH, {
         headers: writerHeaders,
-        body: [
-          { group_hash: 'a'.repeat(257), action_type: 'ack', episode_id: 'some-episode' },
-        ],
+        body: [{ group_hash: 'a'.repeat(257), action_type: 'ack', episode_id: 'some-episode' }],
         responseType: 'json',
       });
 
