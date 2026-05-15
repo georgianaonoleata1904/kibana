@@ -152,7 +152,13 @@ apiTest.describe('Bulk disable rules API', { tag: '@local-stateful-classic' }, (
         buildCreateRuleData({ kind: 'alert', metadata: { name: 'alert-rule' } })
       );
       const signalRule = await apiServices.alertingV2.rules.create(
-        buildCreateRuleData({ kind: 'signal', metadata: { name: 'signal-rule' } })
+        // Signal rules must opt out of the default `state_transition`,
+        // which the schema only allows for `kind: 'alert'`.
+        buildCreateRuleData({
+          kind: 'signal',
+          state_transition: undefined,
+          metadata: { name: 'signal-rule' },
+        })
       );
 
       const response = await apiClient.post(BULK_DISABLE_URL, {

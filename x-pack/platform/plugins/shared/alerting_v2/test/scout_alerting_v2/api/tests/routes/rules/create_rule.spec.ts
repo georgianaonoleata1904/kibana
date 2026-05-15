@@ -220,8 +220,11 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
   apiTest(
     'create: returns 201 with the signal kind round-tripped to the response',
     async ({ apiClient, apiServices }) => {
+      // Signal rules must opt out of the default `state_transition`,
+      // which the schema only allows for `kind: 'alert'`.
       const body = buildCreateRuleData({
         kind: 'signal',
+        state_transition: undefined,
         metadata: { name: 'created-signal-rule' },
       });
       const response = await apiClient.post(testData.RULE_API_PATH, {

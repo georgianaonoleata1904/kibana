@@ -262,7 +262,13 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
     'validation: should reject state_transition updates on non-alert rules',
     async ({ apiClient, apiServices }) => {
       const created = await apiServices.alertingV2.rules.create(
-        buildCreateRuleData({ kind: 'signal', metadata: { name: 'signal-rule' } })
+        // Signal rules must opt out of the default `state_transition`,
+        // which the schema only allows for `kind: 'alert'`.
+        buildCreateRuleData({
+          kind: 'signal',
+          state_transition: undefined,
+          metadata: { name: 'signal-rule' },
+        })
       );
       const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
