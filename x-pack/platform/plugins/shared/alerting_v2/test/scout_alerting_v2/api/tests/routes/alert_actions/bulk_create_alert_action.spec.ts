@@ -256,6 +256,44 @@ apiTest.describe('Bulk create alert actions API', { tag: '@local-stateful-classi
     }
   );
 
+  apiTest('schema: rejects an item with empty group_hash with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(BULK_ACTION_PATH, {
+      headers: writerHeaders,
+      body: [{ group_hash: '', action_type: 'ack', episode_id: 'some-episode' }],
+      responseType: 'json',
+    });
+
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest(
+    'schema: rejects an item with group_hash over 256 chars with 400',
+    async ({ apiClient }) => {
+      const response = await apiClient.post(BULK_ACTION_PATH, {
+        headers: writerHeaders,
+        body: [
+          { group_hash: 'a'.repeat(257), action_type: 'ack', episode_id: 'some-episode' },
+        ],
+        responseType: 'json',
+      });
+
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest('schema: rejects a non-array body with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(BULK_ACTION_PATH, {
+      headers: writerHeaders,
+      body: { group_hash: 'any-group', action_type: 'ack', episode_id: 'some-episode' },
+      responseType: 'json',
+    });
+
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
   apiTest(
     'authorization: returns 403 for a user with read-only alerting_v2 privileges',
     async ({ apiClient, apiServices, requestAuth }) => {

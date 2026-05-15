@@ -149,6 +149,16 @@ apiTest.describe('Create tag alert action API', { tag: '@local-stateful-classic'
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
   });
 
+  apiTest('schema: rejects group_hash over 256 chars with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(tagUrl('a'.repeat(257)), {
+      headers: writerHeaders,
+      body: { tags: ['production'] },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
   apiTest('returns 404 when group_hash matches no events', async ({ apiClient }) => {
     const response = await apiClient.post(tagUrl('unknown-group'), {
       headers: writerHeaders,

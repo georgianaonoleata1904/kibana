@@ -102,6 +102,16 @@ apiTest.describe('Create activate alert action API', { tag: '@local-stateful-cla
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
   });
 
+  apiTest('schema: rejects group_hash over 256 chars with 400', async ({ apiClient }) => {
+    const response = await apiClient.post(activateUrl('a'.repeat(257)), {
+      headers: writerHeaders,
+      body: { reason: 'valid reason' },
+      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
   apiTest('returns 404 when group_hash matches no events', async ({ apiClient }) => {
     const response = await apiClient.post(activateUrl('unknown-group'), {
       headers: writerHeaders,
