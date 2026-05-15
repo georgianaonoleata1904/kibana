@@ -6,7 +6,7 @@
  */
 import { expect } from '@kbn/scout/api';
 import type { RoleApiCredentials } from '@kbn/scout';
-import { ID_MAX_LENGTH } from '@kbn/alerting-v2-schemas';
+import { ID_MAX_LENGTH, MAX_BULK_ITEMS } from '@kbn/alerting-v2-schemas';
 import {
   ALL_ROLE,
   apiTest,
@@ -50,7 +50,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_DELETE_URL, {
       headers: writerHeaders,
       body: { ids: [ruleA.id, ruleB.id] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(200);
     // Bulk delete intentionally returns an empty `rules` array; deleted
@@ -75,7 +74,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: writerHeaders,
         body: { match_all: true },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.errors).toStrictEqual([]);
@@ -97,7 +95,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: writerHeaders,
         body: { filter: 'metadata.tags: "production"' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.errors).toStrictEqual([]);
@@ -118,7 +115,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: writerHeaders,
         body: { ids: [rule.id, 'does-not-exist'] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.rules).toStrictEqual([]);
@@ -143,7 +139,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: writerHeaders,
         body: { filter: 'metadata.name: nonexistent-rule-xyz' },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -161,7 +156,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_DELETE_URL, {
       headers: writerHeaders,
       body: { ids: [] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -171,7 +165,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_DELETE_URL, {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -181,7 +174,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_DELETE_URL, {
       headers: writerHeaders,
       body: { ids: ['some-id'], filter: 'metadata.tags: "x"' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -191,7 +183,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_DELETE_URL, {
       headers: writerHeaders,
       body: { match_all: true, ids: ['some-id'] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -202,11 +193,23 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_DELETE_URL, {
       headers: writerHeaders,
       body: { ids: [tooLongId] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
   });
+
+  apiTest(
+    'validation: should reject ids arrays longer than MAX_BULK_ITEMS',
+    async ({ apiClient }) => {
+      const ids = Array.from({ length: MAX_BULK_ITEMS + 1 }, (_, i) => `id-${i}`);
+      const response = await apiClient.post(BULK_DELETE_URL, {
+        headers: writerHeaders,
+        body: { ids },
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
 
   apiTest(
     'authorization: should return 200 for a user with full alerting_v2 privileges',
@@ -217,7 +220,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: writerHeaders,
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.errors).toStrictEqual([]);
@@ -234,7 +236,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       // Verify the rule still exists after the failed call.
@@ -253,7 +254,6 @@ apiTest.describe('Bulk delete rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_DELETE_URL, {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       const remaining = await apiServices.alertingV2.rules.find({ perPage: 100 });

@@ -14,7 +14,7 @@ import {
   buildCreateRuleData,
   NO_ACCESS_ROLE,
   READ_ROLE,
-  ruleUrl,
+  getRuleUrl,
 } from '../../../fixtures';
 
 apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
@@ -45,20 +45,17 @@ apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
         },
       });
       const created = await apiServices.alertingV2.rules.create(createData);
-      const response = await apiClient.get(ruleUrl(created.id), {
+      const response = await apiClient.get(getRuleUrl(created.id), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
-      expect(response.body.id).toBe(created.id);
-      expect(response.body.metadata).toStrictEqual(created.metadata);
+      expect(response.body).toStrictEqual(created);
     }
   );
 
   apiTest('status: should return 404 when the rule does not exist', async ({ apiClient }) => {
-    const response = await apiClient.get(ruleUrl('does-not-exist'), {
+    const response = await apiClient.get(getRuleUrl('does-not-exist'), {
       headers: readerHeaders,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
     expect(response.body).toMatchObject({ statusCode: 404, error: 'Not Found' });
@@ -68,9 +65,8 @@ apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
     'validation: should reject ids longer than ID_MAX_LENGTH with a 400',
     async ({ apiClient }) => {
       const tooLongId = 'a'.repeat(ID_MAX_LENGTH + 1);
-      const response = await apiClient.get(ruleUrl(tooLongId), {
+      const response = await apiClient.get(getRuleUrl(tooLongId), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -83,9 +79,8 @@ apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'visible-to-readers' } })
       );
-      const response = await apiClient.get(ruleUrl(created.id), {
+      const response = await apiClient.get(getRuleUrl(created.id), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.id).toBe(created.id);
@@ -99,9 +94,8 @@ apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
         buildCreateRuleData({ metadata: { name: 'visible-to-writers' } })
       );
       const writerCredentials = await requestAuth.getApiKeyForCustomRole(ALL_ROLE);
-      const response = await apiClient.get(ruleUrl(created.id), {
+      const response = await apiClient.get(getRuleUrl(created.id), {
         headers: writerCredentials.apiKeyHeader,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.id).toBe(created.id);
@@ -115,9 +109,8 @@ apiTest.describe('Get rule API', { tag: '@local-stateful-classic' }, () => {
         buildCreateRuleData({ metadata: { name: 'hidden-rule' } })
       );
       const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
-      const response = await apiClient.get(ruleUrl(created.id), {
+      const response = await apiClient.get(getRuleUrl(created.id), {
         headers: noAccessCredentials.apiKeyHeader,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

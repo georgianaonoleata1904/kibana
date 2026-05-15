@@ -14,7 +14,7 @@ import {
   buildCreateRuleData,
   NO_ACCESS_ROLE,
   READ_ROLE,
-  ruleUrl,
+  getRuleUrl,
   testData,
 } from '../../../fixtures';
 
@@ -39,9 +39,8 @@ apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
     const created = await apiServices.alertingV2.rules.create(
       buildCreateRuleData({ metadata: { name: 'rule-to-delete' } })
     );
-    const response = await apiClient.delete(ruleUrl(created.id), {
+    const response = await apiClient.delete(getRuleUrl(created.id), {
       headers: writerHeaders,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(204);
     expect(response.body).toStrictEqual({});
@@ -52,9 +51,8 @@ apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
   });
 
   apiTest('status: returns 404 when the rule does not exist', async ({ apiClient }) => {
-    const response = await apiClient.delete(ruleUrl('does-not-exist'), {
+    const response = await apiClient.delete(getRuleUrl('does-not-exist'), {
       headers: writerHeaders,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
     expect(response.body).toMatchObject({ statusCode: 404, error: 'Not Found' });
@@ -62,9 +60,8 @@ apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
 
   apiTest('validation: rejects ids longer than ID_MAX_LENGTH with a 400', async ({ apiClient }) => {
     const tooLongId = 'a'.repeat(ID_MAX_LENGTH + 1);
-    const response = await apiClient.delete(ruleUrl(tooLongId), {
+    const response = await apiClient.delete(getRuleUrl(tooLongId), {
       headers: writerHeaders,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -76,9 +73,8 @@ apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'writer-can-delete' } })
       );
-      const response = await apiClient.delete(ruleUrl(created.id), {
+      const response = await apiClient.delete(getRuleUrl(created.id), {
         headers: writerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(204);
     }
@@ -91,9 +87,8 @@ apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
         buildCreateRuleData({ metadata: { name: 'reader-cannot-delete' } })
       );
       const readerCredentials = await requestAuth.getApiKeyForCustomRole(READ_ROLE);
-      const response = await apiClient.delete(ruleUrl(created.id), {
+      const response = await apiClient.delete(getRuleUrl(created.id), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       // Verify the rule is still present after the failed delete.
@@ -109,9 +104,8 @@ apiTest.describe('Delete rule API', { tag: '@local-stateful-classic' }, () => {
         buildCreateRuleData({ metadata: { name: 'noaccess-cannot-delete' } })
       );
       const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
-      const response = await apiClient.delete(ruleUrl(created.id), {
+      const response = await apiClient.delete(getRuleUrl(created.id), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       const remaining = await apiServices.alertingV2.rules.find({ perPage: 100 });

@@ -7,7 +7,9 @@
 
 import { expect } from '@kbn/scout/api';
 import type { RoleApiCredentials } from '@kbn/scout';
-import { MAX_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
+import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
+
+const MAX_OWNER_LENGTH = 256;
 import {
   ALL_ROLE,
   apiTest,
@@ -47,10 +49,12 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(201);
+      expect(response.body.kind).toBe(body.kind);
       expect(response.body.metadata).toStrictEqual(body.metadata);
+      expect(response.body.schedule).toStrictEqual(body.schedule);
+      expect(response.body.evaluation).toStrictEqual(body.evaluation);
 
       const persisted = await apiServices.alertingV2.rules.get(response.body.id);
       expect(persisted.id).toBe(response.body.id);
@@ -65,7 +69,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body: invalidBody,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -80,7 +83,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -98,7 +100,56 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body: invalidBody,
-        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest('validation: rejects body with missing metadata', async ({ apiClient }) => {
+    const { metadata: _metadata, ...rest } = buildCreateRuleData();
+    const response = await apiClient.post(testData.RULE_API_PATH, {
+      headers: writerHeaders,
+      body: rest,
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('validation: rejects body with empty metadata.name', async ({ apiClient }) => {
+    const body = buildCreateRuleData({ metadata: { name: '' } });
+    const response = await apiClient.post(testData.RULE_API_PATH, {
+      headers: writerHeaders,
+      body,
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest(
+    'validation: rejects body when metadata.description exceeds MAX_DESCRIPTION_LENGTH',
+    async ({ apiClient }) => {
+      const body = buildCreateRuleData({
+        metadata: { name: 'long-description', description: 'a'.repeat(MAX_DESCRIPTION_LENGTH + 1) },
+      });
+      const response = await apiClient.post(testData.RULE_API_PATH, {
+        headers: writerHeaders,
+        body,
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: rejects body when metadata.owner exceeds the maximum length',
+    async ({ apiClient }) => {
+      const body = buildCreateRuleData({
+        metadata: { name: 'long-owner', owner: 'a'.repeat(MAX_OWNER_LENGTH + 1) },
+      });
+      const response = await apiClient.post(testData.RULE_API_PATH, {
+        headers: writerHeaders,
+        body,
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -110,7 +161,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -123,7 +173,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -135,7 +184,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -149,7 +197,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -164,7 +211,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -181,7 +227,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(201);
       expect(response.body.kind).toBe('signal');
@@ -214,7 +259,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(201);
       expect(response.body.metadata).toStrictEqual(body.metadata);
@@ -236,7 +280,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body: rest,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -249,7 +292,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body: rest,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -262,7 +304,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
     const response = await apiClient.post(testData.RULE_API_PATH, {
       headers: writerHeaders,
       body: rest,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -275,7 +316,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(201);
     }
@@ -289,7 +329,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }
@@ -303,7 +342,6 @@ apiTest.describe('Create rule API', { tag: '@local-stateful-classic' }, () => {
       const response = await apiClient.post(testData.RULE_API_PATH, {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

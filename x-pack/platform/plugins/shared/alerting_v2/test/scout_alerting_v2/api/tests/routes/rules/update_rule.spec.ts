@@ -6,16 +6,18 @@
  */
 import { expect } from '@kbn/scout/api';
 import type { RoleApiCredentials } from '@kbn/scout';
-import { ID_MAX_LENGTH, MAX_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
+import { ID_MAX_LENGTH, MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
 import {
   ALL_ROLE,
   apiTest,
   buildCreateRuleData,
   NO_ACCESS_ROLE,
   READ_ROLE,
-  ruleUrl,
+  getRuleUrl,
   testData,
 } from '../../../fixtures';
+
+const MAX_OWNER_LENGTH = 256;
 
 apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
   let writerCredentials: RoleApiCredentials;
@@ -41,10 +43,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
         metadata: { name: 'original-name', description: 'original description', tags: ['cpu'] },
       });
       const created = await apiServices.alertingV2.rules.create(createData);
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { metadata: { name: 'renamed' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       // Patched field reflects the new value.
@@ -69,10 +70,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       buildCreateRuleData({ metadata: { name: 'rule-to-disable' } })
     );
     expect(created.enabled).toBe(true);
-    const response = await apiClient.patch(ruleUrl(created.id), {
+    const response = await apiClient.patch(getRuleUrl(created.id), {
       headers: writerHeaders,
       body: { enabled: false },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(200);
     expect(response.body.enabled).toBe(false);
@@ -88,10 +88,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
         })
       );
 
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { schedule: { lookback: '15m' } },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -109,10 +108,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
         })
       );
 
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { evaluation: { query: { base: 'FROM new-index-* | LIMIT 100' } } },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -135,10 +133,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       );
       expect(created.grouping).toStrictEqual({ fields: ['host.name'] });
 
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { grouping: null },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -150,10 +147,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
   );
 
   apiTest('status: should return 404 when the rule does not exist', async ({ apiClient }) => {
-    const response = await apiClient.patch(ruleUrl('does-not-exist'), {
+    const response = await apiClient.patch(getRuleUrl('does-not-exist'), {
       headers: writerHeaders,
       body: { metadata: { name: 'whatever' } },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(404);
     expect(response.body).toMatchObject({ statusCode: 404, error: 'Not Found' });
@@ -163,10 +159,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
     'validation: should reject ids longer than ID_MAX_LENGTH with a 400',
     async ({ apiClient }) => {
       const tooLongId = 'a'.repeat(ID_MAX_LENGTH + 1);
-      const response = await apiClient.patch(ruleUrl(tooLongId), {
+      const response = await apiClient.patch(getRuleUrl(tooLongId), {
         headers: writerHeaders,
         body: { metadata: { name: 'whatever' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -179,10 +174,54 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'rule-to-rename' } })
       );
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { metadata: { name: 'a'.repeat(MAX_NAME_LENGTH + 1) } },
-        responseType: 'json',
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: should reject body with empty metadata.name',
+    async ({ apiClient, apiServices }) => {
+      const created = await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({ metadata: { name: 'rule-with-empty-rename' } })
+      );
+      const response = await apiClient.patch(getRuleUrl(created.id), {
+        headers: writerHeaders,
+        body: { metadata: { name: '' } },
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: should reject body when metadata.description exceeds MAX_DESCRIPTION_LENGTH',
+    async ({ apiClient, apiServices }) => {
+      const created = await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({ metadata: { name: 'rule-with-long-description' } })
+      );
+      const response = await apiClient.patch(getRuleUrl(created.id), {
+        headers: writerHeaders,
+        body: { metadata: { description: 'a'.repeat(MAX_DESCRIPTION_LENGTH + 1) } },
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: should reject body when metadata.owner exceeds the maximum length',
+    async ({ apiClient, apiServices }) => {
+      const created = await apiServices.alertingV2.rules.create(
+        buildCreateRuleData({ metadata: { name: 'rule-with-long-owner' } })
+      );
+      const response = await apiClient.patch(getRuleUrl(created.id), {
+        headers: writerHeaders,
+        body: { metadata: { owner: 'a'.repeat(MAX_OWNER_LENGTH + 1) } },
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -195,10 +234,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'rule-strict-metadata' } })
       );
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { metadata: { unknownField: 'nope' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -211,10 +249,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'rule-bad-schedule' } })
       );
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { schedule: { every: '1s' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -227,10 +264,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ kind: 'signal', metadata: { name: 'signal-rule' } })
       );
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { state_transition: { pending_count: 3, pending_timeframe: '5m' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -243,10 +279,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
       const created = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'writer-can-update' } })
       );
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: writerHeaders,
         body: { metadata: { name: 'writer-renamed' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.metadata.name).toBe('writer-renamed');
@@ -260,10 +295,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
         buildCreateRuleData({ metadata: { name: 'reader-cannot-update' } })
       );
       const readerCredentials = await requestAuth.getApiKeyForCustomRole(READ_ROLE);
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { metadata: { name: 'attempted-rename' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       // Verify the rule was not modified.
@@ -279,10 +313,9 @@ apiTest.describe('Update rule API', { tag: '@local-stateful-classic' }, () => {
         buildCreateRuleData({ metadata: { name: 'noaccess-cannot-update' } })
       );
       const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
-      const response = await apiClient.patch(ruleUrl(created.id), {
+      const response = await apiClient.patch(getRuleUrl(created.id), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { metadata: { name: 'attempted-rename' } },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       const stored = await apiServices.alertingV2.rules.get(created.id);

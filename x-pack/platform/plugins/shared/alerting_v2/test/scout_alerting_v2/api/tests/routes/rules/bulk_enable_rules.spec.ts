@@ -7,7 +7,7 @@
 
 import { expect } from '@kbn/scout/api';
 import type { RoleApiCredentials } from '@kbn/scout';
-import { ID_MAX_LENGTH } from '@kbn/alerting-v2-schemas';
+import { ID_MAX_LENGTH, MAX_BULK_ITEMS } from '@kbn/alerting-v2-schemas';
 import {
   ALL_ROLE,
   apiTest,
@@ -49,7 +49,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_ENABLE_URL, {
       headers: writerHeaders,
       body: { ids: [ruleA.id, ruleB.id] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(200);
     expect(response.body.errors).toStrictEqual([]);
@@ -75,7 +74,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: writerHeaders,
         body: { filter: 'metadata.tags: "production"' },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.errors).toStrictEqual([]);
@@ -97,7 +95,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: writerHeaders,
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.errors).toStrictEqual([]);
@@ -117,7 +114,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: writerHeaders,
         body: { ids: [rule.id, 'does-not-exist'] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.rules).toHaveLength(1);
@@ -143,7 +139,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: writerHeaders,
         body: { match_all: true },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.errors).toStrictEqual([]);
@@ -169,7 +164,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: writerHeaders,
         body: { filter: 'kind: signal' },
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -188,7 +182,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_ENABLE_URL, {
       headers: writerHeaders,
       body: { ids: [] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -198,7 +191,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_ENABLE_URL, {
       headers: writerHeaders,
       body: {},
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -208,7 +200,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_ENABLE_URL, {
       headers: writerHeaders,
       body: { ids: ['some-id'], filter: 'metadata.tags: "x"' },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -218,7 +209,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_ENABLE_URL, {
       headers: writerHeaders,
       body: { match_all: true, ids: ['some-id'] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -229,11 +219,23 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
     const response = await apiClient.post(BULK_ENABLE_URL, {
       headers: writerHeaders,
       body: { ids: [tooLongId] },
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
   });
+
+  apiTest(
+    'validation: should reject ids arrays longer than MAX_BULK_ITEMS',
+    async ({ apiClient }) => {
+      const ids = Array.from({ length: MAX_BULK_ITEMS + 1 }, (_, i) => `id-${i}`);
+      const response = await apiClient.post(BULK_ENABLE_URL, {
+        headers: writerHeaders,
+        body: { ids },
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
 
   apiTest(
     'authorization: should return 200 for a user with full alerting_v2 privileges',
@@ -245,7 +247,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: writerHeaders,
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.rules[0].id).toBe(rule.id);
@@ -263,7 +264,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       // Verify the rule remained disabled after the failed call.
@@ -283,7 +283,6 @@ apiTest.describe('Bulk enable rules API', { tag: '@local-stateful-classic' }, ()
       const response = await apiClient.post(BULK_ENABLE_URL, {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: { ids: [rule.id] },
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       const stored = await apiServices.alertingV2.rules.get(rule.id);

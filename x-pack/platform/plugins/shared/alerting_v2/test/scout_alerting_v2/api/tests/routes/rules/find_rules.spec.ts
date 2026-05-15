@@ -66,7 +66,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
     const response = await apiClient.get(findRulesUrl({ search: 'HighCpu', perPage: 100 }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(200);
@@ -88,7 +87,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
     const response = await apiClient.get(findRulesUrl({ search: 'memory', perPage: 100 }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(200);
@@ -110,7 +108,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
     const response = await apiClient.get(findRulesUrl({ search: 'cpu production', perPage: 100 }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(200);
@@ -127,7 +124,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(findRulesUrl({ search: 'highcpu', perPage: 100 }), {
         headers: adminHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -150,7 +146,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
         await apiTest.step(`search="${search}" returns 200`, async () => {
           const response = await apiClient.get(findRulesUrl({ search, perPage: 100 }), {
             headers: adminHeaders,
-            responseType: 'json',
           });
           expect(response).toHaveStatusCode(200);
         });
@@ -167,7 +162,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(findRulesUrl({ search: 'nonexistent', perPage: 100 }), {
         headers: adminHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -188,7 +182,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
       await apiTest.step('first page returns the first slice', async () => {
         const firstPage = await apiClient.get(findRulesUrl({ page: 1, perPage: 2 }), {
           headers: adminHeaders,
-          responseType: 'json',
         });
 
         expect(firstPage).toHaveStatusCode(200);
@@ -199,7 +192,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
       await apiTest.step('last page returns the remaining items', async () => {
         const lastPage = await apiClient.get(findRulesUrl({ page: 3, perPage: 2 }), {
           headers: adminHeaders,
-          responseType: 'json',
         });
 
         expect(lastPage).toHaveStatusCode(200);
@@ -218,7 +210,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(findRulesUrl({ page: 99, perPage: 10 }), {
         headers: adminHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -236,7 +227,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(
         findRulesUrl({ sortField: 'name', sortOrder: 'asc', perPage: 100 }),
-        { headers: adminHeaders, responseType: 'json' }
+        { headers: adminHeaders }
       );
 
       expect(response).toHaveStatusCode(200);
@@ -253,7 +244,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(
         findRulesUrl({ sortField: 'name', sortOrder: 'desc', perPage: 100 }),
-        { headers: adminHeaders, responseType: 'json' }
+        { headers: adminHeaders }
       );
 
       expect(response).toHaveStatusCode(200);
@@ -274,13 +265,12 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
     await apiClient.post(`${testData.RULE_API_PATH}/_bulk_disable`, {
       headers: { ...testData.COMMON_HEADERS, ...adminHeaders },
       body: { ids: [ruleToDisable.id] },
-      responseType: 'json',
     });
 
     await apiTest.step('filter=enabled:true returns only the enabled rule', async () => {
       const response = await apiClient.get(
         findRulesUrl({ filter: 'enabled: true', perPage: 100 }),
-        { headers: adminHeaders, responseType: 'json' }
+        { headers: adminHeaders }
       );
 
       expect(response).toHaveStatusCode(200);
@@ -291,7 +281,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
     await apiTest.step('filter=enabled:false returns only the disabled rule', async () => {
       const response = await apiClient.get(
         findRulesUrl({ filter: 'enabled: false', perPage: 100 }),
-        { headers: adminHeaders, responseType: 'json' }
+        { headers: adminHeaders }
       );
 
       expect(response).toHaveStatusCode(200);
@@ -310,7 +300,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
     const response = await apiClient.get(
       findRulesUrl({ filter: 'metadata.tags: "production"', perPage: 100 }),
-      { headers: adminHeaders, responseType: 'json' }
+      { headers: adminHeaders }
     );
 
     expect(response).toHaveStatusCode(200);
@@ -336,7 +326,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
           filter: 'metadata.tags: "production" AND NOT metadata.name: "rule-a"',
           perPage: 100,
         }),
-        { headers: adminHeaders, responseType: 'json' }
+        { headers: adminHeaders }
       );
 
       expect(response).toHaveStatusCode(200);
@@ -356,7 +346,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(
         findRulesUrl({ filter: 'unknown_field: "value"', perPage: 100 }),
-        { headers: adminHeaders, responseType: 'json' }
+        { headers: adminHeaders }
       );
 
       expect(response).toHaveStatusCode(400);
@@ -374,7 +364,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject perPage above the maximum', async ({ apiClient }) => {
     const response = await apiClient.get(findRulesUrl({ perPage: 1001 }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -384,7 +373,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject perPage below the minimum', async ({ apiClient }) => {
     const response = await apiClient.get(findRulesUrl({ perPage: 0 }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -394,7 +382,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject page values below 1', async ({ apiClient }) => {
     const response = await apiClient.get(findRulesUrl({ page: 0 }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -404,7 +391,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject non-numeric page values', async ({ apiClient }) => {
     const response = await apiClient.get(findRulesUrl({ page: 'abc' }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -414,7 +400,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject unknown sortField values', async ({ apiClient }) => {
     const response = await apiClient.get(findRulesUrl({ sortField: 'unknown-field' }), {
       headers: adminHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(400);
@@ -424,7 +409,7 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject unknown sortOrder values', async ({ apiClient }) => {
     const response = await apiClient.get(
       findRulesUrl({ sortField: 'name', sortOrder: 'ascending' }),
-      { headers: adminHeaders, responseType: 'json' }
+      { headers: adminHeaders }
     );
 
     expect(response).toHaveStatusCode(400);
@@ -436,7 +421,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
     async ({ apiClient }) => {
       const response = await apiClient.get(findRulesUrl({ search: '   ' }), {
         headers: adminHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(400);
@@ -455,7 +439,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(findRulesUrl({ perPage: 100 }), {
         headers: readerCredentials.apiKeyHeader,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -475,7 +458,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(findRulesUrl({ perPage: 100 }), {
         headers: writerCredentials.apiKeyHeader,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -494,7 +476,6 @@ apiTest.describe('Find rules API', { tag: '@local-stateful-classic' }, () => {
 
       const response = await apiClient.get(findRulesUrl({ perPage: 100 }), {
         headers: noAccessCredentials.apiKeyHeader,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);

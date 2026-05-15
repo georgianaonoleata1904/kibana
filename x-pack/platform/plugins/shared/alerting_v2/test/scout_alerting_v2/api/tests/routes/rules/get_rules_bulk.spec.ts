@@ -20,11 +20,23 @@ import {
 const BULK_URL = `${testData.RULE_API_PATH}/_bulk`;
 
 /**
+ * The route's Zod schema declares `ids.array.max(1000)`, but that validation
+ * rule is unreachable via HTTP: Hapi parses query strings with `qs`, whose
+ * default `parameterLimit` is also 1000. Repeated query params beyond that
+ * limit are silently dropped before validation runs, so the server never sees
+ * more than 1000 ids.
+ *
+ * See https://github.com/ljharb/qs/issues/376 and the upstream Express thread
+ * https://github.com/expressjs/express/issues/5878.
+ */
+const QS_PARAMETER_LIMIT = 1000;
+
+/**
  * Build a `?ids=…&ids=…` query string using URLSearchParams so each id is
  * URL-encoded correctly and repeated params (the array form) are produced
  * without manual string concatenation.
  */
-const bulkUrl = (ids: string[] | string): string => {
+const getBulkUrl = (ids: string[] | string): string => {
   const search = new URLSearchParams();
   const list = Array.isArray(ids) ? ids : [ids];
   for (const id of list) {
@@ -65,9 +77,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
       await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'rule-c' } })
       );
-      const response = await apiClient.get(bulkUrl([ruleA.id, ruleB.id]), {
+      const response = await apiClient.get(getBulkUrl([ruleA.id, ruleB.id]), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body).toMatchObject({
@@ -86,9 +97,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
       const rule = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'single-rule' } })
       );
-      const response = await apiClient.get(bulkUrl(rule.id), {
+      const response = await apiClient.get(getBulkUrl(rule.id), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.total).toBe(1);
@@ -103,9 +113,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
       const rule = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'existing-rule' } })
       );
-      const response = await apiClient.get(bulkUrl([rule.id, 'does-not-exist']), {
+      const response = await apiClient.get(getBulkUrl([rule.id, 'does-not-exist']), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.total).toBe(1);
@@ -116,9 +125,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
   apiTest(
     'bulk: should return an empty result set when none of the ids exist',
     async ({ apiClient }) => {
-      const response = await apiClient.get(bulkUrl(['missing-1', 'missing-2']), {
+      const response = await apiClient.get(getBulkUrl(['missing-1', 'missing-2']), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body).toMatchObject({
@@ -135,7 +143,6 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
     async ({ apiClient }) => {
       const response = await apiClient.get(BULK_URL, {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body).toMatchObject({
@@ -149,13 +156,29 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
 
   apiTest('validation: should reject ids longer than ID_MAX_LENGTH', async ({ apiClient }) => {
     const tooLongId = 'a'.repeat(ID_MAX_LENGTH + 1);
-    const response = await apiClient.get(bulkUrl([tooLongId]), {
+    const response = await apiClient.get(getBulkUrl([tooLongId]), {
       headers: readerHeaders,
-      responseType: 'json',
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
   });
+
+  apiTest(
+    'bulk: documents that ids past the qs parameter limit are silently dropped',
+    async ({ apiClient }) => {
+      // We send `QS_PARAMETER_LIMIT + 1` ids that resolve to no rules (the
+      // index is empty thanks to cleanUp). The route would return 400 if Zod's
+      // .max(1000) was actually reached, but qs truncates first, so we
+      // observe 200 with an empty items array and total === 0.
+      const ids = Array.from({ length: QS_PARAMETER_LIMIT + 1 }, (_, i) => `id-${i}`);
+      const response = await apiClient.get(getBulkUrl(ids), {
+        headers: readerHeaders,
+      });
+      expect(response).toHaveStatusCode(200);
+      expect(response.body.items).toStrictEqual([]);
+      expect(response.body.total).toBe(0);
+    }
+  );
 
   apiTest(
     'authorization: should return 200 for a user with read-only alerting_v2 privileges',
@@ -163,9 +186,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
       const rule = await apiServices.alertingV2.rules.create(
         buildCreateRuleData({ metadata: { name: 'visible-to-readers' } })
       );
-      const response = await apiClient.get(bulkUrl(rule.id), {
+      const response = await apiClient.get(getBulkUrl(rule.id), {
         headers: readerHeaders,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.items[0].id).toBe(rule.id);
@@ -179,9 +201,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
         buildCreateRuleData({ metadata: { name: 'visible-to-writers' } })
       );
       const writerCredentials = await requestAuth.getApiKeyForCustomRole(ALL_ROLE);
-      const response = await apiClient.get(bulkUrl(rule.id), {
+      const response = await apiClient.get(getBulkUrl(rule.id), {
         headers: writerCredentials.apiKeyHeader,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.items[0].id).toBe(rule.id);
@@ -195,9 +216,8 @@ apiTest.describe('Get rules bulk API', { tag: '@local-stateful-classic' }, () =>
         buildCreateRuleData({ metadata: { name: 'hidden-rule' } })
       );
       const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
-      const response = await apiClient.get(bulkUrl(rule.id), {
+      const response = await apiClient.get(getBulkUrl(rule.id), {
         headers: noAccessCredentials.apiKeyHeader,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
     }

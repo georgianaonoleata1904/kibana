@@ -14,4 +14,4 @@ import { RULE_API_PATH } from './constants';
  * leak unencoded characters into path segments — important for the validation
  * tests that craft pathological ids.
  */
-export const ruleUrl = (id: string) => `${RULE_API_PATH}/${encodeURIComponent(id)}`;
+export const getRuleUrl = (id: string) => `${RULE_API_PATH}/${encodeURIComponent(id)}`;

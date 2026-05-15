@@ -38,7 +38,6 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
   apiTest('tags: should return an empty array when no rules exist', async ({ apiClient }) => {
     const response = await apiClient.get(TAGS_URL, {
       headers: readerHeaders,
-      responseType: 'json',
     });
 
     expect(response).toHaveStatusCode(200);
@@ -64,7 +63,6 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
 
       const response = await apiClient.get(TAGS_URL, {
         headers: readerHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -89,7 +87,6 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
 
       const response = await apiClient.get(TAGS_URL, {
         headers: readerHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -109,7 +106,6 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
 
       const response = await apiClient.get(TAGS_URL, {
         headers: readerHeaders,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -127,7 +123,6 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
 
       const response = await apiClient.get(TAGS_URL, {
         headers: writerCredentials.apiKeyHeader,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(200);
@@ -145,7 +140,6 @@ apiTest.describe('Get rule tags API', { tag: '@local-stateful-classic' }, () => 
 
       const response = await apiClient.get(TAGS_URL, {
         headers: noAccessCredentials.apiKeyHeader,
-        responseType: 'json',
       });
 
       expect(response).toHaveStatusCode(403);

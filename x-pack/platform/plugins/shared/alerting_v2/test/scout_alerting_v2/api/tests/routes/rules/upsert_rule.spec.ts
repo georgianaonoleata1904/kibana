@@ -7,16 +7,18 @@
 
 import { expect } from '@kbn/scout/api';
 import type { RoleApiCredentials } from '@kbn/scout';
-import { ID_MAX_LENGTH } from '@kbn/alerting-v2-schemas';
+import { ID_MAX_LENGTH, MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@kbn/alerting-v2-schemas';
 import {
   ALL_ROLE,
   apiTest,
   buildCreateRuleData,
   NO_ACCESS_ROLE,
   READ_ROLE,
-  ruleUrl,
+  getRuleUrl,
   testData,
 } from '../../../fixtures';
+
+const MAX_OWNER_LENGTH = 256;
 
 apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
   let writerCredentials: RoleApiCredentials;
@@ -42,14 +44,17 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
       const body = buildCreateRuleData({
         metadata: { name: 'created-via-upsert', description: 'created', tags: ['cpu'] },
       });
-      const response = await apiClient.put(ruleUrl(id), {
+      const response = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(201);
       expect(response.body.id).toBe(id);
       expect(response.body.metadata).toStrictEqual(body.metadata);
+      expect(response.body.kind).toBe(body.kind);
+      expect(response.body.schedule).toStrictEqual(body.schedule);
+      expect(response.body.evaluation).toStrictEqual(body.evaluation);
+
       const persisted = await apiServices.alertingV2.rules.get(id);
       expect(persisted.id).toBe(id);
       expect(persisted.metadata.name).toBe('created-via-upsert');
@@ -58,17 +63,16 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
 
   apiTest(
     'upsert: should return 200 and replace the rule when the id exists',
-    async ({ apiClient }) => {
+    async ({ apiClient, apiServices }) => {
       const id = 'rule-to-replace';
       const initialBody = buildCreateRuleData({
         metadata: { name: 'initial-name', description: 'initial', tags: ['cpu'] },
       });
-      // Seed an existing rule by issuing the same PUT we're testing — keeps
-      // the endpoint under test exercised end-to-end.
-      const createResponse = await apiClient.put(ruleUrl(id), {
+      Seed an existing rule by issuing the same PUT we're testing — keeps
+      the endpoint under test exercised end-to-end.
+      const createResponse = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: initialBody,
-        responseType: 'json',
       });
       expect(createResponse).toHaveStatusCode(201);
       const created = createResponse.body;
@@ -76,10 +80,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
       const replacementBody = buildCreateRuleData({
         metadata: { name: 'replaced-name', description: 'replaced', tags: ['memory'] },
       });
-      const response = await apiClient.put(ruleUrl(id), {
+      const response = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: replacementBody,
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.id).toBe(id);
@@ -103,10 +106,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
       // Seed an enabled rule via the endpoint under test, then flip it off
       // through a sibling endpoint so the replace below starts from
       // `enabled: false`.
-      const createResponse = await apiClient.put(ruleUrl(id), {
+      const createResponse = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: buildCreateRuleData({ metadata: { name: 'to-be-disabled' } }),
-        responseType: 'json',
       });
       expect(createResponse).toHaveStatusCode(201);
 
@@ -114,10 +116,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
       const stored = await apiServices.alertingV2.rules.get(id);
       expect(stored.enabled).toBe(false);
 
-      const response = await apiClient.put(ruleUrl(id), {
+      const response = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: buildCreateRuleData({ metadata: { name: 'replaced-while-disabled' } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(200);
       expect(response.body.enabled).toBe(false);
@@ -133,18 +134,16 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
       const id = 'rule-immutable-kind';
       // Seed via the endpoint under test so the conflict path is reached
       // against a rule that was itself created through PUT.
-      const createResponse = await apiClient.put(ruleUrl(id), {
+      const createResponse = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: buildCreateRuleData({ kind: 'alert', metadata: { name: 'alert-rule' } }),
-        responseType: 'json',
       });
       expect(createResponse).toHaveStatusCode(201);
       const created = createResponse.body;
 
-      const response = await apiClient.put(ruleUrl(id), {
+      const response = await apiClient.put(getRuleUrl(id), {
         headers: writerHeaders,
         body: buildCreateRuleData({ kind: 'signal', metadata: { name: 'alert-rule' } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(409);
       expect(response.body).toMatchObject({ statusCode: 409, error: 'Conflict' });
@@ -158,10 +157,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
     'validation: should reject ids longer than ID_MAX_LENGTH with a 400',
     async ({ apiClient }) => {
       const tooLongId = 'a'.repeat(ID_MAX_LENGTH + 1);
-      const response = await apiClient.put(ruleUrl(tooLongId), {
+      const response = await apiClient.put(getRuleUrl(tooLongId), {
         headers: writerHeaders,
         body: buildCreateRuleData(),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -171,22 +169,99 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
   apiTest('validation: should reject body with missing metadata.name', async ({ apiClient }) => {
     const body = buildCreateRuleData();
     const invalidBody = { ...body, metadata: { description: 'no name here' } };
-    const response = await apiClient.put(ruleUrl('any-id'), {
+    const response = await apiClient.put(getRuleUrl('any-id'), {
       headers: writerHeaders,
       body: invalidBody,
-      responseType: 'json',
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('validation: should reject body with missing metadata', async ({ apiClient }) => {
+    const { metadata: _metadata, ...rest } = buildCreateRuleData();
+    const response = await apiClient.put(getRuleUrl('any-id'), {
+      headers: writerHeaders,
+      body: rest,
+    });
+    expect(response).toHaveStatusCode(400);
+    expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+  });
+
+  apiTest('validation: should reject body with empty metadata.name', async ({ apiClient }) => {
+    const response = await apiClient.put(getRuleUrl('any-id'), {
+      headers: writerHeaders,
+      body: buildCreateRuleData({ metadata: { name: '' } }),
     });
     expect(response).toHaveStatusCode(400);
     expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
   });
 
   apiTest(
+    'validation: should reject body when metadata.name exceeds MAX_NAME_LENGTH',
+    async ({ apiClient }) => {
+      const response = await apiClient.put(getRuleUrl('any-id'), {
+        headers: writerHeaders,
+        body: buildCreateRuleData({ metadata: { name: 'a'.repeat(MAX_NAME_LENGTH + 1) } }),
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: should reject body with unknown metadata keys (strict schema)',
+    async ({ apiClient }) => {
+      const body = buildCreateRuleData();
+      const invalidBody = {
+        ...body,
+        metadata: { ...body.metadata, unknownField: 'nope' },
+      };
+      const response = await apiClient.put(getRuleUrl('any-id'), {
+        headers: writerHeaders,
+        body: invalidBody,
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: should reject body when metadata.description exceeds MAX_DESCRIPTION_LENGTH',
+    async ({ apiClient }) => {
+      const response = await apiClient.put(getRuleUrl('any-id'), {
+        headers: writerHeaders,
+        body: buildCreateRuleData({
+          metadata: {
+            name: 'long-description',
+            description: 'a'.repeat(MAX_DESCRIPTION_LENGTH + 1),
+          },
+        }),
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
+    'validation: should reject body when metadata.owner exceeds the maximum length',
+    async ({ apiClient }) => {
+      const response = await apiClient.put(getRuleUrl('any-id'), {
+        headers: writerHeaders,
+        body: buildCreateRuleData({
+          metadata: { name: 'long-owner', owner: 'a'.repeat(MAX_OWNER_LENGTH + 1) },
+        }),
+      });
+      expect(response).toHaveStatusCode(400);
+      expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
+    }
+  );
+
+  apiTest(
     'validation: should reject body when schedule.every is below the minimum interval',
     async ({ apiClient }) => {
-      const response = await apiClient.put(ruleUrl('any-id'), {
+      const response = await apiClient.put(getRuleUrl('any-id'), {
         headers: writerHeaders,
         body: buildCreateRuleData({ schedule: { every: '1s' } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -196,10 +271,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
   apiTest(
     'validation: should reject body with empty evaluation.query.base',
     async ({ apiClient }) => {
-      const response = await apiClient.put(ruleUrl('any-id'), {
+      const response = await apiClient.put(getRuleUrl('any-id'), {
         headers: writerHeaders,
         body: buildCreateRuleData({ evaluation: { query: { base: '' } } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(400);
       expect(response.body).toMatchObject({ statusCode: 400, error: 'Bad Request' });
@@ -209,10 +283,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
   apiTest(
     'authorization: should return 201 for a user with full alerting_v2 privileges',
     async ({ apiClient }) => {
-      const response = await apiClient.put(ruleUrl('writer-can-upsert'), {
+      const response = await apiClient.put(getRuleUrl('writer-can-upsert'), {
         headers: writerHeaders,
         body: buildCreateRuleData({ metadata: { name: 'writer-can-upsert' } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(201);
       expect(response.body.id).toBe('writer-can-upsert');
@@ -224,10 +297,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
     async ({ apiClient, apiServices, requestAuth }) => {
       const readerCredentials = await requestAuth.getApiKeyForCustomRole(READ_ROLE);
       const id = 'reader-cannot-upsert';
-      const response = await apiClient.put(ruleUrl(id), {
+      const response = await apiClient.put(getRuleUrl(id), {
         headers: { ...testData.COMMON_HEADERS, ...readerCredentials.apiKeyHeader },
         body: buildCreateRuleData({ metadata: { name: 'attempted' } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       // Verify no rule was created.
@@ -241,10 +313,9 @@ apiTest.describe('Upsert rule API', { tag: '@local-stateful-classic' }, () => {
     async ({ apiClient, apiServices, requestAuth }) => {
       const noAccessCredentials = await requestAuth.getApiKeyForCustomRole(NO_ACCESS_ROLE);
       const id = 'noaccess-cannot-upsert';
-      const response = await apiClient.put(ruleUrl(id), {
+      const response = await apiClient.put(getRuleUrl(id), {
         headers: { ...testData.COMMON_HEADERS, ...noAccessCredentials.apiKeyHeader },
         body: buildCreateRuleData({ metadata: { name: 'attempted' } }),
-        responseType: 'json',
       });
       expect(response).toHaveStatusCode(403);
       const remaining = await apiServices.alertingV2.rules.find({ perPage: 100 });
